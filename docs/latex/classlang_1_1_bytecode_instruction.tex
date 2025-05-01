@@ -1,0 +1,89 @@
+\doxysection{lang\+::Bytecode\+Instruction Class Reference}
+\hypertarget{classlang_1_1_bytecode_instruction}{}\label{classlang_1_1_bytecode_instruction}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+
+
+{\ttfamily \#include $<$compile\+Bytecode.\+hpp$>$}
+
+Inheritance diagram for lang\+::Bytecode\+Instruction\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=1.287356cm]{classlang_1_1_bytecode_instruction}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a5bbf4b7b0f4cc1afb171d541653ec679}{get\+Args}} (\mbox{\hyperlink{structlang_1_1_binary_buffer}{Binary\+Buffer}} \&stream, \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{Bytecode\+Compiler}} \texorpdfstring{$\ast$}{*}compiler)=0
+\item 
+virtual \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecode\+Offset}} \mbox{\hyperlink{classlang_1_1_bytecode_instruction_ae6be36a4c6fb6c2a8d6651ba46861a36}{get\+Args\+Size}} ()=0
+\item 
+virtual std\+::string \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a2c85be008ed748a9d67f03e911645e53}{to\+String}} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a82b77a2417de71e3545f74e4c54dd687}{base\+Size}} = 3
+\item 
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}} \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a98bb84c1c5032925db14e9a15a3e4909}{operation}} = \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a21a361d96e3e13f5f109748c2a9d2434}{Bytecode\+Op\+::push}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classlang_1_1_bytecode_instruction_ab8cad461ab6872676395ee2b19d477d9}{offset}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlang_1_1_bytecode_instruction_a5bbf4b7b0f4cc1afb171d541653ec679}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}!getArgs@{getArgs}}
+\index{getArgs@{getArgs}!lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+\doxysubsubsection{\texorpdfstring{getArgs()}{getArgs()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_instruction_a5bbf4b7b0f4cc1afb171d541653ec679} 
+virtual void lang\+::\+Bytecode\+Instruction\+::get\+Args (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_binary_buffer}{Binary\+Buffer}} \&}]{stream}{, }\item[{\mbox{\hyperlink{structlang_1_1_bytecode_compiler}{Bytecode\+Compiler}} \texorpdfstring{$\ast$}{*}}]{compiler}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classlang_1_1_bytecode_call_function_ad76d31f2a44d129a3d1d60ce5b0f10a0}{lang\+::\+Bytecode\+Call\+Function}}, \mbox{\hyperlink{classlang_1_1_bytecode_call_native_ae9442968dedce8e704d42a7acc814769}{lang\+::\+Bytecode\+Call\+Native}}, \mbox{\hyperlink{classlang_1_1_bytecode_jump_a4a4567d87b9417c64269148077d8f5d4}{lang\+::\+Bytecode\+Jump}}, \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_a08612e6e3f26d4317515886514539fa7}{lang\+::\+Bytecode\+Jump\+Label}}, and \mbox{\hyperlink{classlang_1_1_bytecode_operation_aea983902035eddfddd1bf38e8e4c6280}{lang\+::\+Bytecode\+Operation}}.
+
+\Hypertarget{classlang_1_1_bytecode_instruction_ae6be36a4c6fb6c2a8d6651ba46861a36}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}!getArgsSize@{getArgsSize}}
+\index{getArgsSize@{getArgsSize}!lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+\doxysubsubsection{\texorpdfstring{getArgsSize()}{getArgsSize()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_instruction_ae6be36a4c6fb6c2a8d6651ba46861a36} 
+virtual \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecode\+Offset}} lang\+::\+Bytecode\+Instruction\+::get\+Args\+Size (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classlang_1_1_bytecode_call_function_a3bfebd6719fdbc3a050fc71bb8bc32f5}{lang\+::\+Bytecode\+Call\+Function}}, \mbox{\hyperlink{classlang_1_1_bytecode_call_native_ae41c9326dcdb620d2fc1319fae6630e2}{lang\+::\+Bytecode\+Call\+Native}}, \mbox{\hyperlink{classlang_1_1_bytecode_jump_a4b0f15b436b09a540696a69b3b0981bb}{lang\+::\+Bytecode\+Jump}}, \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_ac08a64b3b7d78e26e123207654479956}{lang\+::\+Bytecode\+Jump\+Label}}, and \mbox{\hyperlink{classlang_1_1_bytecode_operation_a4af954da9cf8dbc0fc204d8f5233ff9f}{lang\+::\+Bytecode\+Operation}}.
+
+\Hypertarget{classlang_1_1_bytecode_instruction_a2c85be008ed748a9d67f03e911645e53}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}!toString@{toString}}
+\index{toString@{toString}!lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_instruction_a2c85be008ed748a9d67f03e911645e53} 
+virtual std\+::string lang\+::\+Bytecode\+Instruction\+::to\+String (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented in \mbox{\hyperlink{classlang_1_1_bytecode_call_function_a61cbefae7669fc138b5ee088046db244}{lang\+::\+Bytecode\+Call\+Function}}, \mbox{\hyperlink{classlang_1_1_bytecode_call_native_acf9f4f1acb86c357b5ae06b9d29fde6e}{lang\+::\+Bytecode\+Call\+Native}}, \mbox{\hyperlink{classlang_1_1_bytecode_jump_ae67f391563504e4000b8be4c36584a79}{lang\+::\+Bytecode\+Jump}}, \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_ad4c8a64b1bf576408298b38e181c073b}{lang\+::\+Bytecode\+Jump\+Label}}, and \mbox{\hyperlink{classlang_1_1_bytecode_operation_a4536220029611ec3feba9d926aa09ac4}{lang\+::\+Bytecode\+Operation}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classlang_1_1_bytecode_instruction_a82b77a2417de71e3545f74e4c54dd687}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}!baseSize@{baseSize}}
+\index{baseSize@{baseSize}!lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+\doxysubsubsection{\texorpdfstring{baseSize}{baseSize}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_instruction_a82b77a2417de71e3545f74e4c54dd687} 
+size\+\_\+t lang\+::\+Bytecode\+Instruction\+::base\+Size = 3}
+
+\Hypertarget{classlang_1_1_bytecode_instruction_ab8cad461ab6872676395ee2b19d477d9}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}!offset@{offset}}
+\index{offset@{offset}!lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+\doxysubsubsection{\texorpdfstring{offset}{offset}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_instruction_ab8cad461ab6872676395ee2b19d477d9} 
+size\+\_\+t lang\+::\+Bytecode\+Instruction\+::offset = 0}
+
+\Hypertarget{classlang_1_1_bytecode_instruction_a98bb84c1c5032925db14e9a15a3e4909}\index{lang::BytecodeInstruction@{lang::BytecodeInstruction}!operation@{operation}}
+\index{operation@{operation}!lang::BytecodeInstruction@{lang::BytecodeInstruction}}
+\doxysubsubsection{\texorpdfstring{operation}{operation}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_instruction_a98bb84c1c5032925db14e9a15a3e4909} 
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}} lang\+::\+Bytecode\+Instruction\+::operation = \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a21a361d96e3e13f5f109748c2a9d2434}{Bytecode\+Op\+::push}}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{compile_bytecode_8hpp}{compile\+Bytecode.\+hpp}}\end{DoxyCompactItemize}

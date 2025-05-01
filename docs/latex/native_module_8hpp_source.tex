@@ -1,0 +1,51 @@
+\doxysection{native\+Module.\+hpp}
+\hypertarget{native_module_8hpp_source}{}\label{native_module_8hpp_source}\index{include/native/nativeModule.hpp@{include/native/nativeModule.hpp}}
+\mbox{\hyperlink{native_module_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{interpreter_8hpp}{interpreter.hpp}}>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{function_8hpp}{parser/function.hpp}}>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{module_8hpp}{parser/module.hpp}}>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{external_function_8hpp}{externalFunction.hpp}}"{}}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00008\ \{}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_native_function_a27cbebda1424ffd316544de630803e5b}{NativeFunction}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_function}{Function}}}
+\DoxyCodeLine{00010\ \ \ \ \ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_native_function_a27cbebda1424ffd316544de630803e5b}{NativeFunction}}(std::vector<FunctionArgument>\ \mbox{\hyperlink{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02}{arguments}},}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{structlang_1_1_native_function_afc156621c827887352b07b9654e02733}{name}},}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_acd168f7bda1b772f686e080cc416f41b}{ExternalFunctionPointer}}\ \mbox{\hyperlink{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1}{function}})}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>arguments\ =\ \mbox{\hyperlink{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02}{arguments}};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>name\ =\ \mbox{\hyperlink{structlang_1_1_native_function_afc156621c827887352b07b9654e02733}{name}};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>function\ =\ \mbox{\hyperlink{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1}{function}};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00019\ }
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ std::vector<FunctionArgument>\ \mbox{\hyperlink{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02}{arguments}};}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{structlang_1_1_native_function_afc156621c827887352b07b9654e02733}{name}};}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_acd168f7bda1b772f686e080cc416f41b}{ExternalFunctionPointer}}\ \mbox{\hyperlink{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1}{function}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00023\ }
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_expression_result}{ExpressionResult}}\ \mbox{\hyperlink{structlang_1_1_native_function_a0c8cc8cb4d7115655945d4a12d1c5634}{compileCall}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ std::vector<FunctionArgument>\ \mbox{\hyperlink{structlang_1_1_native_function_a55643f9f7887b10fdfcc043d65ab5975}{getArguments}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{structlang_1_1_native_function_a5165a24df63e1f4b35deb4f4e60cb835}{getFullName}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structlang_1_1_native_function_acd4c640ecd688ce8d14aee02176515e8}{discardable}}()\ \textcolor{keyword}{const\ override};}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \textcolor{keyword}{friend}\ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_native_function_a1c8bf5392e4e61449ad7ea1e039b6705}{NativeModule}};}
+\DoxyCodeLine{00030\ }
+\DoxyCodeLine{00031\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ std::string\ moduleName;}
+\DoxyCodeLine{00033\ \ \ \ \ \};}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_native_module}{NativeModule}}}
+\DoxyCodeLine{00036\ \ \ \ \ \{}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{structlang_1_1_native_module_a4ceb996ed4a7605aa283d469694b4332}{name}};}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ std::vector<NativeFunction>\ \mbox{\hyperlink{structlang_1_1_native_module_a3d6709d054892ee7e7dd54f86c4e51cc}{functions}};}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ std::vector<Attribute*>\ \mbox{\hyperlink{structlang_1_1_native_module_abd2bf8fde1cb5b4283aff8542ec6f5e8}{attributes}};}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ std::vector<Type*>\ \mbox{\hyperlink{structlang_1_1_native_module_a9c1589c4bbec60b38dae16008f65271d}{types}};}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_module}{Module}}\ \mbox{\hyperlink{structlang_1_1_native_module_a5d2e07a372dc3a9d02ca045a9225c282}{create}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00044\ \ \ \ \ \};}
+\DoxyCodeLine{00045\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

@@ -1,0 +1,24 @@
+using system
+
+module test
+
+class MyClass
+{
+	int x = 20
+	int y = 2
+}
+
+[EntryPoint]
+fn main() -> int
+{
+	var classValue = new MyClass()
+
+	printHalfX(classValue)
+
+	return 0
+}
+
+fn printHalfX(MyClass class)
+{
+	println(class.x / 2)
+}

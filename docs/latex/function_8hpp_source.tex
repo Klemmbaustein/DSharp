@@ -1,0 +1,30 @@
+\doxysection{function.\+hpp}
+\hypertarget{function_8hpp_source}{}\label{function_8hpp_source}\index{include/parser/function.hpp@{include/parser/function.hpp}}
+\mbox{\hyperlink{function_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{type_8hpp}{type.hpp}}"{}}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{expression_8hpp}{expression.hpp}}"{}}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{attribute_8hpp}{attribute.hpp}}"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_function_argument}{FunctionArgument}}}
+\DoxyCodeLine{00009\ \ \ \ \ \{}
+\DoxyCodeLine{00010\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ \mbox{\hyperlink{structlang_1_1_function_argument_a7d959d997f0d792b61032ebe4b8ca6de}{type}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00011\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token}{Token}}\ \mbox{\hyperlink{structlang_1_1_function_argument_a92c125424b627a34339acdc892211887}{name}};}
+\DoxyCodeLine{00012\ \ \ \ \ \};}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00018\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_function}{Function}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_attributable}{Attributable}}}
+\DoxyCodeLine{00019\ \ \ \ \ \{}
+\DoxyCodeLine{00020\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structlang_1_1_expression_result}{ExpressionResult}}\ \mbox{\hyperlink{classlang_1_1_function_a6940aced6557f3f0e7533df842c999c9}{compileCall}}()\ =\ 0;}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ std::vector<FunctionArgument>\ \mbox{\hyperlink{classlang_1_1_function_a637ac6fe61ec52a07d40e73976dfcc24}{getArguments}}()\ =\ 0;}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ std::string\ \mbox{\hyperlink{classlang_1_1_function_a1eae1f7ebf11a1f63ec5cfa350a07fa1}{getFullName}}()\ \textcolor{keyword}{const}\ =\ 0;}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{classlang_1_1_function_afc0c2bea7199928d7ffb6b7d6c4a8cd1}{discardable}}()\ \textcolor{keyword}{const}\ =\ 0;}
+\DoxyCodeLine{00041\ \ \ \ \ \};}
+\DoxyCodeLine{00042\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

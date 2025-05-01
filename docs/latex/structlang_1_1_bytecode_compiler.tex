@@ -1,0 +1,63 @@
+\doxysection{lang\+::Bytecode\+Compiler Struct Reference}
+\hypertarget{structlang_1_1_bytecode_compiler}{}\label{structlang_1_1_bytecode_compiler}\index{lang::BytecodeCompiler@{lang::BytecodeCompiler}}
+
+
+{\ttfamily \#include $<$compile\+Bytecode.\+hpp$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{structlang_1_1_bytecode_compiler_ac2b00e0f3e8bdc8ef0277a1e09a61f2a}{print\+Assembly}} ()
+\item 
+void \mbox{\hyperlink{structlang_1_1_bytecode_compiler_af43807b3bba93ee55dd492673e40c960}{compile\+To}} (\mbox{\hyperlink{structlang_1_1_bytecode_stream}{Bytecode\+Stream}} \&stream)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::map$<$ std\+::string, \mbox{\hyperlink{structlang_1_1_bytecode_function}{Bytecode\+Function}} $>$ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_ac6e3bd5c322861b43bbe1cf025cc4dee}{functions}}
+\item 
+std\+::vector$<$ std\+::string $>$ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_ac4cb2753ae932e4dbe7de17ef00e1799}{externals}}
+\item 
+std\+::map$<$ std\+::string, uint32\+\_\+t $>$ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_a7cd5fec835fd3f66b84c9e66aa4d376a}{used\+Externals}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_bytecode_compiler_af43807b3bba93ee55dd492673e40c960}\index{lang::BytecodeCompiler@{lang::BytecodeCompiler}!compileTo@{compileTo}}
+\index{compileTo@{compileTo}!lang::BytecodeCompiler@{lang::BytecodeCompiler}}
+\doxysubsubsection{\texorpdfstring{compileTo()}{compileTo()}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_compiler_af43807b3bba93ee55dd492673e40c960} 
+void lang\+::\+Bytecode\+Compiler\+::compile\+To (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_bytecode_stream}{Bytecode\+Stream}} \&}]{stream}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_bytecode_compiler_ac2b00e0f3e8bdc8ef0277a1e09a61f2a}\index{lang::BytecodeCompiler@{lang::BytecodeCompiler}!printAssembly@{printAssembly}}
+\index{printAssembly@{printAssembly}!lang::BytecodeCompiler@{lang::BytecodeCompiler}}
+\doxysubsubsection{\texorpdfstring{printAssembly()}{printAssembly()}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_compiler_ac2b00e0f3e8bdc8ef0277a1e09a61f2a} 
+void lang\+::\+Bytecode\+Compiler\+::print\+Assembly (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_bytecode_compiler_ac4cb2753ae932e4dbe7de17ef00e1799}\index{lang::BytecodeCompiler@{lang::BytecodeCompiler}!externals@{externals}}
+\index{externals@{externals}!lang::BytecodeCompiler@{lang::BytecodeCompiler}}
+\doxysubsubsection{\texorpdfstring{externals}{externals}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_compiler_ac4cb2753ae932e4dbe7de17ef00e1799} 
+std\+::vector$<$std\+::string$>$ lang\+::\+Bytecode\+Compiler\+::externals}
+
+\Hypertarget{structlang_1_1_bytecode_compiler_ac6e3bd5c322861b43bbe1cf025cc4dee}\index{lang::BytecodeCompiler@{lang::BytecodeCompiler}!functions@{functions}}
+\index{functions@{functions}!lang::BytecodeCompiler@{lang::BytecodeCompiler}}
+\doxysubsubsection{\texorpdfstring{functions}{functions}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_compiler_ac6e3bd5c322861b43bbe1cf025cc4dee} 
+std\+::map$<$std\+::string, \mbox{\hyperlink{structlang_1_1_bytecode_function}{Bytecode\+Function}}$>$ lang\+::\+Bytecode\+Compiler\+::functions}
+
+\Hypertarget{structlang_1_1_bytecode_compiler_a7cd5fec835fd3f66b84c9e66aa4d376a}\index{lang::BytecodeCompiler@{lang::BytecodeCompiler}!usedExternals@{usedExternals}}
+\index{usedExternals@{usedExternals}!lang::BytecodeCompiler@{lang::BytecodeCompiler}}
+\doxysubsubsection{\texorpdfstring{usedExternals}{usedExternals}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_compiler_a7cd5fec835fd3f66b84c9e66aa4d376a} 
+std\+::map$<$std\+::string, uint32\+\_\+t$>$ lang\+::\+Bytecode\+Compiler\+::used\+Externals}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{compile_bytecode_8hpp}{compile\+Bytecode.\+hpp}}\end{DoxyCompactItemize}

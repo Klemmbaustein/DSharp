@@ -1,0 +1,56 @@
+\doxysection{include/bytecode.hpp File Reference}
+\hypertarget{bytecode_8hpp}{}\label{bytecode_8hpp}\index{include/bytecode.hpp@{include/bytecode.hpp}}
+{\ttfamily \#include $<$cstdint$>$}\newline
+{\ttfamily \#include "{}binary\+Buffer.\+hpp"{}}\newline
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structlang_1_1_bytecode_stream}{lang\+::\+Bytecode\+Stream}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacelang}{lang}}
+\begin{DoxyCompactList}\small\item\em Language namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{lang\+::bytecode\+Offset}} = uint32\+\_\+t
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum class \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{lang\+::\+Bytecode\+Op}} \+: uint8\+\_\+t \{ \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a21a361d96e3e13f5f109748c2a9d2434}{lang\+::push}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4ab21afc54fb48d153c19101658f4a2a48}{lang\+::pop}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a53b9e9679a8ea25880376080b76f98ad}{lang\+::call}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4aba535ef5a9f7b8bc875812bb081286bb}{lang\+::jump}}
+, \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a65c12cd5593849d451c128d58e779dae}{lang\+::call\+External}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a2cb9df9898e55fd0ad829dc202ddbd1c}{lang\+::ret}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a1315f1fe144c772ab687bbb40bc4b104}{lang\+::add\+Int}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4aa651029cb8a3ecb132ae9e43396a6ea8}{lang\+::sub\+Int}}
+, \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a9211ce636c6139ab8bdca6407cd70c62}{lang\+::mul\+Int}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a4098f04962f7073eba6d4117defdac48}{lang\+::div\+Int}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a08e341f8adbcd3f8491a24cb08a26e10}{lang\+::add\+Float}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a962b79c8e40a02e77a80ea566ca02249}{lang\+::sub\+Float}}
+, \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a2232d3bc4f99b3961c6db35b3a915ea3}{lang\+::mul\+Float}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a7315b133409f8a57ccd1daeef55758b7}{lang\+::div\+Float}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4add47bc246cb451fdb7b250eaaf5ce81a}{lang\+::int\+To\+Float}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4ae0f7fdcec50eb0bdbfb1eea98d27368f}{lang\+::float\+To\+Int}}
+, \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a65bfa20d0c48370bde571ae68a1642dc}{lang\+::push\+Variable}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a5a67fca106dfedc4cb4ab42f554050ca}{lang\+::store\+Variable}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a04b1f4e14883d4042b3ca92c49b31675}{lang\+::read\+Variable}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a8be3fa9102ad3a5c4d1b0326abb22e17}{lang\+::pop\+Variable}}
+, \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4acca3144efefb83467c43dba356dadd1d}{lang\+::alloc\+Class}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a8e7d5ca7365f3837054ebf350a8ba8f4}{lang\+::ref\+Class}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a86a65e8d6aa0454b141a493cc5940439}{lang\+::unref\+Class}}
+, \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4ab12f0b975f9608b3f100ab3dd6f14044}{lang\+::class\+Member}}
+, \newline
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a688d22b619c1ade201b8fcc3bb22f72e}{lang\+::set\+Class\+Member}}
+ \}
+\end{DoxyCompactItemize}

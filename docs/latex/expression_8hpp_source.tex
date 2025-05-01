@@ -1,0 +1,28 @@
+\doxysection{expression.\+hpp}
+\hypertarget{expression_8hpp_source}{}\label{expression_8hpp_source}\index{include/parser/expression.hpp@{include/parser/expression.hpp}}
+\mbox{\hyperlink{expression_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{compile_bytecode_8hpp}{compileBytecode.hpp}}"{}}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{tokens_8hpp}{parser/tokens.hpp}}>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <optional>}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_type}{Type}};}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}};}
+\DoxyCodeLine{00010\ }
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_expression_result}{ExpressionResult}}}
+\DoxyCodeLine{00012\ \ \ \ \ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structlang_1_1_expression_result_a71dc454b7f55c0e893f7bb447dd74e91}{valid}}\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structlang_1_1_expression_result_ae9f3b93f7975509f0da0aa9c786dd004}{discardable}}\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ std::optional<BytecodeBuffer>\ \mbox{\hyperlink{structlang_1_1_expression_result_a3b22e1b93127b0dc4d1e6e94e505ee12}{setCode}};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ \mbox{\hyperlink{structlang_1_1_expression_result_a9c78a25b9f2cb1efe8bed645927420c9}{type}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}\ \mbox{\hyperlink{structlang_1_1_expression_result_a91bebd99914087534115e33ee133038b}{code}};}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_expression_result_a5a17213542289a87c3892399ab0b0e08}{discard}}(\mbox{\hyperlink{structlang_1_1_token}{Token}}\ at,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors);}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_expression_result_a30ed8461521bd1c08dee054a615abbf3}{compileToType}}(\mbox{\hyperlink{structlang_1_1_token}{Token}}\ at,\ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ target,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors);}
+\DoxyCodeLine{00021\ \ \ \ \ \};}
+\DoxyCodeLine{00022\ \}}
+
+\end{DoxyCode}

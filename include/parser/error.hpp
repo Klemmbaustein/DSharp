@@ -1,0 +1,56 @@
+#pragma once
+#include "tokens.hpp"
+
+namespace lang
+{
+	enum class ErrorCode
+	{
+		/// E1000 internal compiler error.
+		internalError = 1000,
+		/// E2000 unexpected end of line while tokenizing.
+		tokenUnexpectedEof = 2000,
+		/// E2001 unexpected ::
+		tokenUnexpectedDoubleColon = 2001,
+		/// E2002 Expected a closing quote.
+		tokenExpectedClosingQuote = 2002,
+		/// E2002 Expected a closing quote.
+		tokenUnexpectedEndOfLine = 2003,
+		/// E3000 expected a {
+		parseExpectedOpenBracket = 3000,
+		/// E3001 unexpected end of line while parsing.
+		parseUnexpectedEof = 3001,
+		/// E3002 this token was not expected here.
+		parseUnexpectedToken = 3002,
+		/// E3003 this method, variable or type is unknown.
+		parseUnknownSymbol = 3003,
+		/// E3004 could not determine type of expression.
+		parseUnknownExpressionType = 3004,
+		/// E3005 unexpected or wrong type.
+		parseInvalidType = 3005,
+		/// E3006 unknown module.
+		parseUnknownModule = 3006,
+		/// E3007 unknown member.
+		parseUnknowmMember = 3007,
+		/// E3008 this value cannot be written to.
+		parseReadOnlyValue = 3008,
+		/// E3009 variable declared with "var" must have an initializer.
+		parseVarMustHaveInitializer = 3009,
+		/// E4000 NoDiscard function return value discarded.
+		returnValueDiscarded = 4000,
+	};
+
+	struct ErrorContext
+	{
+		void error(ErrorCode code, const Token& at, std::string description);
+
+		std::string currentFile;
+
+		bool isOk() const
+		{
+			return !hasError;
+		}
+
+	private:
+		bool hasError = false;
+	};
+} // namespace lang

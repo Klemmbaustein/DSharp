@@ -1,0 +1,150 @@
+\doxysection{lang\+::Native\+Function Struct Reference}
+\hypertarget{structlang_1_1_native_function}{}\label{structlang_1_1_native_function}\index{lang::NativeFunction@{lang::NativeFunction}}
+
+
+{\ttfamily \#include $<$native\+Module.\+hpp$>$}
+
+Inheritance diagram for lang\+::Native\+Function\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structlang_1_1_native_function}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structlang_1_1_native_function_a27cbebda1424ffd316544de630803e5b}{Native\+Function}} (std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$ \mbox{\hyperlink{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02}{arguments}}, std\+::string \mbox{\hyperlink{structlang_1_1_native_function_afc156621c827887352b07b9654e02733}{name}}, \mbox{\hyperlink{namespacelang_acd168f7bda1b772f686e080cc416f41b}{External\+Function\+Pointer}} \mbox{\hyperlink{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1}{function}})
+\item 
+\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{structlang_1_1_native_function_a0c8cc8cb4d7115655945d4a12d1c5634}{compile\+Call}} () override
+\begin{DoxyCompactList}\small\item\em Compiles a call for the function, assuming that all arguments are already on the stack. \end{DoxyCompactList}\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$ \mbox{\hyperlink{structlang_1_1_native_function_a55643f9f7887b10fdfcc043d65ab5975}{get\+Arguments}} () override
+\begin{DoxyCompactList}\small\item\em Gets all arguments for this function. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{structlang_1_1_native_function_a5165a24df63e1f4b35deb4f4e60cb835}{get\+Full\+Name}} () const override
+\begin{DoxyCompactList}\small\item\em Gets the full name of this function, including the module name. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{structlang_1_1_native_function_acd4c640ecd688ce8d14aee02176515e8}{discardable}} () const override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classlang_1_1_attributable}{lang\+::\+Attributable}}}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classlang_1_1_attributable_a34d85a0c7991dcdbc8bb0a3a60d4b5f6}{add\+Attributes}} (const std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \&new\+Attributes)
+\item 
+{\footnotesize template$<$typename T$>$ }\\\mbox{\hyperlink{classlang_1_1_attribute}{Attribute}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classlang_1_1_attributable_ab66a8f06bdc7811d4e38c9f130cc0d5d}{get\+Attribute}} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$ \mbox{\hyperlink{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02}{arguments}}
+\item 
+std\+::string \mbox{\hyperlink{structlang_1_1_native_function_afc156621c827887352b07b9654e02733}{name}}
+\item 
+\mbox{\hyperlink{namespacelang_acd168f7bda1b772f686e080cc416f41b}{External\+Function\+Pointer}} \mbox{\hyperlink{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1}{function}} = nullptr
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classlang_1_1_attributable}{lang\+::\+Attributable}}}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \mbox{\hyperlink{classlang_1_1_attributable_a08c3b0859770e4aa46e051cbba770377}{attributes}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Friends}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structlang_1_1_native_function_a1c8bf5392e4e61449ad7ea1e039b6705}{Native\+Module}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{structlang_1_1_native_function_a27cbebda1424ffd316544de630803e5b}\index{lang::NativeFunction@{lang::NativeFunction}!NativeFunction@{NativeFunction}}
+\index{NativeFunction@{NativeFunction}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{NativeFunction()}{NativeFunction()}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a27cbebda1424ffd316544de630803e5b} 
+lang\+::\+Native\+Function\+::\+Native\+Function (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$}]{arguments}{, }\item[{std\+::string}]{name}{, }\item[{\mbox{\hyperlink{namespacelang_acd168f7bda1b772f686e080cc416f41b}{External\+Function\+Pointer}}}]{function}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_native_function_a0c8cc8cb4d7115655945d4a12d1c5634}\index{lang::NativeFunction@{lang::NativeFunction}!compileCall@{compileCall}}
+\index{compileCall@{compileCall}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{compileCall()}{compileCall()}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a0c8cc8cb4d7115655945d4a12d1c5634} 
+\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Native\+Function\+::compile\+Call (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Compiles a call for the function, assuming that all arguments are already on the stack. 
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_function_a6940aced6557f3f0e7533df842c999c9}{lang\+::\+Function}}.
+
+\Hypertarget{structlang_1_1_native_function_acd4c640ecd688ce8d14aee02176515e8}\index{lang::NativeFunction@{lang::NativeFunction}!discardable@{discardable}}
+\index{discardable@{discardable}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{discardable()}{discardable()}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_acd4c640ecd688ce8d14aee02176515e8} 
+bool lang\+::\+Native\+Function\+::discardable (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_function_afc0c2bea7199928d7ffb6b7d6c4a8cd1}{lang\+::\+Function}}.
+
+\Hypertarget{structlang_1_1_native_function_a55643f9f7887b10fdfcc043d65ab5975}\index{lang::NativeFunction@{lang::NativeFunction}!getArguments@{getArguments}}
+\index{getArguments@{getArguments}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{getArguments()}{getArguments()}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a55643f9f7887b10fdfcc043d65ab5975} 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$ lang\+::\+Native\+Function\+::get\+Arguments (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Gets all arguments for this function. 
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_function_a637ac6fe61ec52a07d40e73976dfcc24}{lang\+::\+Function}}.
+
+\Hypertarget{structlang_1_1_native_function_a5165a24df63e1f4b35deb4f4e60cb835}\index{lang::NativeFunction@{lang::NativeFunction}!getFullName@{getFullName}}
+\index{getFullName@{getFullName}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{getFullName()}{getFullName()}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a5165a24df63e1f4b35deb4f4e60cb835} 
+std\+::string lang\+::\+Native\+Function\+::get\+Full\+Name (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Gets the full name of this function, including the module name. 
+
+Example\+: system\+::io\+::println for the system\+::io\+::println() function 
+
+Implements \mbox{\hyperlink{classlang_1_1_function_a1eae1f7ebf11a1f63ec5cfa350a07fa1}{lang\+::\+Function}}.
+
+
+
+\doxysubsection{Friends And Related Symbol Documentation}
+\Hypertarget{structlang_1_1_native_function_a1c8bf5392e4e61449ad7ea1e039b6705}\index{lang::NativeFunction@{lang::NativeFunction}!NativeModule@{NativeModule}}
+\index{NativeModule@{NativeModule}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{NativeModule}{NativeModule}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a1c8bf5392e4e61449ad7ea1e039b6705} 
+friend struct \mbox{\hyperlink{structlang_1_1_native_module}{Native\+Module}}\hspace{0.3cm}{\ttfamily [friend]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02}\index{lang::NativeFunction@{lang::NativeFunction}!arguments@{arguments}}
+\index{arguments@{arguments}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{arguments}{arguments}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a1cffc0305c6171a764f85970fbedcb02} 
+std\+::vector$<$\mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}}$>$ lang\+::\+Native\+Function\+::arguments}
+
+\Hypertarget{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1}\index{lang::NativeFunction@{lang::NativeFunction}!function@{function}}
+\index{function@{function}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{function}{function}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_a25185b5dade1c1eee14e0b712856bfd1} 
+\mbox{\hyperlink{namespacelang_acd168f7bda1b772f686e080cc416f41b}{External\+Function\+Pointer}} lang\+::\+Native\+Function\+::function = nullptr}
+
+\Hypertarget{structlang_1_1_native_function_afc156621c827887352b07b9654e02733}\index{lang::NativeFunction@{lang::NativeFunction}!name@{name}}
+\index{name@{name}!lang::NativeFunction@{lang::NativeFunction}}
+\doxysubsubsection{\texorpdfstring{name}{name}}
+{\footnotesize\ttfamily \label{structlang_1_1_native_function_afc156621c827887352b07b9654e02733} 
+std\+::string lang\+::\+Native\+Function\+::name}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/native/\mbox{\hyperlink{native_module_8hpp}{native\+Module.\+hpp}}\end{DoxyCompactItemize}

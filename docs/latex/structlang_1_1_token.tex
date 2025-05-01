@@ -1,0 +1,87 @@
+\doxysection{lang\+::Token Struct Reference}
+\hypertarget{structlang_1_1_token}{}\label{structlang_1_1_token}\index{lang::Token@{lang::Token}}
+
+
+{\ttfamily \#include $<$tokens.\+hpp$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{structlang_1_1_token_a5842040246874cac08f11b86bb14f2e6}{empty}} () const
+\item 
+bool \mbox{\hyperlink{structlang_1_1_token_ac3e0dc98ed9a613580f2104c67f90936}{operator==}} (const char \texorpdfstring{$\ast$}{*}str) const
+\item 
+void \mbox{\hyperlink{structlang_1_1_token_ac1c5feef3145e774b7ff3d04b113d8fc}{add\+Char}} (char c)
+\item 
+void \mbox{\hyperlink{structlang_1_1_token_a7be51a5a8828190f8c59a92394876547}{add\+Str}} (std\+::string str)
+\item 
+void \mbox{\hyperlink{structlang_1_1_token_a7c1f4bfc9ff14a081bb747592ec8f14c}{merge}} (const \mbox{\hyperlink{structlang_1_1_token}{Token}} \&other)
+\item 
+bool \mbox{\hyperlink{structlang_1_1_token_a1c6154bbe2b1b187deeccd5ee326dcd5}{operator$<$}} (const \mbox{\hyperlink{structlang_1_1_token}{Token}} \&other) const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string \mbox{\hyperlink{structlang_1_1_token_adb1d3a0d74778bd4b3a1a3f3e6a2cd47}{string}}
+\item 
+\mbox{\hyperlink{structlang_1_1_token_pos}{Token\+Pos}} \mbox{\hyperlink{structlang_1_1_token_a30a766cbfa2ae58caf68f008e2cddf01}{position}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_token_ac1c5feef3145e774b7ff3d04b113d8fc}\index{lang::Token@{lang::Token}!addChar@{addChar}}
+\index{addChar@{addChar}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{addChar()}{addChar()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_ac1c5feef3145e774b7ff3d04b113d8fc} 
+void lang\+::\+Token\+::add\+Char (\begin{DoxyParamCaption}\item[{char}]{c}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_a7be51a5a8828190f8c59a92394876547}\index{lang::Token@{lang::Token}!addStr@{addStr}}
+\index{addStr@{addStr}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{addStr()}{addStr()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_a7be51a5a8828190f8c59a92394876547} 
+void lang\+::\+Token\+::add\+Str (\begin{DoxyParamCaption}\item[{std\+::string}]{str}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_a5842040246874cac08f11b86bb14f2e6}\index{lang::Token@{lang::Token}!empty@{empty}}
+\index{empty@{empty}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{empty()}{empty()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_a5842040246874cac08f11b86bb14f2e6} 
+bool lang\+::\+Token\+::empty (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structlang_1_1_token_a7c1f4bfc9ff14a081bb747592ec8f14c}\index{lang::Token@{lang::Token}!merge@{merge}}
+\index{merge@{merge}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{merge()}{merge()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_a7c1f4bfc9ff14a081bb747592ec8f14c} 
+void lang\+::\+Token\+::merge (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structlang_1_1_token}{Token}} \&}]{other}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_a1c6154bbe2b1b187deeccd5ee326dcd5}\index{lang::Token@{lang::Token}!operator$<$@{operator$<$}}
+\index{operator$<$@{operator$<$}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{operator$<$()}{operator<()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_a1c6154bbe2b1b187deeccd5ee326dcd5} 
+bool lang\+::\+Token\+::operator$<$ (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structlang_1_1_token}{Token}} \&}]{other}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\Hypertarget{structlang_1_1_token_ac3e0dc98ed9a613580f2104c67f90936}\index{lang::Token@{lang::Token}!operator==@{operator==}}
+\index{operator==@{operator==}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{operator==()}{operator==()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_ac3e0dc98ed9a613580f2104c67f90936} 
+bool lang\+::\+Token\+::operator== (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{str}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_token_a30a766cbfa2ae58caf68f008e2cddf01}\index{lang::Token@{lang::Token}!position@{position}}
+\index{position@{position}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{position}{position}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_a30a766cbfa2ae58caf68f008e2cddf01} 
+\mbox{\hyperlink{structlang_1_1_token_pos}{Token\+Pos}} lang\+::\+Token\+::position}
+
+\Hypertarget{structlang_1_1_token_adb1d3a0d74778bd4b3a1a3f3e6a2cd47}\index{lang::Token@{lang::Token}!string@{string}}
+\index{string@{string}!lang::Token@{lang::Token}}
+\doxysubsubsection{\texorpdfstring{string}{string}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_adb1d3a0d74778bd4b3a1a3f3e6a2cd47} 
+std\+::string lang\+::\+Token\+::string}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{tokens_8hpp}{tokens.\+hpp}}\end{DoxyCompactItemize}

@@ -1,0 +1,47 @@
+\doxysection{attribute.\+hpp}
+\hypertarget{attribute_8hpp_source}{}\label{attribute_8hpp_source}\index{include/parser/attribute.hpp@{include/parser/attribute.hpp}}
+\mbox{\hyperlink{attribute_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{tokens_8hpp}{tokens.hpp}}"{}}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00006\ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_attribute}{Attribute}}}
+\DoxyCodeLine{00015\ \ \ \ \ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_attribute_a233615df69b698eee731e64064bf4d3f}{name}};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_attribute_a2082b117c8ca120409cec79736f7b849}{moduleName}};}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{classlang_1_1_attribute_a14bfadaf15ab61cf86fe862786343e10}{\string~Attribute}}()\ =\ \textcolor{keywordflow}{default};}
+\DoxyCodeLine{00020\ \ \ \ \ \};}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00028\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_attributable}{Attributable}}}
+\DoxyCodeLine{00029\ \ \ \ \ \{}
+\DoxyCodeLine{00030\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{AttribInfo}}}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ std::vector<Token>\ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info_a8f51601445a225d1e9115487a55fe880}{attributeTokens}};}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_attribute}{Attribute}}*\ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info_a640918a2e180cac606353e0bca42005d}{attribute}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \};}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_attributable_a34d85a0c7991dcdbc8bb0a3a60d4b5f6}{addAttributes}}(\textcolor{keyword}{const}\ std::vector<AttribInfo>\&\ newAttributes);}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \textcolor{keyword}{template}<\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_attribute}{Attribute}}*\ \mbox{\hyperlink{classlang_1_1_attributable_ab66a8f06bdc7811d4e38c9f130cc0d5d}{getAttribute}}()\textcolor{keyword}{\ const}}
+\DoxyCodeLine{00041\ \textcolor{keyword}{\ \ \ \ \ \ \ \ }\{}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{auto}\&\ i\ :\ \mbox{\hyperlink{classlang_1_1_attributable_a08c3b0859770e4aa46e051cbba770377}{attributes}})}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (\textcolor{keyword}{dynamic\_cast<}T*\textcolor{keyword}{>}(i.attribute))}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ i.attribute;}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ std::vector<AttribInfo>\ \mbox{\hyperlink{classlang_1_1_attributable_a08c3b0859770e4aa46e051cbba770377}{attributes}};}
+\DoxyCodeLine{00053\ \ \ \ \ \};}
+\DoxyCodeLine{00054\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

@@ -1,0 +1,104 @@
+\doxysection{lang\+::Function Class Reference}
+\hypertarget{classlang_1_1_function}{}\label{classlang_1_1_function}\index{lang::Function@{lang::Function}}
+
+
+A function that can be called in the language.  
+
+
+
+
+{\ttfamily \#include $<$function.\+hpp$>$}
+
+Inheritance diagram for lang\+::Function\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=4.000000cm]{classlang_1_1_function}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{classlang_1_1_function_a6940aced6557f3f0e7533df842c999c9}{compile\+Call}} ()=0
+\begin{DoxyCompactList}\small\item\em Compiles a call for the function, assuming that all arguments are already on the stack. \end{DoxyCompactList}\item 
+virtual std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$ \mbox{\hyperlink{classlang_1_1_function_a637ac6fe61ec52a07d40e73976dfcc24}{get\+Arguments}} ()=0
+\begin{DoxyCompactList}\small\item\em Gets all arguments for this function. \end{DoxyCompactList}\item 
+virtual std\+::string \mbox{\hyperlink{classlang_1_1_function_a1eae1f7ebf11a1f63ec5cfa350a07fa1}{get\+Full\+Name}} () const =0
+\begin{DoxyCompactList}\small\item\em Gets the full name of this function, including the module name. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classlang_1_1_function_afc0c2bea7199928d7ffb6b7d6c4a8cd1}{discardable}} () const =0
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classlang_1_1_attributable}{lang\+::\+Attributable}}}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classlang_1_1_attributable_a34d85a0c7991dcdbc8bb0a3a60d4b5f6}{add\+Attributes}} (const std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \&new\+Attributes)
+\item 
+{\footnotesize template$<$typename T$>$ }\\\mbox{\hyperlink{classlang_1_1_attribute}{Attribute}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classlang_1_1_attributable_ab66a8f06bdc7811d4e38c9f130cc0d5d}{get\+Attribute}} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classlang_1_1_attributable}{lang\+::\+Attributable}}}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \mbox{\hyperlink{classlang_1_1_attributable_a08c3b0859770e4aa46e051cbba770377}{attributes}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+A function that can be called in the language. 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlang_1_1_function_a6940aced6557f3f0e7533df842c999c9}\index{lang::Function@{lang::Function}!compileCall@{compileCall}}
+\index{compileCall@{compileCall}!lang::Function@{lang::Function}}
+\doxysubsubsection{\texorpdfstring{compileCall()}{compileCall()}}
+{\footnotesize\ttfamily \label{classlang_1_1_function_a6940aced6557f3f0e7533df842c999c9} 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Function\+::compile\+Call (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Compiles a call for the function, assuming that all arguments are already on the stack. 
+
+
+
+Implemented in \mbox{\hyperlink{structlang_1_1_constructor_function_a1e4c52996bb26fce0ed8db73a845ea7d}{lang\+::\+Constructor\+Function}}, \mbox{\hyperlink{structlang_1_1_native_function_a0c8cc8cb4d7115655945d4a12d1c5634}{lang\+::\+Native\+Function}}, and \mbox{\hyperlink{structlang_1_1_parsed_function_a8eab85518f15de2a39f7f517aaf9ed7a}{lang\+::\+Parsed\+Function}}.
+
+\Hypertarget{classlang_1_1_function_afc0c2bea7199928d7ffb6b7d6c4a8cd1}\index{lang::Function@{lang::Function}!discardable@{discardable}}
+\index{discardable@{discardable}!lang::Function@{lang::Function}}
+\doxysubsubsection{\texorpdfstring{discardable()}{discardable()}}
+{\footnotesize\ttfamily \label{classlang_1_1_function_afc0c2bea7199928d7ffb6b7d6c4a8cd1} 
+virtual bool lang\+::\+Function\+::discardable (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{structlang_1_1_constructor_function_a874d6eb5915639c11252a1839f7347c1}{lang\+::\+Constructor\+Function}}, \mbox{\hyperlink{structlang_1_1_native_function_acd4c640ecd688ce8d14aee02176515e8}{lang\+::\+Native\+Function}}, and \mbox{\hyperlink{structlang_1_1_parsed_function_ab7a1cddc64b0578370cdaaaaa6ce1091}{lang\+::\+Parsed\+Function}}.
+
+\Hypertarget{classlang_1_1_function_a637ac6fe61ec52a07d40e73976dfcc24}\index{lang::Function@{lang::Function}!getArguments@{getArguments}}
+\index{getArguments@{getArguments}!lang::Function@{lang::Function}}
+\doxysubsubsection{\texorpdfstring{getArguments()}{getArguments()}}
+{\footnotesize\ttfamily \label{classlang_1_1_function_a637ac6fe61ec52a07d40e73976dfcc24} 
+virtual std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_function_argument}{Function\+Argument}} $>$ lang\+::\+Function\+::get\+Arguments (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Gets all arguments for this function. 
+
+
+
+Implemented in \mbox{\hyperlink{structlang_1_1_constructor_function_a92011d82d4c463d9aedfb88819c83c7c}{lang\+::\+Constructor\+Function}}, \mbox{\hyperlink{structlang_1_1_native_function_a55643f9f7887b10fdfcc043d65ab5975}{lang\+::\+Native\+Function}}, and \mbox{\hyperlink{structlang_1_1_parsed_function_a5c60e0c81255339f82e7055a00d84770}{lang\+::\+Parsed\+Function}}.
+
+\Hypertarget{classlang_1_1_function_a1eae1f7ebf11a1f63ec5cfa350a07fa1}\index{lang::Function@{lang::Function}!getFullName@{getFullName}}
+\index{getFullName@{getFullName}!lang::Function@{lang::Function}}
+\doxysubsubsection{\texorpdfstring{getFullName()}{getFullName()}}
+{\footnotesize\ttfamily \label{classlang_1_1_function_a1eae1f7ebf11a1f63ec5cfa350a07fa1} 
+virtual std\+::string lang\+::\+Function\+::get\+Full\+Name (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Gets the full name of this function, including the module name. 
+
+Example\+: system\+::io\+::println for the system\+::io\+::println() function 
+
+Implemented in \mbox{\hyperlink{structlang_1_1_constructor_function_ae1237590ebe6577ddc9591732062c396}{lang\+::\+Constructor\+Function}}, \mbox{\hyperlink{structlang_1_1_native_function_a5165a24df63e1f4b35deb4f4e60cb835}{lang\+::\+Native\+Function}}, and \mbox{\hyperlink{structlang_1_1_parsed_function_a61f2d96bc1955b6b47963ba7fef7c99a}{lang\+::\+Parsed\+Function}}.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{function_8hpp}{function.\+hpp}}\end{DoxyCompactItemize}

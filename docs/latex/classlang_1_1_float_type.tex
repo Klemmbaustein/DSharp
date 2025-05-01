@@ -1,0 +1,92 @@
+\doxysection{lang\+::Float\+Type Class Reference}
+\hypertarget{classlang_1_1_float_type}{}\label{classlang_1_1_float_type}\index{lang::FloatType@{lang::FloatType}}
+
+
+{\ttfamily \#include $<$type.\+hpp$>$}
+
+Inheritance diagram for lang\+::Float\+Type\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{classlang_1_1_float_type}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classlang_1_1_float_type_a6c10444319783598a83580848cd64bef}{Float\+Type}} ()
+\item 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{classlang_1_1_float_type_af298725507ec964c9ba6188581e0b8c7}{compile\+Operator}} (\mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8a}{Operator}} operator\+Type, \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \&first, \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \&second) override
+\item 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{classlang_1_1_float_type_a143e42290966cd01b8c605fd2fff75d2}{compile\+Value}} (\mbox{\hyperlink{structlang_1_1_token}{Token}} first, \mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&line) override
+\item 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{classlang_1_1_float_type_aae36163ff25172c4180af4408694fcd1}{compile\+Cast}} (\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} value) override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classlang_1_1_type}{lang\+::\+Type}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool \mbox{\hyperlink{classlang_1_1_type_a6890beeda96a6bca5701e1a2ac957835}{same\+As}} (\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}other)
+\item 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{classlang_1_1_type_a3617353a8d6449c5b0f526a97af30f3e}{compile\+Member}} (\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} value, \mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&line, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors, bool set\+Member)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Static Public Member Functions inherited from \mbox{\hyperlink{classlang_1_1_type}{lang\+::\+Type}}}
+\begin{DoxyCompactItemize}
+\item 
+static std\+::string \mbox{\hyperlink{classlang_1_1_type_a33d655b1d484476e7bec771e71d8b72d}{to\+String}} (\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}target)
+\begin{DoxyCompactList}\small\item\em Returns the name of the type, or $<$void$>$ if the type is null. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classlang_1_1_type}{lang\+::\+Type}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} \mbox{\hyperlink{classlang_1_1_type_a3e1874a33fed09d2c13a85dce156ff75}{from}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classlang_1_1_type_a7b20d7d0cad28b615f817fc7719e05f6}{size}} = 0
+\item 
+std\+::string \mbox{\hyperlink{classlang_1_1_type_a64fae179255867a6e42b6ba0eba9db13}{name}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classlang_1_1_float_type_a6c10444319783598a83580848cd64bef}\index{lang::FloatType@{lang::FloatType}!FloatType@{FloatType}}
+\index{FloatType@{FloatType}!lang::FloatType@{lang::FloatType}}
+\doxysubsubsection{\texorpdfstring{FloatType()}{FloatType()}}
+{\footnotesize\ttfamily \label{classlang_1_1_float_type_a6c10444319783598a83580848cd64bef} 
+lang\+::\+Float\+Type\+::\+Float\+Type (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlang_1_1_float_type_aae36163ff25172c4180af4408694fcd1}\index{lang::FloatType@{lang::FloatType}!compileCast@{compileCast}}
+\index{compileCast@{compileCast}!lang::FloatType@{lang::FloatType}}
+\doxysubsubsection{\texorpdfstring{compileCast()}{compileCast()}}
+{\footnotesize\ttfamily \label{classlang_1_1_float_type_aae36163ff25172c4180af4408694fcd1} 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Float\+Type\+::compile\+Cast (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}}}]{value}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_type_a4d5764c8265acdbe06b3f2c652ea96fd}{lang\+::\+Type}}.
+
+\Hypertarget{classlang_1_1_float_type_af298725507ec964c9ba6188581e0b8c7}\index{lang::FloatType@{lang::FloatType}!compileOperator@{compileOperator}}
+\index{compileOperator@{compileOperator}!lang::FloatType@{lang::FloatType}}
+\doxysubsubsection{\texorpdfstring{compileOperator()}{compileOperator()}}
+{\footnotesize\ttfamily \label{classlang_1_1_float_type_af298725507ec964c9ba6188581e0b8c7} 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Float\+Type\+::compile\+Operator (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8a}{Operator}}}]{operator\+Type}{, }\item[{\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \&}]{first}{, }\item[{\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \&}]{second}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_type_a1f6662459ba33904b90618ea34841b83}{lang\+::\+Type}}.
+
+\Hypertarget{classlang_1_1_float_type_a143e42290966cd01b8c605fd2fff75d2}\index{lang::FloatType@{lang::FloatType}!compileValue@{compileValue}}
+\index{compileValue@{compileValue}!lang::FloatType@{lang::FloatType}}
+\doxysubsubsection{\texorpdfstring{compileValue()}{compileValue()}}
+{\footnotesize\ttfamily \label{classlang_1_1_float_type_a143e42290966cd01b8c605fd2fff75d2} 
+virtual \mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Float\+Type\+::compile\+Value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token}{Token}}}]{first}{, }\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&}]{line}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_type_a1dfd0d2fcd478a9a4588303b01502198}{lang\+::\+Type}}.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{type_8hpp}{type.\+hpp}}\end{DoxyCompactItemize}

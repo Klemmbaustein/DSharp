@@ -1,0 +1,93 @@
+\doxysection{lang\+::Bytecode\+Call\+Native Class Reference}
+\hypertarget{classlang_1_1_bytecode_call_native}{}\label{classlang_1_1_bytecode_call_native}\index{lang::BytecodeCallNative@{lang::BytecodeCallNative}}
+
+
+{\ttfamily \#include $<$compile\+Bytecode.\+hpp$>$}
+
+Inheritance diagram for lang\+::Bytecode\+Call\+Native\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classlang_1_1_bytecode_call_native}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8848e44334fb3501e5f25c4545a5cd36}{Bytecode\+Call\+Native}} (\mbox{\hyperlink{structlang_1_1_native_function}{Native\+Function}} \texorpdfstring{$\ast$}{*}\mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8c0df2d0e859e10eefadb7552f01d1bc}{function}})
+\item 
+void \mbox{\hyperlink{classlang_1_1_bytecode_call_native_ae9442968dedce8e704d42a7acc814769}{get\+Args}} (\mbox{\hyperlink{structlang_1_1_binary_buffer}{Binary\+Buffer}} \&stream, \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{Bytecode\+Compiler}} \texorpdfstring{$\ast$}{*}compiler) override
+\item 
+\mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecode\+Offset}} \mbox{\hyperlink{classlang_1_1_bytecode_call_native_ae41c9326dcdb620d2fc1319fae6630e2}{get\+Args\+Size}} () override
+\item 
+std\+::string \mbox{\hyperlink{classlang_1_1_bytecode_call_native_acf9f4f1acb86c357b5ae06b9d29fde6e}{to\+String}} () override
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structlang_1_1_native_function}{Native\+Function}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8c0df2d0e859e10eefadb7552f01d1bc}{function}} = nullptr
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{lang\+::\+Bytecode\+Instruction}}}
+\begin{DoxyCompactItemize}
+\item 
+size\+\_\+t \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a82b77a2417de71e3545f74e4c54dd687}{base\+Size}} = 3
+\item 
+\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}} \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a98bb84c1c5032925db14e9a15a3e4909}{operation}} = \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a21a361d96e3e13f5f109748c2a9d2434}{Bytecode\+Op\+::push}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classlang_1_1_bytecode_instruction_ab8cad461ab6872676395ee2b19d477d9}{offset}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classlang_1_1_bytecode_call_native_a8848e44334fb3501e5f25c4545a5cd36}\index{lang::BytecodeCallNative@{lang::BytecodeCallNative}!BytecodeCallNative@{BytecodeCallNative}}
+\index{BytecodeCallNative@{BytecodeCallNative}!lang::BytecodeCallNative@{lang::BytecodeCallNative}}
+\doxysubsubsection{\texorpdfstring{BytecodeCallNative()}{BytecodeCallNative()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_call_native_a8848e44334fb3501e5f25c4545a5cd36} 
+lang\+::\+Bytecode\+Call\+Native\+::\+Bytecode\+Call\+Native (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_native_function}{Native\+Function}} \texorpdfstring{$\ast$}{*}}]{function}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlang_1_1_bytecode_call_native_ae9442968dedce8e704d42a7acc814769}\index{lang::BytecodeCallNative@{lang::BytecodeCallNative}!getArgs@{getArgs}}
+\index{getArgs@{getArgs}!lang::BytecodeCallNative@{lang::BytecodeCallNative}}
+\doxysubsubsection{\texorpdfstring{getArgs()}{getArgs()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_call_native_ae9442968dedce8e704d42a7acc814769} 
+void lang\+::\+Bytecode\+Call\+Native\+::get\+Args (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_binary_buffer}{Binary\+Buffer}} \&}]{stream}{, }\item[{\mbox{\hyperlink{structlang_1_1_bytecode_compiler}{Bytecode\+Compiler}} \texorpdfstring{$\ast$}{*}}]{compiler}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a5bbf4b7b0f4cc1afb171d541653ec679}{lang\+::\+Bytecode\+Instruction}}.
+
+\Hypertarget{classlang_1_1_bytecode_call_native_ae41c9326dcdb620d2fc1319fae6630e2}\index{lang::BytecodeCallNative@{lang::BytecodeCallNative}!getArgsSize@{getArgsSize}}
+\index{getArgsSize@{getArgsSize}!lang::BytecodeCallNative@{lang::BytecodeCallNative}}
+\doxysubsubsection{\texorpdfstring{getArgsSize()}{getArgsSize()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_call_native_ae41c9326dcdb620d2fc1319fae6630e2} 
+\mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecode\+Offset}} lang\+::\+Bytecode\+Call\+Native\+::get\+Args\+Size (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classlang_1_1_bytecode_instruction_ae6be36a4c6fb6c2a8d6651ba46861a36}{lang\+::\+Bytecode\+Instruction}}.
+
+\Hypertarget{classlang_1_1_bytecode_call_native_acf9f4f1acb86c357b5ae06b9d29fde6e}\index{lang::BytecodeCallNative@{lang::BytecodeCallNative}!toString@{toString}}
+\index{toString@{toString}!lang::BytecodeCallNative@{lang::BytecodeCallNative}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_call_native_acf9f4f1acb86c357b5ae06b9d29fde6e} 
+std\+::string lang\+::\+Bytecode\+Call\+Native\+::to\+String (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a2c85be008ed748a9d67f03e911645e53}{lang\+::\+Bytecode\+Instruction}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classlang_1_1_bytecode_call_native_a8c0df2d0e859e10eefadb7552f01d1bc}\index{lang::BytecodeCallNative@{lang::BytecodeCallNative}!function@{function}}
+\index{function@{function}!lang::BytecodeCallNative@{lang::BytecodeCallNative}}
+\doxysubsubsection{\texorpdfstring{function}{function}}
+{\footnotesize\ttfamily \label{classlang_1_1_bytecode_call_native_a8c0df2d0e859e10eefadb7552f01d1bc} 
+\mbox{\hyperlink{structlang_1_1_native_function}{Native\+Function}}\texorpdfstring{$\ast$}{*} lang\+::\+Bytecode\+Call\+Native\+::function = nullptr}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{compile_bytecode_8hpp}{compile\+Bytecode.\+hpp}}\end{DoxyCompactItemize}

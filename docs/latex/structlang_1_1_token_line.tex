@@ -1,0 +1,119 @@
+\doxysection{lang\+::Token\+Line Struct Reference}
+\hypertarget{structlang_1_1_token_line}{}\label{structlang_1_1_token_line}\index{lang::TokenLine@{lang::TokenLine}}
+
+
+{\ttfamily \#include $<$tokens.\+hpp$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} \mbox{\hyperlink{structlang_1_1_token_line_aaa1b00e6fc214284a2f77962ebe710f3}{peek}} ()
+\item 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} \mbox{\hyperlink{structlang_1_1_token_line_a65b070d29f5b25d5971c803a227c072b}{get}} ()
+\item 
+bool \mbox{\hyperlink{structlang_1_1_token_line_a5c5e88f4b74668865b9f1d3ba4bfb260}{empty}} () const
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}} $>$ \mbox{\hyperlink{structlang_1_1_token_line_ae2d92fed6fd04cd86d542de6a9822ac3}{get\+In\+Braces}} ()
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}} $>$ \mbox{\hyperlink{structlang_1_1_token_line_ae4bef513485ee194d3d9858e5bd64afd}{get\+Until}} (std\+::string token, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+bool \mbox{\hyperlink{structlang_1_1_token_line_a2642f366ebddd191d6d55c6df14da862}{contains}} (std\+::string token) const
+\item 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} \mbox{\hyperlink{structlang_1_1_token_line_a6ea7969503d1a8bb9009a62d96859789}{previous}} ()
+\item 
+size\+\_\+t \mbox{\hyperlink{structlang_1_1_token_line_acb941b9244ccd84d8c3883290ef26d86}{save\+Position}} ()
+\item 
+void \mbox{\hyperlink{structlang_1_1_token_line_acdab1bcded9b6306799da78df4a8eff9}{load\+Position}} (size\+\_\+t old\+Pos)
+\item 
+\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \& \mbox{\hyperlink{structlang_1_1_token_line_a68b736d1867c8a3ca20924b8ca829101}{post\+Process\+Tokens}} (\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}} $>$ \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_token_line_a3071f1ce0c39e898e92e9cd4a8b41bc2}{line\+Tokens}} = nullptr
+\item 
+size\+\_\+t \mbox{\hyperlink{structlang_1_1_token_line_a1e3d722c4ce32be055e1aac2af86bbe2}{position}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_token_line_a2642f366ebddd191d6d55c6df14da862}\index{lang::TokenLine@{lang::TokenLine}!contains@{contains}}
+\index{contains@{contains}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{contains()}{contains()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a2642f366ebddd191d6d55c6df14da862} 
+bool lang\+::\+Token\+Line\+::contains (\begin{DoxyParamCaption}\item[{std\+::string}]{token}{}\end{DoxyParamCaption}) const}
+
+\Hypertarget{structlang_1_1_token_line_a5c5e88f4b74668865b9f1d3ba4bfb260}\index{lang::TokenLine@{lang::TokenLine}!empty@{empty}}
+\index{empty@{empty}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{empty()}{empty()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a5c5e88f4b74668865b9f1d3ba4bfb260} 
+bool lang\+::\+Token\+Line\+::empty (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const}
+
+\Hypertarget{structlang_1_1_token_line_a65b070d29f5b25d5971c803a227c072b}\index{lang::TokenLine@{lang::TokenLine}!get@{get}}
+\index{get@{get}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a65b070d29f5b25d5971c803a227c072b} 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} lang\+::\+Token\+Line\+::get (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_ae2d92fed6fd04cd86d542de6a9822ac3}\index{lang::TokenLine@{lang::TokenLine}!getInBraces@{getInBraces}}
+\index{getInBraces@{getInBraces}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{getInBraces()}{getInBraces()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_ae2d92fed6fd04cd86d542de6a9822ac3} 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}} $>$ lang\+::\+Token\+Line\+::get\+In\+Braces (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_ae4bef513485ee194d3d9858e5bd64afd}\index{lang::TokenLine@{lang::TokenLine}!getUntil@{getUntil}}
+\index{getUntil@{getUntil}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{getUntil()}{getUntil()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_ae4bef513485ee194d3d9858e5bd64afd} 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}} $>$ lang\+::\+Token\+Line\+::get\+Until (\begin{DoxyParamCaption}\item[{std\+::string}]{token}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_acdab1bcded9b6306799da78df4a8eff9}\index{lang::TokenLine@{lang::TokenLine}!loadPosition@{loadPosition}}
+\index{loadPosition@{loadPosition}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{loadPosition()}{loadPosition()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_acdab1bcded9b6306799da78df4a8eff9} 
+void lang\+::\+Token\+Line\+::load\+Position (\begin{DoxyParamCaption}\item[{size\+\_\+t}]{old\+Pos}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_aaa1b00e6fc214284a2f77962ebe710f3}\index{lang::TokenLine@{lang::TokenLine}!peek@{peek}}
+\index{peek@{peek}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{peek()}{peek()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_aaa1b00e6fc214284a2f77962ebe710f3} 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} lang\+::\+Token\+Line\+::peek (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_a68b736d1867c8a3ca20924b8ca829101}\index{lang::TokenLine@{lang::TokenLine}!postProcessTokens@{postProcessTokens}}
+\index{postProcessTokens@{postProcessTokens}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{postProcessTokens()}{postProcessTokens()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a68b736d1867c8a3ca20924b8ca829101} 
+\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \& lang\+::\+Token\+Line\+::post\+Process\+Tokens (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_a6ea7969503d1a8bb9009a62d96859789}\index{lang::TokenLine@{lang::TokenLine}!previous@{previous}}
+\index{previous@{previous}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{previous()}{previous()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a6ea7969503d1a8bb9009a62d96859789} 
+\mbox{\hyperlink{structlang_1_1_token}{Token}} lang\+::\+Token\+Line\+::previous (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_token_line_acb941b9244ccd84d8c3883290ef26d86}\index{lang::TokenLine@{lang::TokenLine}!savePosition@{savePosition}}
+\index{savePosition@{savePosition}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{savePosition()}{savePosition()}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_acb941b9244ccd84d8c3883290ef26d86} 
+size\+\_\+t lang\+::\+Token\+Line\+::save\+Position (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_token_line_a3071f1ce0c39e898e92e9cd4a8b41bc2}\index{lang::TokenLine@{lang::TokenLine}!lineTokens@{lineTokens}}
+\index{lineTokens@{lineTokens}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{lineTokens}{lineTokens}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a3071f1ce0c39e898e92e9cd4a8b41bc2} 
+std\+::vector$<$\mbox{\hyperlink{structlang_1_1_token}{Token}}$>$\texorpdfstring{$\ast$}{*} lang\+::\+Token\+Line\+::line\+Tokens = nullptr}
+
+\Hypertarget{structlang_1_1_token_line_a1e3d722c4ce32be055e1aac2af86bbe2}\index{lang::TokenLine@{lang::TokenLine}!position@{position}}
+\index{position@{position}!lang::TokenLine@{lang::TokenLine}}
+\doxysubsubsection{\texorpdfstring{position}{position}}
+{\footnotesize\ttfamily \label{structlang_1_1_token_line_a1e3d722c4ce32be055e1aac2af86bbe2} 
+size\+\_\+t lang\+::\+Token\+Line\+::position = 0}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{tokens_8hpp}{tokens.\+hpp}}\end{DoxyCompactItemize}

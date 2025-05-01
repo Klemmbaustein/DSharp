@@ -1,0 +1,79 @@
+\doxysection{lang\+::Expression\+Result Struct Reference}
+\hypertarget{structlang_1_1_expression_result}{}\label{structlang_1_1_expression_result}\index{lang::ExpressionResult@{lang::ExpressionResult}}
+
+
+{\ttfamily \#include $<$expression.\+hpp$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{structlang_1_1_expression_result_a5a17213542289a87c3892399ab0b0e08}{discard}} (\mbox{\hyperlink{structlang_1_1_token}{Token}} at, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+void \mbox{\hyperlink{structlang_1_1_expression_result_a30ed8461521bd1c08dee054a615abbf3}{compile\+To\+Type}} (\mbox{\hyperlink{structlang_1_1_token}{Token}} at, \mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}target, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{structlang_1_1_expression_result_a71dc454b7f55c0e893f7bb447dd74e91}{valid}} = false
+\item 
+bool \mbox{\hyperlink{structlang_1_1_expression_result_ae9f3b93f7975509f0da0aa9c786dd004}{discardable}} = false
+\item 
+std\+::optional$<$ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}} $>$ \mbox{\hyperlink{structlang_1_1_expression_result_a3b22e1b93127b0dc4d1e6e94e505ee12}{set\+Code}}
+\item 
+\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_expression_result_a9c78a25b9f2cb1efe8bed645927420c9}{type}} = nullptr
+\item 
+\mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}} \mbox{\hyperlink{structlang_1_1_expression_result_a91bebd99914087534115e33ee133038b}{code}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_expression_result_a30ed8461521bd1c08dee054a615abbf3}\index{lang::ExpressionResult@{lang::ExpressionResult}!compileToType@{compileToType}}
+\index{compileToType@{compileToType}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{compileToType()}{compileToType()}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_a30ed8461521bd1c08dee054a615abbf3} 
+void lang\+::\+Expression\+Result\+::compile\+To\+Type (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token}{Token}}}]{at}{, }\item[{\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}}]{target}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_expression_result_a5a17213542289a87c3892399ab0b0e08}\index{lang::ExpressionResult@{lang::ExpressionResult}!discard@{discard}}
+\index{discard@{discard}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{discard()}{discard()}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_a5a17213542289a87c3892399ab0b0e08} 
+void lang\+::\+Expression\+Result\+::discard (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token}{Token}}}]{at}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_expression_result_a91bebd99914087534115e33ee133038b}\index{lang::ExpressionResult@{lang::ExpressionResult}!code@{code}}
+\index{code@{code}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{code}{code}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_a91bebd99914087534115e33ee133038b} 
+\mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}} lang\+::\+Expression\+Result\+::code}
+
+\Hypertarget{structlang_1_1_expression_result_ae9f3b93f7975509f0da0aa9c786dd004}\index{lang::ExpressionResult@{lang::ExpressionResult}!discardable@{discardable}}
+\index{discardable@{discardable}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{discardable}{discardable}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_ae9f3b93f7975509f0da0aa9c786dd004} 
+bool lang\+::\+Expression\+Result\+::discardable = false}
+
+\Hypertarget{structlang_1_1_expression_result_a3b22e1b93127b0dc4d1e6e94e505ee12}\index{lang::ExpressionResult@{lang::ExpressionResult}!setCode@{setCode}}
+\index{setCode@{setCode}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{setCode}{setCode}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_a3b22e1b93127b0dc4d1e6e94e505ee12} 
+std\+::optional$<$\mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}}$>$ lang\+::\+Expression\+Result\+::set\+Code}
+
+\Hypertarget{structlang_1_1_expression_result_a9c78a25b9f2cb1efe8bed645927420c9}\index{lang::ExpressionResult@{lang::ExpressionResult}!type@{type}}
+\index{type@{type}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{type}{type}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_a9c78a25b9f2cb1efe8bed645927420c9} 
+\mbox{\hyperlink{classlang_1_1_type}{Type}}\texorpdfstring{$\ast$}{*} lang\+::\+Expression\+Result\+::type = nullptr}
+
+\Hypertarget{structlang_1_1_expression_result_a71dc454b7f55c0e893f7bb447dd74e91}\index{lang::ExpressionResult@{lang::ExpressionResult}!valid@{valid}}
+\index{valid@{valid}!lang::ExpressionResult@{lang::ExpressionResult}}
+\doxysubsubsection{\texorpdfstring{valid}{valid}}
+{\footnotesize\ttfamily \label{structlang_1_1_expression_result_a71dc454b7f55c0e893f7bb447dd74e91} 
+bool lang\+::\+Expression\+Result\+::valid = false}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{expression_8hpp}{expression.\+hpp}}\end{DoxyCompactItemize}

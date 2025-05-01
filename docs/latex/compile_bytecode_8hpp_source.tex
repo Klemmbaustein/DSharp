@@ -1,0 +1,116 @@
+\doxysection{compile\+Bytecode.\+hpp}
+\hypertarget{compile_bytecode_8hpp_source}{}\label{compile_bytecode_8hpp_source}\index{include/parser/compileBytecode.hpp@{include/parser/compileBytecode.hpp}}
+\mbox{\hyperlink{compile_bytecode_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{bytecode_8hpp}{bytecode.hpp}}>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <map>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <set>}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00008\ \{}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}};}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_native_function}{NativeFunction}};}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}}
+\DoxyCodeLine{00013\ \ \ \ \ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a82b77a2417de71e3545f74e4c54dd687}{baseSize}}\ =\ 3;}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{BytecodeOp}}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a98bb84c1c5032925db14e9a15a3e4909}{operation}}\ =\ \mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4a21a361d96e3e13f5f109748c2a9d2434}{BytecodeOp::push}};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_ab8cad461ab6872676395ee2b19d477d9}{offset}}\ =\ 0;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a5bbf4b7b0f4cc1afb171d541653ec679}{getArgs}}(\mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ stream,\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}*\ compiler)\ =\ 0;}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_ae6be36a4c6fb6c2a8d6651ba46861a36}{getArgsSize}}()\ =\ 0;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a2c85be008ed748a9d67f03e911645e53}{toString}}()\ \{\ \textcolor{keywordflow}{return}\ \textcolor{stringliteral}{"{}"{}};\ \};}
+\DoxyCodeLine{00021\ \ \ \ \ \};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_bytecode_operation_a88c74db09560936a6e611516b4aa3e82}{BytecodeOperation}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}}
+\DoxyCodeLine{00024\ \ \ \ \ \{}
+\DoxyCodeLine{00025\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_bytecode_operation_a88c74db09560936a6e611516b4aa3e82}{BytecodeOperation}}(\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{BytecodeOp}}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction_a98bb84c1c5032925db14e9a15a3e4909}{operation}},\ \mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\ \mbox{\hyperlink{classlang_1_1_bytecode_operation_a3d3fba8ae8b9b4c95a1bc04cb09753f4}{arguments}});}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_bytecode_operation_aea983902035eddfddd1bf38e8e4c6280}{getArgs}}(\mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ stream,\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}*\ compiler)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{classlang_1_1_bytecode_operation_a4af954da9cf8dbc0fc204d8f5233ff9f}{getArgsSize}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_operation_a4536220029611ec3feba9d926aa09ac4}{toString}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\ \mbox{\hyperlink{classlang_1_1_bytecode_operation_a3d3fba8ae8b9b4c95a1bc04cb09753f4}{arguments}};}
+\DoxyCodeLine{00033\ \ \ \ \ \};}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_bytecode_call_function_a4496ce65b54acf66ea46d86e20c4833f}{BytecodeCallFunction}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}}
+\DoxyCodeLine{00036\ \ \ \ \ \{}
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_bytecode_call_function_a4496ce65b54acf66ea46d86e20c4833f}{BytecodeCallFunction}}(std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_call_function_ae313ede107f61143b7e8f0d38ef912e4}{callName}});}
+\DoxyCodeLine{00039\ }
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_bytecode_call_function_ad76d31f2a44d129a3d1d60ce5b0f10a0}{getArgs}}(\mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ stream,\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}*\ compiler)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{classlang_1_1_bytecode_call_function_a3bfebd6719fdbc3a050fc71bb8bc32f5}{getArgsSize}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_call_function_a61cbefae7669fc138b5ee088046db244}{toString}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_call_function_ae313ede107f61143b7e8f0d38ef912e4}{callName}};}
+\DoxyCodeLine{00045\ \ \ \ \ \};}
+\DoxyCodeLine{00046\ }
+\DoxyCodeLine{00047\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8848e44334fb3501e5f25c4545a5cd36}{BytecodeCallNative}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}}
+\DoxyCodeLine{00048\ \ \ \ \ \{}
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8848e44334fb3501e5f25c4545a5cd36}{BytecodeCallNative}}(\mbox{\hyperlink{structlang_1_1_native_function}{NativeFunction}}*\ \mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8c0df2d0e859e10eefadb7552f01d1bc}{function}});}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_bytecode_call_native_ae9442968dedce8e704d42a7acc814769}{getArgs}}(\mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ stream,\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}*\ compiler)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{classlang_1_1_bytecode_call_native_ae41c9326dcdb620d2fc1319fae6630e2}{getArgsSize}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_call_native_acf9f4f1acb86c357b5ae06b9d29fde6e}{toString}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00055\ }
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_native_function}{NativeFunction}}*\ \mbox{\hyperlink{classlang_1_1_bytecode_call_native_a8c0df2d0e859e10eefadb7552f01d1bc}{function}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00057\ \ \ \ \ \};}
+\DoxyCodeLine{00058\ }
+\DoxyCodeLine{00059\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_bytecode_jump_label_a6799d070d9191d2736676c9e7c58a1a3}{BytecodeJumpLabel}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}}
+\DoxyCodeLine{00060\ \ \ \ \ \{}
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_a6799d070d9191d2736676c9e7c58a1a3}{BytecodeJumpLabel}}(std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_a9cd7bd179e07c01880407c8e5bec14dc}{name}});}
+\DoxyCodeLine{00063\ }
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_a08612e6e3f26d4317515886514539fa7}{getArgs}}(\mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ stream,\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}*\ compiler)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_ac08a64b3b7d78e26e123207654479956}{getArgsSize}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_ad4c8a64b1bf576408298b38e181c073b}{toString}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00067\ }
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label_a9cd7bd179e07c01880407c8e5bec14dc}{name}};}
+\DoxyCodeLine{00069\ \ \ \ \ \};}
+\DoxyCodeLine{00070\ }
+\DoxyCodeLine{00071\ \ \ \ \ \textcolor{keyword}{class\ }\mbox{\hyperlink{classlang_1_1_bytecode_jump_a2c8da0e3f403f77b99335c9772f46c5a}{BytecodeJump}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}}
+\DoxyCodeLine{00072\ \ \ \ \ \{}
+\DoxyCodeLine{00073\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00074\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_bytecode_jump_a2c8da0e3f403f77b99335c9772f46c5a}{BytecodeJump}}(\mbox{\hyperlink{classlang_1_1_bytecode_jump_label}{BytecodeJumpLabel}}*\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_a24f54ee410360ed86f51a99779331383}{target}});}
+\DoxyCodeLine{00075\ }
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_a4a4567d87b9417c64269148077d8f5d4}{getArgs}}(\mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ stream,\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}*\ compiler)\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_a4b0f15b436b09a540696a69b3b0981bb}{getArgsSize}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_ae67f391563504e4000b8be4c36584a79}{toString}}()\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00079\ }
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_bytecode_jump_label}{BytecodeJumpLabel}}*\ \mbox{\hyperlink{classlang_1_1_bytecode_jump_a24f54ee410360ed86f51a99779331383}{target}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00081\ \ \ \ \ \};}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}}
+\DoxyCodeLine{00084\ \ \ \ \ \{}
+\DoxyCodeLine{00085\ \ \ \ \ \ \ \ \ std::vector<BytecodeInstruction*>\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer_a8c81cb80ce0e5ee26866d66e4e123058}{instructions}};}
+\DoxyCodeLine{00086\ }
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer_ad8051fe96d6557af190624afc98df7ad}{add}}(\mbox{\hyperlink{classlang_1_1_bytecode_instruction}{BytecodeInstruction}}*\ instruction);}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer_a8b0e7210ec761a53d40a86b71cb50d78}{addOperation}}(\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{BytecodeOp}}\ operation,\ \textcolor{keyword}{const}\ \mbox{\hyperlink{structlang_1_1_binary_buffer}{BinaryBuffer}}\&\ arguments);}
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer_a2ee9609578b7d6475432107060e32e67}{addOperation}}(\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{BytecodeOp}}\ operation);}
+\DoxyCodeLine{00090\ }
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer_aee0ddb9a4f1970d73bb310f8136e547f}{addBuffer}}(\textcolor{keyword}{const}\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}\&\ other);}
+\DoxyCodeLine{00092\ \ \ \ \ \};}
+\DoxyCodeLine{00093\ }
+\DoxyCodeLine{00094\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_bytecode_function}{BytecodeFunction}}\ :\ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}}
+\DoxyCodeLine{00095\ \ \ \ \ \{}
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structlang_1_1_bytecode_function_a672b0c066d7aaf7732e2fbf9fbdc1aef}{isEntryPoint}}\ =\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00097\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{namespacelang_a54c9e89369fd593496709e656fd4ac9a}{bytecodeOffset}}\ \mbox{\hyperlink{structlang_1_1_bytecode_function_a450998b7c24d529517664bc3f6b6b228}{offset}}\ =\ 0;}
+\DoxyCodeLine{00098\ \ \ \ \ \};}
+\DoxyCodeLine{00099\ }
+\DoxyCodeLine{00100\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_bytecode_compiler}{BytecodeCompiler}}}
+\DoxyCodeLine{00101\ \ \ \ \ \{}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ std::map<std::string,\ BytecodeFunction>\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_ac6e3bd5c322861b43bbe1cf025cc4dee}{functions}};}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ std::vector<std::string>\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_ac4cb2753ae932e4dbe7de17ef00e1799}{externals}};}
+\DoxyCodeLine{00104\ \ \ \ \ \ \ \ \ std::map<std::string,\ uint32\_t>\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_a7cd5fec835fd3f66b84c9e66aa4d376a}{usedExternals}};}
+\DoxyCodeLine{00105\ }
+\DoxyCodeLine{00106\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_ac2b00e0f3e8bdc8ef0277a1e09a61f2a}{printAssembly}}();}
+\DoxyCodeLine{00107\ }
+\DoxyCodeLine{00108\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_bytecode_compiler_af43807b3bba93ee55dd492673e40c960}{compileTo}}(\mbox{\hyperlink{structlang_1_1_bytecode_stream}{BytecodeStream}}\&\ stream);}
+\DoxyCodeLine{00109\ \ \ \ \ \};}
+\DoxyCodeLine{00110\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

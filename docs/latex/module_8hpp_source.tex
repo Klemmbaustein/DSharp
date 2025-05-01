@@ -1,0 +1,29 @@
+\doxysection{module.\+hpp}
+\hypertarget{module_8hpp_source}{}\label{module_8hpp_source}\index{include/parser/module.hpp@{include/parser/module.hpp}}
+\mbox{\hyperlink{module_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ <map>}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{function_8hpp}{function.hpp}}"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{attribute_8hpp}{attribute.hpp}}"{}}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00008\ \{}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_module}{Module}}}
+\DoxyCodeLine{00010\ \ \ \ \ \{}
+\DoxyCodeLine{00011\ \ \ \ \ \ \ \ \ std::string\ \mbox{\hyperlink{structlang_1_1_module_a529c5921054bccce2455dabe9e3a1f74}{name}};}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ std::map<std::string,\ Type*>\ \mbox{\hyperlink{structlang_1_1_module_a14e6226726b1f9003d59dea67f7a0466}{moduleTypes}};}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ std::map<std::string,\ Function*>\ \mbox{\hyperlink{structlang_1_1_module_a6bf21bee4975901695661b110b2c8fe3}{moduleFunctions}};}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ std::map<std::string,\ Attribute*>\ \mbox{\hyperlink{structlang_1_1_module_a616b6b2ddb308e3cc3a823dd5f40b7f1}{moduleAttributes}};}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ std::map<std::string,\ Module*>\ \mbox{\hyperlink{structlang_1_1_module_a0b9909964e6721a88fcb598993974a2c}{submodules}};}
+\DoxyCodeLine{00018\ }
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_function}{Function}}*\ \mbox{\hyperlink{structlang_1_1_module_a81739e1d63ca36fb2f4aa7feb638d690}{getMethod}}(std::string\ \mbox{\hyperlink{structlang_1_1_module_a529c5921054bccce2455dabe9e3a1f74}{name}});}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ \mbox{\hyperlink{structlang_1_1_module_a0966232cb9145c98dc4d02e5e27cb824}{getType}}(\mbox{\hyperlink{structlang_1_1_token_line}{TokenLine}}\&\ from);}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_attribute}{Attribute}}*\ \mbox{\hyperlink{structlang_1_1_module_a5808a9803b1dadb455d7f913c9aa8ceb}{getAttribute}}(\mbox{\hyperlink{structlang_1_1_token_line}{TokenLine}}\&\ from);}
+\DoxyCodeLine{00022\ \ \ \ \ \};}
+\DoxyCodeLine{00023\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

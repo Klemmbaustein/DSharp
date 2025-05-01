@@ -1,0 +1,29 @@
+\doxysection{include/parser/operator.hpp File Reference}
+\hypertarget{operator_8hpp}{}\label{operator_8hpp}\index{include/parser/operator.hpp@{include/parser/operator.hpp}}
+{\ttfamily \#include $<$string$>$}\newline
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacelang}{lang}}
+\begin{DoxyCompactList}\small\item\em Language namespace. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum class \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8a}{lang\+::\+Operator}} \{ \newline
+\mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aa34ec78fcc91ffb1e54cd85e4a0924332}{lang\+::add}}
+, \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aa97f415c180230ce76bafa74bc058ef5f}{lang\+::subtract}}
+, \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aa0fbe41b549bb236aabadebd7924379fd}{lang\+::multiply}}
+, \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aa95bd4d656164278daf3f83b7099a8529}{lang\+::divide}}
+, \newline
+\mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aa5dcb4a1ea5a35da52691d50c8313c333}{lang\+::modulo}}
+, \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aaaa08769cdcb26674c6706093503ff0a3}{lang\+::member}}
+, \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8aaad921d60486366258809553a3db49a4a}{lang\+::unknown}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8a}{Operator}} \mbox{\hyperlink{namespacelang_ada3ed606250cf76abcaaf308b13defbd}{lang\+::string\+To\+Operator}} (std\+::string op\+String)
+\begin{DoxyCompactList}\small\item\em Converts a string to an operator enum value. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{namespacelang_ab890fc4dedb810c458b14a196e032720}{lang\+::operator\+Has\+Priority}} (\mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8a}{Operator}} op, \mbox{\hyperlink{namespacelang_a41b1256440d1155cad206ae76fc37f8a}{Operator}} compare\+To)
+\end{DoxyCompactItemize}

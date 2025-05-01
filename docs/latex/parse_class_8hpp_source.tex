@@ -1,0 +1,63 @@
+\doxysection{parse\+Class.\+hpp}
+\hypertarget{parse_class_8hpp_source}{}\label{parse_class_8hpp_source}\index{include/parser/parseClass.hpp@{include/parser/parseClass.hpp}}
+\mbox{\hyperlink{parse_class_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{tokens_8hpp}{tokens.hpp}}"{}}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{type_8hpp}{type.hpp}}"{}}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{attribute_8hpp}{attribute.hpp}}"{}}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{function_8hpp}{function.hpp}}"{}}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{module_8hpp}{module.hpp}}"{}}}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00009\ \{}
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}};}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parse_context}{ParseContext}};}
+\DoxyCodeLine{00012\ }
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parsed_class_member}{ParsedClassMember}}}
+\DoxyCodeLine{00014\ \ \ \ \ \{}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ \mbox{\hyperlink{structlang_1_1_parsed_class_member_a83a0ed1073004432ce9183db01205f7b}{type}};}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token}{Token}}\ \mbox{\hyperlink{structlang_1_1_parsed_class_member_ac3d36d3cd291d20163457bccd75ef5bb}{name}};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ std::vector<Token>\ \mbox{\hyperlink{structlang_1_1_parsed_class_member_ac26204cba48dd5473abc3f3c45fba46a}{value}};}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ uint32\_t\ \mbox{\hyperlink{structlang_1_1_parsed_class_member_a6ddda70c57f2ca007c2fa45ae35e8a75}{offset}}\ =\ 0;}
+\DoxyCodeLine{00019\ \ \ \ \ \};}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parsed_class}{ParsedClass}};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_constructor_function}{ConstructorFunction}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_function}{Function}}}
+\DoxyCodeLine{00024\ \ \ \ \ \{}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}\ \mbox{\hyperlink{structlang_1_1_constructor_function_a1bc64281687d8b0266fcfd5fe7e8d230}{code}};}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_parsed_class}{ParsedClass}}*\ \mbox{\hyperlink{structlang_1_1_constructor_function_a48738c399b94cbfe425ce04da213615c}{parent}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00027\ }
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \mbox{\hyperlink{structlang_1_1_expression_result}{ExpressionResult}}\ \mbox{\hyperlink{structlang_1_1_constructor_function_a1e4c52996bb26fce0ed8db73a845ea7d}{compileCall}}();}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ std::vector<FunctionArgument>\ \mbox{\hyperlink{structlang_1_1_constructor_function_a92011d82d4c463d9aedfb88819c83c7c}{getArguments}}();}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ std::string\ \mbox{\hyperlink{structlang_1_1_constructor_function_ae1237590ebe6577ddc9591732062c396}{getFullName}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structlang_1_1_constructor_function_a874d6eb5915639c11252a1839f7347c1}{discardable}}()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \ \ \};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parsed_class}{ParsedClass}}\ :\ \textcolor{keyword}{public}\ \mbox{\hyperlink{classlang_1_1_attributable}{Attributable}}}
+\DoxyCodeLine{00038\ \ \ \ \ \{}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token}{Token}}\ \mbox{\hyperlink{structlang_1_1_parsed_class_aee63f051219616e8c69d97061c8f2900}{name}};}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token_pos}{TokenPos}}\ \mbox{\hyperlink{structlang_1_1_parsed_class_aacf04df87bfb61900f197e73777ed320}{start}};}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token_pos}{TokenPos}}\ \mbox{\hyperlink{structlang_1_1_parsed_class_a691f9fdbeaced80510097e8080a3c59a}{end}};}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token_stream}{TokenStream}}\ \mbox{\hyperlink{structlang_1_1_parsed_class_a071fad17e3e8246d11ee89224f3fcba7}{classStream}};}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ std::vector<ParsedClassMember>\ \mbox{\hyperlink{structlang_1_1_parsed_class_a0971c3724a5b1ff3de0c85cc96ec7100}{members}};}
+\DoxyCodeLine{00045\ }
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_constructor_function}{ConstructorFunction}}\ \mbox{\hyperlink{structlang_1_1_parsed_class_a1625bddae4c4a24980a5029d3f4a0654}{constructor}};}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ \mbox{\hyperlink{structlang_1_1_parsed_class_a5c5bafc18a39f6722ac06795410dd28b}{thisType}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_module}{Module}}*\ \mbox{\hyperlink{structlang_1_1_parsed_class_ad6dcc5803d7f741f553adb9fdd88aa1e}{classModule}};}
+\DoxyCodeLine{00049\ }
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_class_a9d15ebf45d0d854f7effdf9f639b08d4}{registerType}}(\mbox{\hyperlink{structlang_1_1_parse_context}{ParseContext}}*\ context,\ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ file);}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_class_a629aaa75892d71fb6a0c29c40f2c616f}{compile}}(\mbox{\hyperlink{structlang_1_1_parse_context}{ParseContext}}*\ context,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors,\ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ file);}
+\DoxyCodeLine{00053\ }
+\DoxyCodeLine{00054\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_class_aba2c9110672aa7d3a4f661d54ffbd298}{scan}}(\mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors,\ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ file);}
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ \mbox{\hyperlink{structlang_1_1_parsed_class_aa90ba5642ce877972eaed6cd0c7904d5}{scanLine}}(\mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors,\ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ file);}
+\DoxyCodeLine{00056\ \ \ \ \ \};}
+\DoxyCodeLine{00057\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

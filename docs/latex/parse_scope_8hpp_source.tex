@@ -1,0 +1,47 @@
+\doxysection{parse\+Scope.\+hpp}
+\hypertarget{parse_scope_8hpp_source}{}\label{parse_scope_8hpp_source}\index{include/parser/parseScope.hpp@{include/parser/parseScope.hpp}}
+\mbox{\hyperlink{parse_scope_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{parser_8hpp}{parser.hpp}}"{}}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00005\ \{}
+\DoxyCodeLine{00006\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parsed_scope}{ParsedScope}}}
+\DoxyCodeLine{00007\ \ \ \ \ \{}
+\DoxyCodeLine{00008\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_parsed_function}{ParsedFunction}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a74b9926ecab66b88012f68e39e56cd0f}{scopeFunction}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00009\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a816d557dfbf558999e6e14ad81a23477}{scopeFile}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00010\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a01420c4fe092c56bee1b90949d885d94}{code}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00011\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_parse_context}{ParseContext}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_ab0838583df72dfea731de9ad4656f040}{context}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token_stream}{TokenStream}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_ac40b46da77a22dad832da7fc2d67fc2a}{tokenStream}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{ScopeVariable}}}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_token}{Token}}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_a6a009cb1a661fbe164fc26f7731f7b2b}{name}};}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \ \ \ \ uint32\_t\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_a4584fe408a84ee5b094ed2b8a091d522}{stackPosition}}\ =\ 0;}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_parsed_scope}{ParsedScope}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_a1ae1f0c15f551dc721538c82fda7c5b8}{ownedBy}}\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_a78f89576b5d585177b71f78dc4a56a74}{type}}\ =\ 0;}
+\DoxyCodeLine{00020\ }
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \ \ \ \ uint32\_t\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_ab622025b6f3c46f23f3e38adda0c6869}{getRelativePosition}}(\mbox{\hyperlink{structlang_1_1_parsed_scope}{ParsedScope}}*\ scope)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00022\ }
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_a384991d9fb305e10085840dc2957f16c}{readValue}}(\mbox{\hyperlink{structlang_1_1_parsed_scope}{ParsedScope}}*\ scope)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{BytecodeBuffer}}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable_ae4ff33a7666d062e9d495c06926ecf86}{writeValue}}(\mbox{\hyperlink{structlang_1_1_parsed_scope}{ParsedScope}}*\ scope)\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \};}
+\DoxyCodeLine{00026\ }
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ std::map<Token,\ ScopeVariable>\ \mbox{\hyperlink{structlang_1_1_parsed_scope_ae3d869701a724e67b181e7f20e830c3f}{variables}};}
+\DoxyCodeLine{00028\ }
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a1ed866e034b7537f3c340cd5bead0928}{pushVariableValue}}(\mbox{\hyperlink{classlang_1_1_type}{Type}}*\ type);}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{ScopeVariable}}\&\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a70923e413d51b7656263cb210c5aef94}{addVariable}}(\mbox{\hyperlink{structlang_1_1_token}{Token}}\ name,\ \mbox{\hyperlink{classlang_1_1_type}{Type}}*\ type);}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a37c5f06177f4bac3e7b1c8b84c17a45b}{compileScopeExit}}(\textcolor{keywordtype}{bool}\ full);}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ uint32\_t\ \mbox{\hyperlink{structlang_1_1_parsed_scope_aba1458b81e9e40e386e3c69d5eea596a}{variableStackPosition}}\ =\ 0;}
+\DoxyCodeLine{00035\ }
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a39632bd7566d1b57e216dce5db0027f5}{compile}}(\mbox{\hyperlink{structlang_1_1_parse_context}{ParseContext}}*\ \mbox{\hyperlink{structlang_1_1_parsed_scope_ab0838583df72dfea731de9ad4656f040}{context}},\ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ file,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors);}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_aa21de430f9c040814a9f37ecba8bcdfd}{compileLine}}(\mbox{\hyperlink{structlang_1_1_token_line}{TokenLine}}\ line,\ \mbox{\hyperlink{structlang_1_1_parsed_file}{ParsedFile}}*\ file,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors);}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_expression_result}{ExpressionResult}}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a8e325882a92ce85031262efb83cfcab7}{pushExpression}}(\mbox{\hyperlink{structlang_1_1_token_line}{TokenLine}}\&\ currentLine,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors,\ \textcolor{keywordtype}{bool}\ setExpression);}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_expression_result}{ExpressionResult}}\ \mbox{\hyperlink{structlang_1_1_parsed_scope_a56f5fdd1e1fb3e8b20270fb0732e8587}{pushValue}}(\mbox{\hyperlink{structlang_1_1_token_line}{TokenLine}}\&\ currentLine,\ \mbox{\hyperlink{structlang_1_1_error_context}{ErrorContext}}*\ errors,\ \textcolor{keywordtype}{bool}\ setExpression);}
+\DoxyCodeLine{00040\ \ \ \ \ \};}
+\DoxyCodeLine{00041\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}

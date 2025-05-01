@@ -1,0 +1,169 @@
+\doxysection{lang\+::Parsed\+File Struct Reference}
+\hypertarget{structlang_1_1_parsed_file}{}\label{structlang_1_1_parsed_file}\index{lang::ParsedFile@{lang::ParsedFile}}
+
+
+{\ttfamily \#include $<$parser.\+hpp$>$}
+
+Inheritance diagram for lang\+::Parsed\+File\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{structlang_1_1_parsed_file}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_file_adad1a362ff7b4910cad045be1020d48b}{load\+Available\+Types}} (\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*}context)
+\item 
+\mbox{\hyperlink{classlang_1_1_function}{Function}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_file_accc14018435dbeff517e9115c9282b78}{get\+Method}} (std\+::string \mbox{\hyperlink{structlang_1_1_parsed_file_afcf22199b1fbd0903380c12f3a639f63}{name}})
+\item 
+\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_file_a2933e8429926132a2d59ae5361c03cf5}{get\+Type}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&from)
+\item 
+\mbox{\hyperlink{classlang_1_1_attribute}{Attribute}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_file_af18049aef115ce2b6534cc915016d4a9}{get\+Attribute}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&from)
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_file_a91264cc46b6aac1f1bc486f67e164f03}{scan}} (\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+bool \mbox{\hyperlink{structlang_1_1_parsed_file_a736ca6157db72787c724cd21c01bf275}{scan\+Line}} (std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \&current\+Attributes, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+\mbox{\hyperlink{structlang_1_1_parsed_function}{Parsed\+Function}} \& \mbox{\hyperlink{structlang_1_1_parsed_file_a95c9d643f373b70954dd9ed23eb330d2}{scan\+Function}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} current\+Line, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+\mbox{\hyperlink{structlang_1_1_parsed_class}{Parsed\+Class}} \& \mbox{\hyperlink{structlang_1_1_parsed_file_a7bb82b79ccd325f17e7729c4af8f47d0}{scan\+Class}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} current\+Line, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_file_a7c2a952c3eda81dd7ae7a1ba3ef4d469}{compile}} (\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*}context)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classlang_1_1_attributable}{lang\+::\+Attributable}}}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classlang_1_1_attributable_a34d85a0c7991dcdbc8bb0a3a60d4b5f6}{add\+Attributes}} (const std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \&new\+Attributes)
+\item 
+{\footnotesize template$<$typename T$>$ }\\\mbox{\hyperlink{classlang_1_1_attribute}{Attribute}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{classlang_1_1_attributable_ab66a8f06bdc7811d4e38c9f130cc0d5d}{get\+Attribute}} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structlang_1_1_token_stream}{Token\+Stream}} \mbox{\hyperlink{structlang_1_1_parsed_file_ac3ff2b160ca34755e065e2f966f7efcf}{stream}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_parsed_function}{Parsed\+Function}} $>$ \mbox{\hyperlink{structlang_1_1_parsed_file_a8961b2c7c5f686c1d1efacc9d404cba8}{functions}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_parsed_class}{Parsed\+Class}} $>$ \mbox{\hyperlink{structlang_1_1_parsed_file_a7cbdff47c40a9494eba1eba6df8ae404}{classes}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}}, \mbox{\hyperlink{structlang_1_1_module}{Module}} \texorpdfstring{$\ast$}{*} $>$ \mbox{\hyperlink{structlang_1_1_parsed_file_ae3a263b40816b7374624e1af103e71b7}{usings}}
+\item 
+\mbox{\hyperlink{structlang_1_1_module}{Module}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_file_a04998ca9e9c2c453e43e208c528d967c}{file\+Module}} = nullptr
+\item 
+std\+::string \mbox{\hyperlink{structlang_1_1_parsed_file_afcf22199b1fbd0903380c12f3a639f63}{name}}
+\item 
+std\+::string \mbox{\hyperlink{structlang_1_1_parsed_file_a858d618eb35c3709e59898227aa8e4dd}{scope\+Name}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classlang_1_1_attributable}{lang\+::\+Attributable}}}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \mbox{\hyperlink{classlang_1_1_attributable_a08c3b0859770e4aa46e051cbba770377}{attributes}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_parsed_file_a7c2a952c3eda81dd7ae7a1ba3ef4d469}\index{lang::ParsedFile@{lang::ParsedFile}!compile@{compile}}
+\index{compile@{compile}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{compile()}{compile()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a7c2a952c3eda81dd7ae7a1ba3ef4d469} 
+void lang\+::\+Parsed\+File\+::compile (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*}}]{context}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_af18049aef115ce2b6534cc915016d4a9}\index{lang::ParsedFile@{lang::ParsedFile}!getAttribute@{getAttribute}}
+\index{getAttribute@{getAttribute}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{getAttribute()}{getAttribute()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_af18049aef115ce2b6534cc915016d4a9} 
+\mbox{\hyperlink{classlang_1_1_attribute}{Attribute}} \texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+File\+::get\+Attribute (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&}]{from}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_accc14018435dbeff517e9115c9282b78}\index{lang::ParsedFile@{lang::ParsedFile}!getMethod@{getMethod}}
+\index{getMethod@{getMethod}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{getMethod()}{getMethod()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_accc14018435dbeff517e9115c9282b78} 
+\mbox{\hyperlink{classlang_1_1_function}{Function}} \texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+File\+::get\+Method (\begin{DoxyParamCaption}\item[{std\+::string}]{name}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_a2933e8429926132a2d59ae5361c03cf5}\index{lang::ParsedFile@{lang::ParsedFile}!getType@{getType}}
+\index{getType@{getType}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{getType()}{getType()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a2933e8429926132a2d59ae5361c03cf5} 
+\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+File\+::get\+Type (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&}]{from}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_adad1a362ff7b4910cad045be1020d48b}\index{lang::ParsedFile@{lang::ParsedFile}!loadAvailableTypes@{loadAvailableTypes}}
+\index{loadAvailableTypes@{loadAvailableTypes}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{loadAvailableTypes()}{loadAvailableTypes()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_adad1a362ff7b4910cad045be1020d48b} 
+void lang\+::\+Parsed\+File\+::load\+Available\+Types (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*}}]{context}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_a91264cc46b6aac1f1bc486f67e164f03}\index{lang::ParsedFile@{lang::ParsedFile}!scan@{scan}}
+\index{scan@{scan}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{scan()}{scan()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a91264cc46b6aac1f1bc486f67e164f03} 
+void lang\+::\+Parsed\+File\+::scan (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_a7bb82b79ccd325f17e7729c4af8f47d0}\index{lang::ParsedFile@{lang::ParsedFile}!scanClass@{scanClass}}
+\index{scanClass@{scanClass}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{scanClass()}{scanClass()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a7bb82b79ccd325f17e7729c4af8f47d0} 
+\mbox{\hyperlink{structlang_1_1_parsed_class}{Parsed\+Class}} \& lang\+::\+Parsed\+File\+::scan\+Class (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}}}]{current\+Line}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_a95c9d643f373b70954dd9ed23eb330d2}\index{lang::ParsedFile@{lang::ParsedFile}!scanFunction@{scanFunction}}
+\index{scanFunction@{scanFunction}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{scanFunction()}{scanFunction()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a95c9d643f373b70954dd9ed23eb330d2} 
+\mbox{\hyperlink{structlang_1_1_parsed_function}{Parsed\+Function}} \& lang\+::\+Parsed\+File\+::scan\+Function (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}}}]{current\+Line}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_file_a736ca6157db72787c724cd21c01bf275}\index{lang::ParsedFile@{lang::ParsedFile}!scanLine@{scanLine}}
+\index{scanLine@{scanLine}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{scanLine()}{scanLine()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a736ca6157db72787c724cd21c01bf275} 
+bool lang\+::\+Parsed\+File\+::scan\+Line (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structlang_1_1_attributable_1_1_attrib_info}{Attrib\+Info}} $>$ \&}]{current\+Attributes}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_parsed_file_a7cbdff47c40a9494eba1eba6df8ae404}\index{lang::ParsedFile@{lang::ParsedFile}!classes@{classes}}
+\index{classes@{classes}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{classes}{classes}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a7cbdff47c40a9494eba1eba6df8ae404} 
+std\+::vector$<$\mbox{\hyperlink{structlang_1_1_parsed_class}{Parsed\+Class}}$>$ lang\+::\+Parsed\+File\+::classes}
+
+\Hypertarget{structlang_1_1_parsed_file_a04998ca9e9c2c453e43e208c528d967c}\index{lang::ParsedFile@{lang::ParsedFile}!fileModule@{fileModule}}
+\index{fileModule@{fileModule}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{fileModule}{fileModule}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a04998ca9e9c2c453e43e208c528d967c} 
+\mbox{\hyperlink{structlang_1_1_module}{Module}}\texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+File\+::file\+Module = nullptr}
+
+\Hypertarget{structlang_1_1_parsed_file_a8961b2c7c5f686c1d1efacc9d404cba8}\index{lang::ParsedFile@{lang::ParsedFile}!functions@{functions}}
+\index{functions@{functions}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{functions}{functions}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a8961b2c7c5f686c1d1efacc9d404cba8} 
+std\+::vector$<$\mbox{\hyperlink{structlang_1_1_parsed_function}{Parsed\+Function}}$>$ lang\+::\+Parsed\+File\+::functions}
+
+\Hypertarget{structlang_1_1_parsed_file_afcf22199b1fbd0903380c12f3a639f63}\index{lang::ParsedFile@{lang::ParsedFile}!name@{name}}
+\index{name@{name}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{name}{name}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_afcf22199b1fbd0903380c12f3a639f63} 
+std\+::string lang\+::\+Parsed\+File\+::name}
+
+\Hypertarget{structlang_1_1_parsed_file_a858d618eb35c3709e59898227aa8e4dd}\index{lang::ParsedFile@{lang::ParsedFile}!scopeName@{scopeName}}
+\index{scopeName@{scopeName}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{scopeName}{scopeName}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_a858d618eb35c3709e59898227aa8e4dd} 
+std\+::string lang\+::\+Parsed\+File\+::scope\+Name}
+
+\Hypertarget{structlang_1_1_parsed_file_ac3ff2b160ca34755e065e2f966f7efcf}\index{lang::ParsedFile@{lang::ParsedFile}!stream@{stream}}
+\index{stream@{stream}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{stream}{stream}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_ac3ff2b160ca34755e065e2f966f7efcf} 
+\mbox{\hyperlink{structlang_1_1_token_stream}{Token\+Stream}} lang\+::\+Parsed\+File\+::stream}
+
+\Hypertarget{structlang_1_1_parsed_file_ae3a263b40816b7374624e1af103e71b7}\index{lang::ParsedFile@{lang::ParsedFile}!usings@{usings}}
+\index{usings@{usings}!lang::ParsedFile@{lang::ParsedFile}}
+\doxysubsubsection{\texorpdfstring{usings}{usings}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_file_ae3a263b40816b7374624e1af103e71b7} 
+std\+::map$<$\mbox{\hyperlink{structlang_1_1_token}{Token}}, \mbox{\hyperlink{structlang_1_1_module}{Module}}\texorpdfstring{$\ast$}{*}$>$ lang\+::\+Parsed\+File\+::usings}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{parser_8hpp}{parser.\+hpp}}\end{DoxyCompactItemize}

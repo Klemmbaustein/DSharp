@@ -1,0 +1,69 @@
+\doxysection{lang\+::Bytecode\+Buffer Struct Reference}
+\hypertarget{structlang_1_1_bytecode_buffer}{}\label{structlang_1_1_bytecode_buffer}\index{lang::BytecodeBuffer@{lang::BytecodeBuffer}}
+
+
+{\ttfamily \#include $<$compile\+Bytecode.\+hpp$>$}
+
+Inheritance diagram for lang\+::Bytecode\+Buffer\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{structlang_1_1_bytecode_buffer}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{structlang_1_1_bytecode_buffer_ad8051fe96d6557af190624afc98df7ad}{add}} (\mbox{\hyperlink{classlang_1_1_bytecode_instruction}{Bytecode\+Instruction}} \texorpdfstring{$\ast$}{*}instruction)
+\item 
+void \mbox{\hyperlink{structlang_1_1_bytecode_buffer_a8b0e7210ec761a53d40a86b71cb50d78}{add\+Operation}} (\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}} operation, const \mbox{\hyperlink{structlang_1_1_binary_buffer}{Binary\+Buffer}} \&arguments)
+\item 
+void \mbox{\hyperlink{structlang_1_1_bytecode_buffer_a2ee9609578b7d6475432107060e32e67}{add\+Operation}} (\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}} operation)
+\item 
+void \mbox{\hyperlink{structlang_1_1_bytecode_buffer_aee0ddb9a4f1970d73bb310f8136e547f}{add\+Buffer}} (const \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}} \&other)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classlang_1_1_bytecode_instruction}{Bytecode\+Instruction}} \texorpdfstring{$\ast$}{*} $>$ \mbox{\hyperlink{structlang_1_1_bytecode_buffer_a8c81cb80ce0e5ee26866d66e4e123058}{instructions}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_bytecode_buffer_ad8051fe96d6557af190624afc98df7ad}\index{lang::BytecodeBuffer@{lang::BytecodeBuffer}!add@{add}}
+\index{add@{add}!lang::BytecodeBuffer@{lang::BytecodeBuffer}}
+\doxysubsubsection{\texorpdfstring{add()}{add()}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_buffer_ad8051fe96d6557af190624afc98df7ad} 
+void lang\+::\+Bytecode\+Buffer\+::add (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classlang_1_1_bytecode_instruction}{Bytecode\+Instruction}} \texorpdfstring{$\ast$}{*}}]{instruction}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_bytecode_buffer_aee0ddb9a4f1970d73bb310f8136e547f}\index{lang::BytecodeBuffer@{lang::BytecodeBuffer}!addBuffer@{addBuffer}}
+\index{addBuffer@{addBuffer}!lang::BytecodeBuffer@{lang::BytecodeBuffer}}
+\doxysubsubsection{\texorpdfstring{addBuffer()}{addBuffer()}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_buffer_aee0ddb9a4f1970d73bb310f8136e547f} 
+void lang\+::\+Bytecode\+Buffer\+::add\+Buffer (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}} \&}]{other}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_bytecode_buffer_a2ee9609578b7d6475432107060e32e67}\index{lang::BytecodeBuffer@{lang::BytecodeBuffer}!addOperation@{addOperation}}
+\index{addOperation@{addOperation}!lang::BytecodeBuffer@{lang::BytecodeBuffer}}
+\doxysubsubsection{\texorpdfstring{addOperation()}{addOperation()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_buffer_a2ee9609578b7d6475432107060e32e67} 
+void lang\+::\+Bytecode\+Buffer\+::add\+Operation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}}}]{operation}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_bytecode_buffer_a8b0e7210ec761a53d40a86b71cb50d78}\index{lang::BytecodeBuffer@{lang::BytecodeBuffer}!addOperation@{addOperation}}
+\index{addOperation@{addOperation}!lang::BytecodeBuffer@{lang::BytecodeBuffer}}
+\doxysubsubsection{\texorpdfstring{addOperation()}{addOperation()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_buffer_a8b0e7210ec761a53d40a86b71cb50d78} 
+void lang\+::\+Bytecode\+Buffer\+::add\+Operation (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacelang_a91fefe73bcebd68994e821c855cbb6c4}{Bytecode\+Op}}}]{operation}{, }\item[{const \mbox{\hyperlink{structlang_1_1_binary_buffer}{Binary\+Buffer}} \&}]{arguments}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_bytecode_buffer_a8c81cb80ce0e5ee26866d66e4e123058}\index{lang::BytecodeBuffer@{lang::BytecodeBuffer}!instructions@{instructions}}
+\index{instructions@{instructions}!lang::BytecodeBuffer@{lang::BytecodeBuffer}}
+\doxysubsubsection{\texorpdfstring{instructions}{instructions}}
+{\footnotesize\ttfamily \label{structlang_1_1_bytecode_buffer_a8c81cb80ce0e5ee26866d66e4e123058} 
+std\+::vector$<$\mbox{\hyperlink{classlang_1_1_bytecode_instruction}{Bytecode\+Instruction}}\texorpdfstring{$\ast$}{*}$>$ lang\+::\+Bytecode\+Buffer\+::instructions}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{compile_bytecode_8hpp}{compile\+Bytecode.\+hpp}}\end{DoxyCompactItemize}

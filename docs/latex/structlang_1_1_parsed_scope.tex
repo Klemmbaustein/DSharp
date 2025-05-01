@@ -1,0 +1,140 @@
+\doxysection{lang\+::Parsed\+Scope Struct Reference}
+\hypertarget{structlang_1_1_parsed_scope}{}\label{structlang_1_1_parsed_scope}\index{lang::ParsedScope@{lang::ParsedScope}}
+
+
+{\ttfamily \#include $<$parse\+Scope.\+hpp$>$}
+
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{Scope\+Variable}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_scope_a1ed866e034b7537f3c340cd5bead0928}{push\+Variable\+Value}} (\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}type)
+\item 
+\mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{Scope\+Variable}} \& \mbox{\hyperlink{structlang_1_1_parsed_scope_a70923e413d51b7656263cb210c5aef94}{add\+Variable}} (\mbox{\hyperlink{structlang_1_1_token}{Token}} name, \mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}type)
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_scope_a37c5f06177f4bac3e7b1c8b84c17a45b}{compile\+Scope\+Exit}} (bool full)
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_scope_a39632bd7566d1b57e216dce5db0027f5}{compile}} (\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*}\mbox{\hyperlink{structlang_1_1_parsed_scope_ab0838583df72dfea731de9ad4656f040}{context}}, \mbox{\hyperlink{structlang_1_1_parsed_file}{Parsed\+File}} \texorpdfstring{$\ast$}{*}file, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+void \mbox{\hyperlink{structlang_1_1_parsed_scope_aa21de430f9c040814a9f37ecba8bcdfd}{compile\+Line}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} line, \mbox{\hyperlink{structlang_1_1_parsed_file}{Parsed\+File}} \texorpdfstring{$\ast$}{*}file, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors)
+\item 
+\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{structlang_1_1_parsed_scope_a8e325882a92ce85031262efb83cfcab7}{push\+Expression}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&current\+Line, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors, bool set\+Expression)
+\item 
+\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} \mbox{\hyperlink{structlang_1_1_parsed_scope_a56f5fdd1e1fb3e8b20270fb0732e8587}{push\+Value}} (\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&current\+Line, \mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}errors, bool set\+Expression)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structlang_1_1_parsed_function}{Parsed\+Function}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_scope_a74b9926ecab66b88012f68e39e56cd0f}{scope\+Function}} = nullptr
+\item 
+\mbox{\hyperlink{structlang_1_1_parsed_file}{Parsed\+File}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_scope_a816d557dfbf558999e6e14ad81a23477}{scope\+File}} = nullptr
+\item 
+\mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_scope_a01420c4fe092c56bee1b90949d885d94}{code}} = nullptr
+\item 
+\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_scope_ab0838583df72dfea731de9ad4656f040}{context}} = nullptr
+\item 
+\mbox{\hyperlink{structlang_1_1_token_stream}{Token\+Stream}} \texorpdfstring{$\ast$}{*} \mbox{\hyperlink{structlang_1_1_parsed_scope_ac40b46da77a22dad832da7fc2d67fc2a}{token\+Stream}} = nullptr
+\item 
+std\+::map$<$ \mbox{\hyperlink{structlang_1_1_token}{Token}}, \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{Scope\+Variable}} $>$ \mbox{\hyperlink{structlang_1_1_parsed_scope_ae3d869701a724e67b181e7f20e830c3f}{variables}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{structlang_1_1_parsed_scope_aba1458b81e9e40e386e3c69d5eea596a}{variable\+Stack\+Position}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structlang_1_1_parsed_scope_a70923e413d51b7656263cb210c5aef94}\index{lang::ParsedScope@{lang::ParsedScope}!addVariable@{addVariable}}
+\index{addVariable@{addVariable}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{addVariable()}{addVariable()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a70923e413d51b7656263cb210c5aef94} 
+\mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{Scope\+Variable}} \& lang\+::\+Parsed\+Scope\+::add\+Variable (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token}{Token}}}]{name}{, }\item[{\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}}]{type}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_scope_a39632bd7566d1b57e216dce5db0027f5}\index{lang::ParsedScope@{lang::ParsedScope}!compile@{compile}}
+\index{compile@{compile}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{compile()}{compile()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a39632bd7566d1b57e216dce5db0027f5} 
+void lang\+::\+Parsed\+Scope\+::compile (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}} \texorpdfstring{$\ast$}{*}}]{context}{, }\item[{\mbox{\hyperlink{structlang_1_1_parsed_file}{Parsed\+File}} \texorpdfstring{$\ast$}{*}}]{file}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_scope_aa21de430f9c040814a9f37ecba8bcdfd}\index{lang::ParsedScope@{lang::ParsedScope}!compileLine@{compileLine}}
+\index{compileLine@{compileLine}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{compileLine()}{compileLine()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_aa21de430f9c040814a9f37ecba8bcdfd} 
+void lang\+::\+Parsed\+Scope\+::compile\+Line (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}}}]{line}{, }\item[{\mbox{\hyperlink{structlang_1_1_parsed_file}{Parsed\+File}} \texorpdfstring{$\ast$}{*}}]{file}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_scope_a37c5f06177f4bac3e7b1c8b84c17a45b}\index{lang::ParsedScope@{lang::ParsedScope}!compileScopeExit@{compileScopeExit}}
+\index{compileScopeExit@{compileScopeExit}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{compileScopeExit()}{compileScopeExit()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a37c5f06177f4bac3e7b1c8b84c17a45b} 
+void lang\+::\+Parsed\+Scope\+::compile\+Scope\+Exit (\begin{DoxyParamCaption}\item[{bool}]{full}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_scope_a8e325882a92ce85031262efb83cfcab7}\index{lang::ParsedScope@{lang::ParsedScope}!pushExpression@{pushExpression}}
+\index{pushExpression@{pushExpression}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{pushExpression()}{pushExpression()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a8e325882a92ce85031262efb83cfcab7} 
+\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Parsed\+Scope\+::push\+Expression (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&}]{current\+Line}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{, }\item[{bool}]{set\+Expression}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_scope_a56f5fdd1e1fb3e8b20270fb0732e8587}\index{lang::ParsedScope@{lang::ParsedScope}!pushValue@{pushValue}}
+\index{pushValue@{pushValue}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{pushValue()}{pushValue()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a56f5fdd1e1fb3e8b20270fb0732e8587} 
+\mbox{\hyperlink{structlang_1_1_expression_result}{Expression\+Result}} lang\+::\+Parsed\+Scope\+::push\+Value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlang_1_1_token_line}{Token\+Line}} \&}]{current\+Line}{, }\item[{\mbox{\hyperlink{structlang_1_1_error_context}{Error\+Context}} \texorpdfstring{$\ast$}{*}}]{errors}{, }\item[{bool}]{set\+Expression}{}\end{DoxyParamCaption})}
+
+\Hypertarget{structlang_1_1_parsed_scope_a1ed866e034b7537f3c340cd5bead0928}\index{lang::ParsedScope@{lang::ParsedScope}!pushVariableValue@{pushVariableValue}}
+\index{pushVariableValue@{pushVariableValue}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{pushVariableValue()}{pushVariableValue()}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a1ed866e034b7537f3c340cd5bead0928} 
+void lang\+::\+Parsed\+Scope\+::push\+Variable\+Value (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classlang_1_1_type}{Type}} \texorpdfstring{$\ast$}{*}}]{type}{}\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{structlang_1_1_parsed_scope_a01420c4fe092c56bee1b90949d885d94}\index{lang::ParsedScope@{lang::ParsedScope}!code@{code}}
+\index{code@{code}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{code}{code}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a01420c4fe092c56bee1b90949d885d94} 
+\mbox{\hyperlink{structlang_1_1_bytecode_buffer}{Bytecode\+Buffer}}\texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+Scope\+::code = nullptr}
+
+\Hypertarget{structlang_1_1_parsed_scope_ab0838583df72dfea731de9ad4656f040}\index{lang::ParsedScope@{lang::ParsedScope}!context@{context}}
+\index{context@{context}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{context}{context}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_ab0838583df72dfea731de9ad4656f040} 
+\mbox{\hyperlink{structlang_1_1_parse_context}{Parse\+Context}}\texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+Scope\+::context = nullptr}
+
+\Hypertarget{structlang_1_1_parsed_scope_a816d557dfbf558999e6e14ad81a23477}\index{lang::ParsedScope@{lang::ParsedScope}!scopeFile@{scopeFile}}
+\index{scopeFile@{scopeFile}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{scopeFile}{scopeFile}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a816d557dfbf558999e6e14ad81a23477} 
+\mbox{\hyperlink{structlang_1_1_parsed_file}{Parsed\+File}}\texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+Scope\+::scope\+File = nullptr}
+
+\Hypertarget{structlang_1_1_parsed_scope_a74b9926ecab66b88012f68e39e56cd0f}\index{lang::ParsedScope@{lang::ParsedScope}!scopeFunction@{scopeFunction}}
+\index{scopeFunction@{scopeFunction}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{scopeFunction}{scopeFunction}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_a74b9926ecab66b88012f68e39e56cd0f} 
+\mbox{\hyperlink{structlang_1_1_parsed_function}{Parsed\+Function}}\texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+Scope\+::scope\+Function = nullptr}
+
+\Hypertarget{structlang_1_1_parsed_scope_ac40b46da77a22dad832da7fc2d67fc2a}\index{lang::ParsedScope@{lang::ParsedScope}!tokenStream@{tokenStream}}
+\index{tokenStream@{tokenStream}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{tokenStream}{tokenStream}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_ac40b46da77a22dad832da7fc2d67fc2a} 
+\mbox{\hyperlink{structlang_1_1_token_stream}{Token\+Stream}}\texorpdfstring{$\ast$}{*} lang\+::\+Parsed\+Scope\+::token\+Stream = nullptr}
+
+\Hypertarget{structlang_1_1_parsed_scope_ae3d869701a724e67b181e7f20e830c3f}\index{lang::ParsedScope@{lang::ParsedScope}!variables@{variables}}
+\index{variables@{variables}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{variables}{variables}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_ae3d869701a724e67b181e7f20e830c3f} 
+std\+::map$<$\mbox{\hyperlink{structlang_1_1_token}{Token}}, \mbox{\hyperlink{structlang_1_1_parsed_scope_1_1_scope_variable}{Scope\+Variable}}$>$ lang\+::\+Parsed\+Scope\+::variables}
+
+\Hypertarget{structlang_1_1_parsed_scope_aba1458b81e9e40e386e3c69d5eea596a}\index{lang::ParsedScope@{lang::ParsedScope}!variableStackPosition@{variableStackPosition}}
+\index{variableStackPosition@{variableStackPosition}!lang::ParsedScope@{lang::ParsedScope}}
+\doxysubsubsection{\texorpdfstring{variableStackPosition}{variableStackPosition}}
+{\footnotesize\ttfamily \label{structlang_1_1_parsed_scope_aba1458b81e9e40e386e3c69d5eea596a} 
+uint32\+\_\+t lang\+::\+Parsed\+Scope\+::variable\+Stack\+Position = 0}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+include/parser/\mbox{\hyperlink{parse_scope_8hpp}{parse\+Scope.\+hpp}}\end{DoxyCompactItemize}

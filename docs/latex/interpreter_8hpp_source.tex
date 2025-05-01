@@ -1,0 +1,71 @@
+\doxysection{interpreter.\+hpp}
+\hypertarget{interpreter_8hpp_source}{}\label{interpreter_8hpp_source}\index{include/interpreter.hpp@{include/interpreter.hpp}}
+\mbox{\hyperlink{interpreter_8hpp}{Go to the documentation of this file.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#include\ "{}\mbox{\hyperlink{bytecode_8hpp}{bytecode.hpp}}"{}}}
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <array>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <\mbox{\hyperlink{external_function_8hpp}{native/externalFunction.hpp}}>}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{namespace\ }\mbox{\hyperlink{namespacelang}{lang}}}
+\DoxyCodeLine{00007\ \{}
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_language_context}{LanguageContext}};}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \ \ \ \ \textcolor{keyword}{struct\ }\mbox{\hyperlink{structlang_1_1_interpret_context_a75f27ed5514e55ace84b55404b4f0d86}{InterpretContext}}}
+\DoxyCodeLine{00011\ \ \ \ \ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_interpret_context_a75f27ed5514e55ace84b55404b4f0d86}{InterpretContext}}(\mbox{\hyperlink{structlang_1_1_language_context}{LanguageContext}}*\ from);}
+\DoxyCodeLine{00013\ }
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_interpret_context_a13d18a7e82c4a06c2fb8db19f8116465}{loadBytecode}}(\mbox{\hyperlink{structlang_1_1_bytecode_stream}{BytecodeStream}}*\ code);}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_interpret_context_aa4d78366ed858ba69fa6a47c666049b2}{run}}();}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ T\ \mbox{\hyperlink{structlang_1_1_interpret_context_a1781fd61b440b721efe79125c4546081}{popValue}}()}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \ \ \ \ stackPos\ -\/=\ \textcolor{keyword}{sizeof}(T);}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ *(T*)\&this-\/>stack[stackPos];}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{keyword}{template}\ <\textcolor{keyword}{typename}\ T>}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_interpret_context_a94da2a658883bb6d2af179a80028ba03}{pushValue}}(\textcolor{keyword}{const}\ T\&\ value)}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \ \ \ \ *((T*)\&this-\/>stack[stackPos])\ =\ value;}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \ \ \ \ stackPos\ +=\ \textcolor{keyword}{sizeof}(value);}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_interpret_context_a77deb4413a1872540ff1f4372125e0a6}{pushBytes}}(\textcolor{keyword}{const}\ uint8\_t*\ data,\ \textcolor{keywordtype}{size\_t}\ size)}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (size\ ==\ 0)}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00036\ }
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \ \ \ \ memcpy(\&this-\/>stack[stackPos],\ data,\ size);}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \ \ \ \ stackPos\ +=\ size;}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ \mbox{\hyperlink{structlang_1_1_interpret_context_abbf8b797857078747c83cafd3169d88f}{popBytes}}(uint8\_t*\ to,\ \textcolor{keywordtype}{size\_t}\ size)}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \{}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (size\ ==\ 0)}
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return};}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \ \ \ \ stackPos\ -\/=\ size;}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \ \ \ \ memcpy(to,\ \&this-\/>stack[stackPos],\ size);}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00048\ }
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{size\_t}\ STACK\_SIZE\ =\ 8000;}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \textcolor{keyword}{constexpr}\ \textcolor{keyword}{static}\ \textcolor{keywordtype}{size\_t}\ FUNCTION\_STACK\_SIZE\ =\ 512;}
+\DoxyCodeLine{00052\ }
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structlang_1_1_language_context}{LanguageContext}}*\ language\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ std::vector<ExternalFunctionPointer>\ externals;}
+\DoxyCodeLine{00056\ }
+\DoxyCodeLine{00057\ \ \ \ \ \ \ \ \ std::array<uint8\_t,\ STACK\_SIZE>\ stack\ =\ \{\};}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ std::array<uint8\_t,\ STACK\_SIZE>\ variableStack\ =\ \{\};}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ std::array<bytecodeOffset,\ FUNCTION\_STACK\_SIZE>\ functionStack\ =\ \{\};}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ stackPos\ =\ 0;}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ variableStackPos\ =\ 0;}
+\DoxyCodeLine{00062\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ functionStackPos\ =\ 0;}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ BinaryBuffer*\ bytecodeBuffer\ =\ \textcolor{keyword}{nullptr};}
+\DoxyCodeLine{00064\ \ \ \ \ \};}
+\DoxyCodeLine{00065\ \}\ \textcolor{comment}{//\ namespace\ lang}}
+
+\end{DoxyCode}
