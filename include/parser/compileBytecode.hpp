@@ -8,6 +8,7 @@ namespace lang
 {
 	struct BytecodeCompiler;
 	struct NativeFunction;
+	class ClassType;
 
 	class BytecodeInstruction
 	{
@@ -55,6 +56,17 @@ namespace lang
 
 		NativeFunction* function = nullptr;
 	};
+	class BytecodeAllocClass : public BytecodeInstruction
+	{
+	public:
+		BytecodeAllocClass(ClassType* languageClass);
+
+		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
+		bytecodeOffset getArgsSize() override;
+		std::string toString() override;
+
+		ClassType* languageClass = nullptr;
+	};
 
 	class BytecodeJumpLabel : public BytecodeInstruction
 	{
@@ -85,9 +97,11 @@ namespace lang
 		std::vector<BytecodeInstruction*> instructions;
 
 		void add(BytecodeInstruction* instruction);
+		void pushInt(uint32_t data);
 		void addOperation(BytecodeOp operation, const BinaryBuffer& arguments);
 		void addOperation(BytecodeOp operation);
 
+		void prependBuffer(const BytecodeBuffer& other);
 		void addBuffer(const BytecodeBuffer& other);
 	};
 

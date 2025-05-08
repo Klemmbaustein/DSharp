@@ -100,6 +100,19 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 			continue;
 		}
 
+		if (newChar == '"')
+		{
+			currentWord.addChar(newChar);
+			do
+			{
+				newChar = getNextChar(stream);
+				currentWord.addChar(newChar);
+			} while (newChar != '"');
+			addToken(currentWord);
+			currentWord = newToken();
+			continue;
+		}
+
 		bool foundSpecial = false;
 		for (auto& i : specialWords)
 		{
@@ -278,7 +291,7 @@ bool lang::TokenLine::empty() const
 	return !this->lineTokens || this->lineTokens->empty() || this->position >= this->lineTokens->size();
 }
 
-std::vector<Token> lang::TokenLine::getInBraces()
+std::vector<Token> lang::TokenLine::getInBraces(ErrorContext* errors)
 {
 	std::vector<Token> result;
 
@@ -287,6 +300,12 @@ std::vector<Token> lang::TokenLine::getInBraces()
 	do
 	{
 		auto next = get();
+
+		if (next.empty())
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, previous(), "Expected a ')'");
+			break;
+		}
 
 		if (next.string == "(")
 		{
@@ -302,7 +321,8 @@ std::vector<Token> lang::TokenLine::getInBraces()
 		{
 			if (depth == 0)
 			{
-				abort();
+				errors->error(ErrorCode::parseUnexpectedToken, previous(), "Unexpected ')'");
+				break;
 			}
 			depth--;
 			// Skip last )

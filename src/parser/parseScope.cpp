@@ -24,7 +24,7 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, Error
 
 		if (exprOperator == Operator::member)
 		{
-			result = result.type->compileMember(result, currentLine, errors, setExpression);
+			result = result.type->compileMember(result, currentLine, errors, setExpression, this);
 			continue;
 		}
 
@@ -56,12 +56,11 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, Error
 ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression)
 {
 	Token value = currentLine.peek();
-	ExpressionResult result;
 
 	// If the value is a bracket it means it's another expression.
 	if (value == "(")
 	{
-		auto inBraces = currentLine.getInBraces();
+		auto inBraces = currentLine.getInBraces(errors);
 		TokenLine line;
 		line.lineTokens = &inBraces;
 		return pushExpression(line, errors, setExpression);
@@ -82,7 +81,15 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 			return ExpressionResult();
 		}
 
-		return foundType->compileValue(className, currentLine);
+		auto compiled = foundType->compileValue(className, currentLine, errors, this);
+
+		if (compiled.type == nullptr)
+		{
+			return ExpressionResult();
+		}
+
+		compiled.code.addBuffer(compiled.type->compileEndMove(this));
+		return compiled;
 	}
 
 	// if it's a variable, it's a variable (shocking)
@@ -106,48 +113,111 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 	{
 		Function* function = this->scopeFile->getMethod(value.string);
 
-		if (!function)
+		if (!function && !this->inClass)
 		{
 			errors->error(ErrorCode::parseUnknownSymbol, value, "Unknown function: '" + value.string + "'");
 			return ExpressionResult();
 		}
-
-		auto args = currentLine.getInBraces();
-
-		if (!args.empty())
+		else if (function)
 		{
-			TokenLine arguments;
-			arguments.lineTokens = &args;
-			auto expr = this->pushExpression(arguments, errors, false);
+			auto args = currentLine.getInBraces(errors);
 
-			this->code->addBuffer(expr.code);
+			TokenLine argsLine;
+			argsLine.lineTokens = &args;
+
+			while (!argsLine.empty())
+			{
+				auto expr = this->pushExpression(argsLine, errors, false);
+
+				this->code->addBuffer(expr.code);
+
+				if (argsLine.empty())
+					break;
+				else if (argsLine.get() != ",")
+					errors->error(ErrorCode::parseUnexpectedToken, argsLine.previous(), "Expected a ',', got '" + argsLine.previous().string + "'");
+			}
+
+			auto fn = function->compileCall();
+
+			if (fn.type)
+			{
+				fn.code.addBuffer(fn.type->compileEndMove(this));
+			}
+			return fn;
 		}
-
-		return function->compileCall();
 	}
 
 	// Try to convert it into each default type.
 	for (auto& i : this->context->defaultTypes)
 	{
 		size_t pos = currentLine.savePosition();
-		auto compiled = i->compileValue(value, currentLine);
+		auto compiled = i->compileValue(value, currentLine, errors, this);
 		if (compiled.valid)
 		{
 			return compiled;
 		}
 		currentLine.loadPosition(pos);
 	}
+
+	if (this->inClass)
+	{
+		currentLine.position = 0;
+		auto result = pushClassValue(currentLine, errors, setExpression);
+
+		if (result.valid)
+			return result;
+	}
+
 	errors->error(ErrorCode::parseUnknownExpressionType, value, "Unknown symbol: " + value.string);
 	return ExpressionResult();
 }
 
-void lang::ParsedScope::pushVariableValue(Type* type)
+ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression)
+{
+	ExpressionResult result;
+	result.valid = true;
+	result.type = this->inClass->thisType;
+	result.code = thisVariable->readValue(this);
+
+	result = this->inClass->thisType->compileMember(result, currentLine, errors, setExpression, this);
+	return result;
+}
+
+BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
+{
+	BytecodeBuffer buffer;
+	BinaryBuffer args;
+	args.addValue<uint32_t>(type->size);
+	args.addValue<uint32_t>(0);
+	buffer.addOperation(BytecodeOp::storeVariable, args);
+
+	args.clear();
+	args.addValue<uint32_t>(type->size);
+	buffer.addOperation(BytecodeOp::pushVariable, args);
+
+	auto& result = this->variables.insert({ Token("_temp_" + std::to_string(tempCounter++)), ScopeVariable{
+		.name = "_temp_",
+		.stackPosition = this->variableStackPosition,
+		.ownedBy = nullptr,
+		.type = type,
+	} }).first->second;
+
+	this->variableStackPosition += type->size;
+
+	return buffer;
+}
+
+void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 {
 	BinaryBuffer args;
 	// size
 	args.addValue<uint32_t>(type->size);
 	// stack position (on top so 0)
 	args.addValue<uint32_t>(0);
+	if (copy)
+	{
+		code->addBuffer(type->compileMove(this));
+	}
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
 
@@ -172,17 +242,48 @@ ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* typ
 
 void lang::ParsedScope::compileScopeExit(bool full)
 {
+	uint32_t size = 0;
 	for (auto& i : variables)
 	{
-		if (i.second.ownedBy == this || full)
+		if ((i.second.ownedBy && i.second.ownedBy != this) && !full)
 		{
-			BinaryBuffer args;
-			args.addValue<uint32_t>(i.second.type->size);
-			code->addOperation(BytecodeOp::popVariable, args);
-
-			this->variableStackPosition -= i.second.type->size;
+			continue;
 		}
+		if (&i.second != thisVariable || !scopeFunction || scopeFunction->name != "delete")
+		{
+			auto unrefCode = i.second.type->compileUnref();
+			if (unrefCode.instructions.size())
+			{
+				code->addBuffer(i.second.readValue(this));
+				code->addBuffer(unrefCode);
+			}
+		}
+
+		size += i.second.type->size;
 	}
+
+	if (inClass && scopeFunction && scopeFunction->name == "delete")
+	{
+		code->addBuffer(thisVariable->readValue(this));
+		code->addOperation(BytecodeOp::unrefClass);
+	}
+
+	if (size)
+	{
+		BinaryBuffer args;
+		args.addValue<uint32_t>(size);
+		code->addOperation(BytecodeOp::popVariable, args);
+
+		this->variableStackPosition -= size;
+	}
+}
+
+void lang::ParsedScope::setClass(ParsedClass* inClass)
+{
+	this->inClass = inClass;
+
+	pushVariableValue(inClass->thisType, !this->scopeFunction || this->scopeFunction->name != "delete");
+	this->thisVariable = &addVariable(Token("this"), inClass->thisType);
 }
 
 void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
@@ -204,7 +305,15 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 	}
 
 	compileScopeExit(false);
-	code->addOperation(BytecodeOp::ret);
+	if (compileReturn)
+	{
+		if (returnThis)
+		{
+			code->addBuffer(thisVariable->readValue(this));
+		}
+
+		code->addOperation(BytecodeOp::ret);
+	}
 }
 
 void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors)
@@ -220,6 +329,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			expr.compileToType(first, scopeFunction->returnType, errors);
 
 			this->code->addBuffer(expr.code);
+			this->code->addBuffer(expr.type->compileMove(this));
 		}
 		compileScopeExit(true);
 		this->code->addOperation(BytecodeOp::ret);
@@ -256,7 +366,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			}
 
 			code->addBuffer(expr.code);
-			pushVariableValue(expr.type);
+			pushVariableValue(expr.type, true);
 		}
 		else if (isVar)
 		{
@@ -269,14 +379,11 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	}
 
 	line.position = 0;
-	auto expr = pushExpression(line, errors, false);
+	auto expr = pushExpression(line, errors, true);
 
-	if (line.peek() == "=")
+	if (line.peek() == "=" && expr.valid)
 	{
 		// Reparse the expression but set the read flag to true.
-		line.position = 0;
-		auto setValueExpr = pushExpression(line, errors, true);
-
 		auto equals = line.get();
 
 		if (equals != "=")
@@ -285,18 +392,18 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			return;
 		}
 
-		if (!setValueExpr.setCode)
+		if (!expr.setCode)
 		{
 			errors->error(ErrorCode::parseReadOnlyValue, line.lineTokens->at(0), "This value cannot be written to.");
 			return;
 		}
 
 		auto valueExpr = pushExpression(line, errors, false);
-		valueExpr.compileToType(equals, setValueExpr.type, errors);
+		valueExpr.compileToType(equals, expr.type, errors);
 		this->code->addBuffer(valueExpr.code);
-		this->code->addBuffer(setValueExpr.setCode.value());
+		this->code->addBuffer(expr.setCode.value());
 	}
-	else
+	else if (expr.valid)
 	{
 		this->code->addBuffer(expr.code);
 
@@ -341,7 +448,7 @@ BytecodeBuffer lang::ParsedScope::ScopeVariable::writeValue(ParsedScope* scope) 
 	args.addValue(this->type->size);
 	// stack position
 	args.addValue(getRelativePosition(scope));
-
+	result.addBuffer(type->compileMove(scope));
 	result.addOperation(BytecodeOp::storeVariable, args);
 
 	return result;

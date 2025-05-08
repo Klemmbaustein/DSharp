@@ -2,23 +2,14 @@ using system
 
 module test
 
-class MyClass
+fn getStr() -> string
 {
-	int x = 20
-	int y = 2
+	return "Hello World" + "!"
 }
 
 [EntryPoint]
 fn main() -> int
 {
-	var classValue = new MyClass()
-
-	printHalfX(classValue)
-
+	println(getStr())
 	return 0
-}
-
-fn printHalfX(MyClass class)
-{
-	println(class.x / 2)
 }

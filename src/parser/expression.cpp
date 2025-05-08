@@ -4,7 +4,7 @@
 
 void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
 {
-	if (this->discardable || !this->type)
+	//if (this->discardable || !this->type)
 	{
 		return;
 	}
@@ -15,6 +15,11 @@ void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
 
 void lang::ExpressionResult::compileToType(Token at, Type* target, ErrorContext* errors)
 {
+	if (!type)
+	{
+		return;
+	}
+
 	if (this->type->sameAs(target))
 	{
 		return;

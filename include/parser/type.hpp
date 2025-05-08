@@ -7,6 +7,7 @@
 namespace lang
 {
 	class Function;
+	struct ParsedScope;
 
 	class Type
 	{
@@ -15,17 +16,31 @@ namespace lang
 		uint32_t size = 0;
 		std::string name;
 
+		virtual ~Type() = default;
+
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) = 0;
 
 		virtual bool sameAs(Type* other)
 		{
 			return this == other;
 		}
+		virtual BytecodeBuffer compileUnref()
+		{
+			return BytecodeBuffer();
+		}
+		virtual BytecodeBuffer compileMove(ParsedScope* with)
+		{
+			return BytecodeBuffer();
+		}
+		virtual BytecodeBuffer compileEndMove(ParsedScope* with)
+		{
+			return BytecodeBuffer();
+		}
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line) = 0;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) = 0;
 		virtual ExpressionResult compileCast(ExpressionResult value) = 0;
 
-		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember);
+		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with);
 		
 		/**
 		* @brief
@@ -53,7 +68,7 @@ namespace lang
 
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line) override;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
 	};
 
@@ -68,37 +83,8 @@ namespace lang
 
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line) override;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
-	};
-
-	struct ClassMember
-	{
-		Token name;
-		uint32_t offset = 0;
-		Type* type = nullptr;
-	};
-
-	class ClassType : public Type
-	{
-	public:
-		ClassType(Token name, std::vector<ClassMember> members, size_t classSize, Function* constructor)
-		{
-			this->name = name.string;
-			this->members = members;
-			this->size = sizeof(size_t);
-			this->classSize = classSize;
-			this->constructor = constructor;
-		}
-
-		size_t classSize = 0;
-		Function* constructor = nullptr;
-		std::vector<ClassMember> members;
-
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
-		virtual ExpressionResult compileValue(Token first, TokenLine& line) override;
-		virtual ExpressionResult compileCast(ExpressionResult value) override;
-		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember) override;
 	};
 
 } // namespace lang

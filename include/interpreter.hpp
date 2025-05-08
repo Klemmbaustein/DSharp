@@ -7,6 +7,12 @@ namespace lang
 {
 	struct LanguageContext;
 
+	struct RuntimeStr
+	{
+		const char* ptr = nullptr;
+		uint32_t length = 0;
+	};
+
 	struct InterpretContext
 	{
 		InterpretContext(LanguageContext* from);
@@ -21,6 +27,9 @@ namespace lang
 			stackPos -= sizeof(T);
 			return *(T*)&this->stack[stackPos];
 		}
+
+		const char* popString();
+		RuntimeStr popStringLength();
 
 		template <typename T>
 		void pushValue(const T& value)
@@ -44,6 +53,14 @@ namespace lang
 
 			stackPos -= size;
 			memcpy(to, &this->stack[stackPos], size);
+		}
+		void copyBytes(size_t size)
+		{
+			if (size == 0)
+				return;
+
+			memcpy(&this->stack[stackPos], &this->stack[stackPos - size], size);
+			stackPos += size;
 		}
 
 	private:

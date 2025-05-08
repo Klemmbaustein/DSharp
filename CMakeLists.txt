@@ -20,10 +20,15 @@ file(
     SRCS
     "${SRC_DIR}/**.cpp"
 )
+file(
+    GLOB_RECURSE
+    HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/**.hpp"
+)
 
 add_executable(
    ProgrammingLanguage
-   ${SRCS}
+   ${SRCS} ${HEADERS}
 )
 
 target_include_directories(ProgrammingLanguage PUBLIC "include")

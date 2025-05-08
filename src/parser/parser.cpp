@@ -1,7 +1,8 @@
 #include <parser/parser.hpp>
 #include <parser/parseScope.hpp>
-#include "language.hpp"
+#include <parser/stringType.hpp>
 #include <modules/system.hpp>
+#include <language.hpp>
 using namespace lang;
 
 lang::ParseContext::ParseContext(LanguageContext* context)
@@ -25,6 +26,7 @@ BytecodeStream lang::ParseContext::compile()
 {
 	this->defaultTypes.push_back(new IntType());
 	this->defaultTypes.push_back(new FloatType());
+	this->defaultTypes.push_back(new StringType());
 
 	scanModules();
 
@@ -178,40 +180,7 @@ ParsedFunction& lang::ParsedFile::scanFunction(TokenLine currentLine, ErrorConte
 {
 	ParsedFunction& fn = this->functions.emplace_back();
 
-	fn.name = currentLine.get();
-	fn.functionFile = this;
-
-	fn.argumentTokens = currentLine.getInBraces();
-
-	Token next = currentLine.get();
-
-	// If the brace is directly after the function arguments, it has no return
-	// type.
-	if (next == "{")
-	{
-		fn.start = next.position;
-	}
-	// Else it's the return type
-	else if (next == "->")
-	{
-		fn.returnTypeTokens = currentLine.getUntil("{", errors);
-
-		next = currentLine.get();
-
-		if (next != "{")
-		{
-			errors->error(ErrorCode::parseUnexpectedToken, next,
-				"Unexpected '" + next.string + "' after function definition. Expected '{'");
-		}
-	}
-	else
-	{
-		errors->error(ErrorCode::parseUnexpectedToken, next,
-			"Unexpected '" + next.string + "' after function definition. Expected '-> [type]' or '{'");
-	}
-	fn.start = next.position;
-
-	this->stream.getScope(fn.functionStream, errors);
+	fn.scanDeclaration(currentLine, stream, this, errors);
 
 	return fn;
 }
@@ -245,13 +214,19 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 	functionScope.tokenStream = &functionStream;
 	functionScope.code = &functionCode;
 	functionScope.scopeFunction = this;
+	functionScope.compileReturn = true;
 	functionScope.scopeFile = file;
-
+	functionScope.returnThis = this->inClass && this->name == "new";
+	
+	if (this->inClass)
+	{
+		functionScope.setClass(this->inClass);
+	}
 	// Read the arguments given to the function and add them as variables in the scope.
 	// They're added in reverse order because they're pushed onto the stack in this order.
 	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
 	{
-		functionScope.pushVariableValue(it->type);
+		functionScope.pushVariableValue(it->type, true);
 		functionScope.addVariable(it->name, it->type);
 	}
 
@@ -264,7 +239,47 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 
 std::string lang::ParsedFunction::getFullName() const
 {
+	if (this->inClass)
+		return this->functionModule->name + "::" + this->inClass->name.string + "." + this->name.string;
 	return this->functionModule->name + "::" + this->name.string;
+}
+
+void lang::ParsedFunction::scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors)
+{
+	name = currentLine.get();
+	functionFile = file;
+
+	argumentTokens = currentLine.getInBraces(errors);
+
+	Token next = currentLine.get();
+
+	// If the brace is directly after the function arguments, it has no return
+	// type.
+	if (next == "{")
+	{
+		start = next.position;
+	}
+	// Else it's the return type
+	else if (next == "->")
+	{
+		returnTypeTokens = currentLine.getUntil("{", errors);
+
+		next = currentLine.get();
+
+		if (next != "{")
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, next,
+				"Unexpected '" + next.string + "' after function definition. Expected '{'");
+		}
+	}
+	else
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, next,
+			"Unexpected '" + next.string + "' after function definition. Expected '-> [type]' or '{'");
+	}
+	start = next.position;
+
+	stream.getScope(functionStream, errors);
 }
 
 void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* errors)

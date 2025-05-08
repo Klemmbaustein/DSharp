@@ -1,5 +1,4 @@
 #include <parser/type.hpp>
-#include <parser/function.hpp>
 #include <parser/stringUtils.hpp>
 using namespace lang;
 
@@ -47,7 +46,7 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType, Expressio
 	return result;
 }
 
-ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line)
+ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
 {
 	bool isNegative = false;
 	if (first == "+")
@@ -93,7 +92,7 @@ ExpressionResult lang::IntType::compileCast(ExpressionResult value)
 	return ExpressionResult();
 }
 
-ExpressionResult lang::Type::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember)
+ExpressionResult lang::Type::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	return ExpressionResult();
 }
@@ -142,7 +141,7 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 	return result;
 }
 
-ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line)
+ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
 {
 	bool isNegative = false;
 	if (first == "+")
@@ -184,68 +183,6 @@ ExpressionResult lang::FloatType::compileCast(ExpressionResult value)
 		value.code.addOperation(BytecodeOp::intToFloat);
 		return value;
 	}
-
-	return ExpressionResult();
-}
-ExpressionResult lang::ClassType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
-{
-	return ExpressionResult();
-}
-
-ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line)
-{
-	ExpressionResult result;
-
-	auto constructorArgs = line.getInBraces();
-
-	BinaryBuffer args;
-	// class size
-	args.addValue(uint32_t(this->classSize));
-	// typeid
-	args.addValue(uint32_t(0));
-	result.code.addOperation(BytecodeOp::allocClass, args);
-	result.code.addBuffer(this->constructor->compileCall().code);
-
-	result.type = this;
-	result.valid = true;
-
-	return result;
-}
-
-ExpressionResult lang::ClassType::compileCast(ExpressionResult value)
-{
-	return ExpressionResult();
-}
-
-ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember)
-{
-	Token memberName = line.get();
-
-	for (auto& i : this->members)
-	{
-		if (i.name.string != memberName.string)
-		{
-			continue;
-		}
-		ExpressionResult result;
-		result.valid = true;
-		result.type = i.type;
-		BinaryBuffer args;
-		args.addValue(i.offset);
-		args.addValue(i.type->size);
-		result.code.addBuffer(value.code);
-
-		if (setMember)
-		{
-			result.setCode = result.code;
-			result.setCode->addOperation(BytecodeOp::setClassMember, args);
-		}
-
-		result.code.addOperation(BytecodeOp::classMember, args);
-		return result;
-	}
-
-	errors->error(ErrorCode::parseUnknowmMember, memberName, "The type " + this->name + " does not contain a member called '" + memberName.string + "'");
 
 	return ExpressionResult();
 }

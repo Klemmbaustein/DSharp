@@ -1,4 +1,5 @@
 #include <parser/compileBytecode.hpp>
+#include <parser/classType.hpp>
 #include <native/nativeModule.hpp>
 #include <print>
 using namespace lang;
@@ -31,6 +32,7 @@ std::string BytecodeOperation::toString()
 		{ BytecodeOp::jump, "JUMP" },
 		{ BytecodeOp::callExternal, "CALL_EXTERNAL" },
 		{ BytecodeOp::ret, "RETURN" },
+		{ BytecodeOp::copy, "COPY" },
 		{ BytecodeOp::addInt, "ADD_I32" },
 		{ BytecodeOp::subInt, "SUB_I32" },
 		{ BytecodeOp::mulInt, "MUL_I32" },
@@ -46,9 +48,12 @@ std::string BytecodeOperation::toString()
 		{ BytecodeOp::readVariable, "READ_VAR" },
 		{ BytecodeOp::popVariable, "POP_VAR" },
 		{ BytecodeOp::allocClass, "NEW_CLASS" },
+		{ BytecodeOp::refClass, "REF_CLASS" },
 		{ BytecodeOp::unrefClass, "UNREF_CLASS" },
 		{ BytecodeOp::classMember, "CLASS_MEMBER" },
 		{ BytecodeOp::setClassMember, "SET_CLASS_MEMBER" },
+		{ BytecodeOp::setClassMemberPushAgain, "SET_CLASS_MEMBER_PUSH" },
+		{ BytecodeOp::concatString, "CONCAT_STRING" },
 	};
 
 	std::string op = operations[this->operation];
@@ -169,6 +174,33 @@ std::string BytecodeJump::toString()
 	return std::format("\tJUMP ", this->target->name);
 }
 
+// ------------- //
+// AllocClass    //
+// ------------- //
+
+lang::BytecodeAllocClass::BytecodeAllocClass(ClassType* languageClass)
+{
+	this->languageClass = languageClass;
+	this->operation = BytecodeOp::allocClass;
+}
+void lang::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+{
+	// typeid
+	stream.addValue(uint32_t(0));
+	// vtable
+	stream.addValue(uint32_t(languageClass->destructor ? compiler->functions[languageClass->destructor->getFullName()].offset : 0));
+}
+
+bytecodeOffset lang::BytecodeAllocClass::getArgsSize()
+{
+	return sizeof(uint32_t) * 2;
+}
+
+std::string BytecodeAllocClass::toString()
+{
+	return std::format("\tALLOC {}", this->languageClass->name);
+}
+
 void lang::BytecodeCompiler::printAssembly()
 {
 	for (auto& fn : this->functions)
@@ -234,6 +266,14 @@ void lang::BytecodeBuffer::add(BytecodeInstruction* instruction)
 	this->instructions.push_back(instruction);
 }
 
+void lang::BytecodeBuffer::pushInt(uint32_t data)
+{
+	static BinaryBuffer args;
+	args.clear();
+	args.addValue(data);
+	addOperation(BytecodeOp::push, args);
+}
+
 void lang::BytecodeBuffer::addOperation(BytecodeOp operation, const BinaryBuffer& arguments)
 {
 	add(new BytecodeOperation(operation, arguments));
@@ -244,6 +284,12 @@ void lang::BytecodeBuffer::addOperation(BytecodeOp operation)
 	add(new BytecodeOperation(operation, BinaryBuffer()));
 }
 
+void lang::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)
+{
+	this->instructions.reserve(this->instructions.size() + other.instructions.size());
+
+	this->instructions.insert_range(instructions.begin(), other.instructions);
+}
 void lang::BytecodeBuffer::addBuffer(const BytecodeBuffer& other)
 {
 	this->instructions.reserve(this->instructions.size() + other.instructions.size());

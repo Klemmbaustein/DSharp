@@ -54,6 +54,7 @@ namespace lang
 		Token name;
 		TokenPos start;
 		TokenPos end;
+		ParsedClass* inClass = nullptr;
 		BytecodeFunction functionCode;
 		Module* functionModule = nullptr;
 		ParsedFile* functionFile = nullptr;
@@ -61,6 +62,8 @@ namespace lang
 		std::vector<FunctionArgument> arguments;
 
 		std::string getFullName() const override;
+
+		void scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors);
 
 		TokenStream functionStream;
 		std::vector<Token> returnTypeTokens;

@@ -1,7 +1,9 @@
 #include "interpreter.hpp"
 #include <language.hpp>
 #include <bytecode.hpp>
+#include <class.hpp>
 #include <print>
+#include <vector>
 
 lang::InterpretContext::InterpretContext(LanguageContext* from)
 {
@@ -34,6 +36,7 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 void lang::InterpretContext::run()
 {
 	std::array<uint8_t, 255> argumentBuffer{};
+
 	while (!bytecodeBuffer->empty())
 	{
 		auto op = bytecodeBuffer->getValue<BytecodeOp>();
@@ -50,8 +53,15 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::push:
 			pushBytes(argumentBuffer.data(), size_t(argsSize));
 			break;
-		case lang::BytecodeOp::pop:
+		case lang::BytecodeOp::pop: {
+			stackPos -= *(uint32_t*)&argumentBuffer[0];
 			break;
+		}
+		case lang::BytecodeOp::copy: {
+			uint32_t size = *(uint32_t*)&argumentBuffer[0];
+			copyBytes(size);
+			break;
+		}
 		case lang::BytecodeOp::addInt:
 			pushValue(popValue<int32_t>() + popValue<int32_t>());
 			break;
@@ -128,27 +138,93 @@ void lang::InterpretContext::run()
 			break;
 		}
 		case lang::BytecodeOp::allocClass: {
-			uint32_t size = *(uint32_t*)&argumentBuffer[0];
-			uint32_t typeId = *(uint32_t*)&argumentBuffer[sizeof(size)];
-			pushValue<size_t>(size_t(malloc(size)));
+			uint32_t size = popValue<uint32_t>();
+			uint32_t typeId = *(uint32_t*)&argumentBuffer[0];
+			uint32_t destructor = *(uint32_t*)&argumentBuffer[sizeof(typeId)];
+			pushValue(RuntimeClass::allocateClass(size, destructor));
 			break;
 		}
 		case lang::BytecodeOp::classMember: {
-			uint8_t* ptr = popValue<uint8_t*>();
-			uint32_t offset = *(uint32_t*)&argumentBuffer[0];
-			uint32_t size = *(uint32_t*)&argumentBuffer[sizeof(offset)];
-			pushBytes(ptr + offset, size);
+			uint32_t size = popValue<uint32_t>();
+			uint32_t offset = popValue<uint32_t>();
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			pushBytes(ptr->getBody() + offset, size);
 			break;
 		}
 		case lang::BytecodeOp::setClassMember: {
-			uint8_t* ptr = popValue<uint8_t*>();
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
 			uint32_t offset = *(uint32_t*)&argumentBuffer[0];
 			uint32_t size = *(uint32_t*)&argumentBuffer[sizeof(offset)];
-			popBytes(ptr + offset, size);
+			popBytes(ptr->getBody() + offset, size);
 			break;
 		}
+		case lang::BytecodeOp::setClassMemberPushAgain: {
+			uint32_t size = popValue<uint32_t>();
+			uint32_t offset = popValue<uint32_t>();
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			popBytes(ptr->getBody() + offset, size);
+			pushValue(ptr);
+			break;
+		}
+		case lang::BytecodeOp::refClass: {
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			ptr->addRef();
+			pushValue(ptr);
+			break;
+		}
+		case lang::BytecodeOp::refClassScoped: {
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			ptr->addRef();
+			pushValue(ptr);
+			break;
+		}
+		case lang::BytecodeOp::unrefClass: {
+			auto ptr = popValue<RuntimeClass*>();
+			bytecodeOffset destructor = RuntimeClass::unref(ptr);
+
+			if (destructor != 0 && destructor != UINT32_MAX)
+			{
+				pushValue(ptr);
+				functionStack[functionStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+				bytecodeBuffer->streamPos = destructor;
+			}
+
+			break;
+		}
+		case lang::BytecodeOp::concatString: {
+			auto second = popStringLength();
+			auto first = popStringLength();
+
+			uint32_t newSize = first.length + second.length + 1;
+
+			RuntimeClass* newClass = RuntimeClass::allocateClass(newSize + sizeof(uint32_t), 0);
+
+			(*(uint32_t*)newClass->getBody()) = newSize;
+			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
+			memcpy(strBegin, first.ptr, first.length);
+			memcpy(strBegin + first.length, second.ptr, second.length);
+			strBegin[first.length + second.length] = 0;
+			pushValue<size_t>(size_t(newClass));
+
+			break;
+		}
+
 		default:
 			break;
 		}
 	}
+}
+
+const char* lang::InterpretContext::popString()
+{
+	RuntimeClass* ptr = popValue<RuntimeClass*>();
+
+	return (const char*)(ptr->getBody() + sizeof(uint32_t));
+}
+
+lang::RuntimeStr lang::InterpretContext::popStringLength()
+{
+	RuntimeClass* ptr = popValue<RuntimeClass*>();
+
+	return { (const char*)(ptr->getBody() + sizeof(uint32_t)), *(uint32_t*)ptr->getBody() };
 }

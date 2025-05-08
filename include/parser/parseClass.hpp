@@ -4,6 +4,7 @@
 #include "attribute.hpp"
 #include "function.hpp"
 #include "module.hpp"
+#include "classType.hpp"
 
 namespace lang
 {
@@ -17,14 +18,19 @@ namespace lang
 		Token name;
 		std::vector<Token> value;
 		uint32_t offset = 0;
+
+		BytecodeBuffer readValue() const;
+		BytecodeBuffer writeValue() const;
 	};
 
 	struct ParsedClass;
 
-	struct ConstructorFunction : public Function
+	// Either a constructor or destructor
+	struct ClassLifetimeFunction : public Function
 	{
 		BytecodeBuffer code;
 		ParsedClass* parent = nullptr;
+		bool isConstructor = true;
 
 		ExpressionResult compileCall() override;
 
@@ -32,7 +38,6 @@ namespace lang
 
 		std::string getFullName() const override;
 		bool discardable() const override;
-
 	};
 
 	struct ParsedClass : public Attributable
@@ -41,11 +46,14 @@ namespace lang
 		TokenPos start;
 		TokenPos end;
 		TokenStream classStream;
+		size_t refVariableCount = 0;
 
-		std::vector<ParsedClassMember> members;
+		std::map<Token, ParsedClassMember> members;
 		std::vector<ParsedFunction*> methods;
 
-		ConstructorFunction constructor;
+		ClassLifetimeFunction constructor;
+		ClassLifetimeFunction baseDestructor;
+		Function* usedDestructor = nullptr;
 		Type* thisType = nullptr;
 		Module* classModule = nullptr;
 
