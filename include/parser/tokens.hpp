@@ -57,6 +57,8 @@ namespace lang
 
 		void loadPosition(size_t oldPos);
 
+		void expectEndOfLine(ErrorContext* errors);
+
 		TokenLine& postProcessTokens(ErrorContext* errors);
 
 		std::vector<Token>* lineTokens = nullptr;

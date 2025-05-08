@@ -15,6 +15,14 @@ namespace lang
 		divide,
 		/// a % b operator
 		modulo,
+		/// a == b operator
+		equals,
+		/// a > b operator
+		greater,
+		/// a<> b operator
+		less,
+		/// a && b operator
+		logicalAnd,
 		/// a.member operator
 		member,
 		/// Unknown operator

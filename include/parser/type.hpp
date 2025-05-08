@@ -87,4 +87,20 @@ namespace lang
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
 	};
 
+	class BoolType : public PrimitiveType
+	{
+	public:
+		BoolType()
+		{
+			this->name = "bool";
+			this->size = sizeof(bool);
+		}
+
+		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
+
+		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		virtual ExpressionResult compileCast(ExpressionResult value) override;
+	};
+
+
 } // namespace lang

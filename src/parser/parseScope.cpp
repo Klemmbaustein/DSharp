@@ -8,9 +8,13 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, Error
 
 	while (!currentLine.empty())
 	{
-		if (result.type == nullptr)
+		if (!result.valid)
 		{
 			return ExpressionResult();
+		}
+		if (!result.type)
+		{
+			return result;
 		}
 
 		Token operatorToken = currentLine.peek();
@@ -50,6 +54,7 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, Error
 		result = result.type->compileOperator(exprOperator, result, secondValue);
 	}
 
+	result.valid = true;
 	return result;
 }
 
@@ -77,7 +82,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 
 		if (!foundType)
 		{
-			errors->error(ErrorCode::parseUnknownSymbol, value, "Unknown class: '" + className.string + "'");
+			errors->error(ErrorCode::parseUnknownSymbol, value,
+				"Unknown class: '" + className.string + "'");
 			return ExpressionResult();
 		}
 
@@ -115,7 +121,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 
 		if (!function && !this->inClass)
 		{
-			errors->error(ErrorCode::parseUnknownSymbol, value, "Unknown function: '" + value.string + "'");
+			errors->error(ErrorCode::parseUnknownSymbol, value,
+				"Unknown function: '" + value.string + "'");
 			return ExpressionResult();
 		}
 		else if (function)
@@ -134,7 +141,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 				if (argsLine.empty())
 					break;
 				else if (argsLine.get() != ",")
-					errors->error(ErrorCode::parseUnexpectedToken, argsLine.previous(), "Expected a ',', got '" + argsLine.previous().string + "'");
+					errors->error(ErrorCode::parseUnexpectedToken, argsLine.previous(),
+						"Expected a ',', got '" + argsLine.previous().string + "'");
 			}
 
 			auto fn = function->compileCall();
@@ -183,6 +191,27 @@ ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine, Error
 	return result;
 }
 
+void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors)
+{
+	ParsedScope conditionScope;
+	TokenStream conditionTokens;
+	conditionScope.scopeFunction = this->scopeFunction;
+	conditionScope.tokenStream = &conditionTokens;
+	conditionScope.code = this->code;
+
+	for (auto& i : this->variables)
+	{
+		if (i.second.ownedBy)
+			conditionScope.variables.insert(i);
+	}
+
+	conditionScope.thisVariable = this->thisVariable;
+	conditionScope.variableStackPosition = this->variableStackPosition;
+	this->tokenStream->getScope(conditionTokens, errors);
+
+	conditionScope.compile(this->context, file, errors);
+}
+
 BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 {
 	BytecodeBuffer buffer;
@@ -195,10 +224,10 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 	args.addValue<uint32_t>(type->size);
 	buffer.addOperation(BytecodeOp::pushVariable, args);
 
-	auto& result = this->variables.insert({ Token("_temp_" + std::to_string(tempCounter++)), ScopeVariable{
-		.name = "_temp_",
+	auto& result = this->variables.insert({ Token(".temp_" + std::to_string(tempCounter++)), ScopeVariable{
+		.name = ".temp_",
 		.stackPosition = this->variableStackPosition,
-		.ownedBy = nullptr,
+		.ownedBy = this,
 		.type = type,
 	} }).first->second;
 
@@ -289,6 +318,7 @@ void lang::ParsedScope::setClass(ParsedClass* inClass)
 void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
 {
 	this->context = context;
+	this->scopeFile = file;
 	while (true)
 	{
 		auto nextLine = this->tokenStream->next(&context->errors);
@@ -333,6 +363,42 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		}
 		compileScopeExit(true);
 		this->code->addOperation(BytecodeOp::ret);
+		line.expectEndOfLine(errors);
+		return;
+	}
+	if (first.string == "if")
+	{
+		auto condition = pushExpression(line, errors, false);
+		this->code->addBuffer(condition.code);
+
+		auto endLabel = new BytecodeJumpLabel("endif");
+
+		this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
+
+		parseSubScope(file, errors);
+
+		this->code->add(endLabel);
+
+		return;
+	}
+
+	if (first.string == "while")
+	{
+		auto condition = pushExpression(line, errors, false);
+
+		auto beginLabel = new BytecodeJumpLabel("while_begin");
+		this->code->add(beginLabel);
+		this->code->addBuffer(condition.code);
+
+		auto endLabel = new BytecodeJumpLabel("while_end");
+
+		this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
+
+		parseSubScope(file, errors);
+		this->code->add(new BytecodeJump(BytecodeOp::jump, beginLabel));
+
+		this->code->add(endLabel);
+
 		return;
 	}
 
@@ -370,11 +436,12 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		}
 		else if (isVar)
 		{
-			errors->error(ErrorCode::parseVarMustHaveInitializer, variableName, "A variable declared with 'var' must have an initializer.");
+			errors->error(ErrorCode::parseVarMustHaveInitializer, variableName,
+				"A variable declared with 'var' must have an initializer.");
 		}
 
 		addVariable(variableName, type);
-
+		line.expectEndOfLine(errors);
 		return;
 	}
 
@@ -386,22 +453,25 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		// Reparse the expression but set the read flag to true.
 		auto equals = line.get();
 
-		if (equals != "=")
-		{
-			errors->error(ErrorCode::internalError, line.previous(), "Read and write expressions were parsed differently. This should never happen.");
-			return;
-		}
-
 		if (!expr.setCode)
 		{
-			errors->error(ErrorCode::parseReadOnlyValue, line.lineTokens->at(0), "This value cannot be written to.");
+			errors->error(ErrorCode::parseReadOnlyValue, line.lineTokens->at(0),
+				"This value cannot be written to.");
 			return;
 		}
 
 		auto valueExpr = pushExpression(line, errors, false);
 		valueExpr.compileToType(equals, expr.type, errors);
 		this->code->addBuffer(valueExpr.code);
+
+		auto moveCode = expr.type->compileEndMove(this);
+		if (moveCode.instructions.size())
+		{
+			this->code->addBuffer(moveCode);
+		}
+
 		this->code->addBuffer(expr.setCode.value());
+		line.expectEndOfLine(errors);
 	}
 	else if (expr.valid)
 	{
@@ -413,8 +483,9 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			BinaryBuffer args;
 			args.addValue<uint32_t>(expr.type->size);
 			this->code->addOperation(BytecodeOp::pop, args);
+			expr.discard(line.lineTokens->at(0), errors);
 		}
-		expr.discard(line.lineTokens->at(0), errors);
+		line.expectEndOfLine(errors);
 	}
 	return;
 }

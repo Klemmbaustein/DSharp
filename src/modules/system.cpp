@@ -9,7 +9,7 @@ lang::NativeModule lang::modules::system::createModule()
 		{ FunctionArgument(IntType::instance, Token("intArg")) },
 		"println",
 		[](InterpretContext* context) {
-			std::puts(context->popString());
+			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
 		}));
 
 	out.attributes.push_back(new EntryPointAttribute());

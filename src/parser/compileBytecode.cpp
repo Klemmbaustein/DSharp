@@ -23,13 +23,14 @@ bytecodeOffset lang::BytecodeOperation::getArgsSize()
 	return bytecodeOffset(this->arguments.buffer.size());
 }
 
-std::string BytecodeOperation::toString()
+std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments)
 {
 	static std::map<BytecodeOp, const char*> operations = {
 		{ BytecodeOp::push, "PUSH" },
 		{ BytecodeOp::pop, "POP" },
 		{ BytecodeOp::call, "CALL" },
 		{ BytecodeOp::jump, "JUMP" },
+		{ BytecodeOp::jumpIfNot, "JUMP_IF_NOT" },
 		{ BytecodeOp::callExternal, "CALL_EXTERNAL" },
 		{ BytecodeOp::ret, "RETURN" },
 		{ BytecodeOp::copy, "COPY" },
@@ -37,6 +38,8 @@ std::string BytecodeOperation::toString()
 		{ BytecodeOp::subInt, "SUB_I32" },
 		{ BytecodeOp::mulInt, "MUL_I32" },
 		{ BytecodeOp::divInt, "DIV_I32" },
+		{ BytecodeOp::greaterInt, "GREATER_I32" },
+		{ BytecodeOp::lessInt, "LESS_I32" },
 		{ BytecodeOp::addFloat, "ADD_F32" },
 		{ BytecodeOp::subFloat, "SUB_F32" },
 		{ BytecodeOp::mulFloat, "MUL_F32" },
@@ -61,7 +64,12 @@ std::string BytecodeOperation::toString()
 	if (op.empty())
 		op = std::to_string(int(this->operation));
 
-	return std::format("\t{} {}", op, this->arguments.toString());
+	return std::format("\t{} {}", op, arguments.toString());
+}
+
+std::string BytecodeOperation::toString()
+{
+	return toStringDefault(this->arguments);
 }
 
 // ------------- //
@@ -133,6 +141,7 @@ bytecodeOffset lang::BytecodeCallNative::getArgsSize()
 
 lang::BytecodeJumpLabel::BytecodeJumpLabel(std::string name)
 {
+	this->name = name;
 	this->baseSize = 0;
 }
 
@@ -153,15 +162,15 @@ std::string BytecodeJumpLabel::toString()
 // Jump          //
 // ------------- //
 
-lang::BytecodeJump::BytecodeJump(BytecodeJumpLabel* target)
+lang::BytecodeJump::BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target)
 {
-	this->operation = BytecodeOp::jump;
+	this->operation = operation;
 	this->target = target;
 }
 
 void lang::BytecodeJump::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
-	stream.addValue(this->target->offset);
+	stream.addValue<bytecodeOffset>(this->target->offset);
 }
 
 bytecodeOffset lang::BytecodeJump::getArgsSize()
@@ -171,7 +180,7 @@ bytecodeOffset lang::BytecodeJump::getArgsSize()
 
 std::string BytecodeJump::toString()
 {
-	return std::format("\tJUMP ", this->target->name);
+	return this->toStringDefault(BinaryBuffer()) + "-> " + this->target->name;
 }
 
 // ------------- //
@@ -239,9 +248,12 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream)
 		for (BytecodeInstruction* instr : code->instructions)
 		{
 			instr->offset = bytecodePos;
-			bytecodePos +=
-				/* operation */ sizeof(BytecodeOp) + /* arguments size */ sizeof(uint8_t) +
-				/* arguments */ +instr->getArgsSize();
+			if (instr->baseSize > 0)
+			{
+				bytecodePos +=
+					/* operation */ sizeof(BytecodeOp) + /* arguments size */ sizeof(uint8_t) +
+					/* arguments */ +instr->getArgsSize();
+			}
 		}
 	}
 

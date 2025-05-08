@@ -34,11 +34,16 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType, Expressio
 	case lang::Operator::divide:
 		result.code.addOperation(BytecodeOp::divInt);
 		break;
+	case lang::Operator::greater:
+		result.code.addOperation(BytecodeOp::greaterInt);
+		break;
+	case lang::Operator::less:
+		result.code.addOperation(BytecodeOp::lessInt);
+		break;
 	case lang::Operator::modulo:
 	case lang::Operator::unknown:
-		return ExpressionResult();
 	default:
-		break;
+		return ExpressionResult();
 	}
 
 	result.type = this;
@@ -131,9 +136,8 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 		break;
 	case lang::Operator::modulo:
 	case lang::Operator::unknown:
-		return ExpressionResult();
 	default:
-		break;
+		return ExpressionResult();
 	}
 
 	result.type = this;
@@ -184,5 +188,51 @@ ExpressionResult lang::FloatType::compileCast(ExpressionResult value)
 		return value;
 	}
 
+	return ExpressionResult();
+}
+ExpressionResult lang::BoolType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
+{
+	ExpressionResult result;
+
+	result.code.addBuffer(first.code);
+	result.code.addBuffer(second.code);
+
+	switch (operatorType)
+	{
+	case lang::Operator::logicalAnd:
+		result.code.addOperation(BytecodeOp::boolAnd);
+		break;
+	default:
+		return ExpressionResult();
+	}
+
+	result.type = this;
+	result.valid = true;
+	return result;
+}
+
+ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+{
+	bool value = false;
+	if (first == "true")
+	{
+		value = true;
+	}
+	else if (first != "false")
+	{
+		return ExpressionResult();
+	}
+
+	ExpressionResult result;
+	BinaryBuffer valueBuffer;
+	valueBuffer.addValue<bool>(value);
+	result.code.addOperation(BytecodeOp::push, valueBuffer);
+	result.valid = true;
+	result.type = this;
+	return result;
+}
+
+ExpressionResult lang::BoolType::compileCast(ExpressionResult value)
+{
 	return ExpressionResult();
 }

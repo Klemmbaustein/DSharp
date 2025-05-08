@@ -2,14 +2,21 @@ using system
 
 module test
 
-fn getStr() -> string
+class TestClass
 {
-	return "Hello World" + "!"
+	int num = 42
+	fn delete()
+	{
+		println(num)
+	}
 }
 
 [EntryPoint]
 fn main() -> int
 {
-	println(getStr())
+	var testing = new TestClass()
+
+	testing = new TestClass()
+
 	return 0
 }

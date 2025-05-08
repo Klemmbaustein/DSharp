@@ -26,6 +26,7 @@ BytecodeStream lang::ParseContext::compile()
 {
 	this->defaultTypes.push_back(new IntType());
 	this->defaultTypes.push_back(new FloatType());
+	this->defaultTypes.push_back(new BoolType());
 	this->defaultTypes.push_back(new StringType());
 
 	scanModules();

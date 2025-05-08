@@ -62,6 +62,18 @@ void lang::InterpretContext::run()
 			copyBytes(size);
 			break;
 		}
+		case lang::BytecodeOp::jump: {
+			bytecodeBuffer->streamPos = size_t(*(uint32_t*)&argumentBuffer[0]);
+			break;
+		}
+		case lang::BytecodeOp::jumpIfNot: {
+			bool cond = popValue<bool>();
+			if (!cond)
+			{
+				bytecodeBuffer->streamPos = size_t(*(uint32_t*)&argumentBuffer[0]);
+			}
+			break;
+		}
 		case lang::BytecodeOp::addInt:
 			pushValue(popValue<int32_t>() + popValue<int32_t>());
 			break;
@@ -76,6 +88,16 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::divInt: {
 			int32_t first = popValue<int32_t>();
 			pushValue(popValue<int32_t>() / first);
+			break;
+		}
+		case lang::BytecodeOp::greaterInt: {
+			int32_t first = popValue<int32_t>();
+			pushValue(popValue<int32_t>() > first);
+			break;
+		}
+		case lang::BytecodeOp::lessInt: {
+			int32_t first = popValue<int32_t>();
+			pushValue(popValue<int32_t>() < first);
 			break;
 		}
 		case lang::BytecodeOp::addFloat:
@@ -172,12 +194,6 @@ void lang::InterpretContext::run()
 			pushValue(ptr);
 			break;
 		}
-		case lang::BytecodeOp::refClassScoped: {
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			ptr->addRef();
-			pushValue(ptr);
-			break;
-		}
 		case lang::BytecodeOp::unrefClass: {
 			auto ptr = popValue<RuntimeClass*>();
 			bytecodeOffset destructor = RuntimeClass::unref(ptr);
@@ -210,6 +226,7 @@ void lang::InterpretContext::run()
 		}
 
 		default:
+			abort();
 			break;
 		}
 	}

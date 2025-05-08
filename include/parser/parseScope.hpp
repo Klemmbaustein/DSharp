@@ -48,6 +48,8 @@ namespace lang
 		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 
+		void parseSubScope(ParsedFile* file, ErrorContext* errors);
+
 	private:
 		uint32_t tempCounter = 0;
 	};

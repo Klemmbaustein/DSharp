@@ -10,6 +10,11 @@ Operator lang::stringToOperator(std::string opString)
 		{ "*", Operator::multiply },
 		{ "/", Operator::divide },
 		{ "%", Operator::modulo },
+		{ "==", Operator::equals },
+		{ ">", Operator::greater },
+		{ "<", Operator::less },
+		{ "&&", Operator::logicalAnd },
+		{ "||", Operator::modulo },
 		{ ".", Operator::member },
 	};
 
@@ -31,7 +36,7 @@ bool lang::operatorHasPriority(Operator op, Operator compareTo)
 		{ Operator::multiply, 1 },
 		{ Operator::divide, 1 },
 		{ Operator::modulo, 1 },
-		{ Operator::member, 10 },
+		{ Operator::member, 100 },
 	};
 	return priorities[op] > priorities[compareTo];
 }

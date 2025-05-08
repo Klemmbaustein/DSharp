@@ -18,7 +18,8 @@ namespace lang
 		size_t offset = 0;
 		virtual void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) = 0;
 		virtual bytecodeOffset getArgsSize() = 0;
-		virtual std::string toString() { return ""; };
+		virtual std::string toString() { return ""; }
+		std::string toStringDefault(const BinaryBuffer& arguments);
 	};
 
 	class BytecodeOperation : public BytecodeInstruction
@@ -83,7 +84,7 @@ namespace lang
 	class BytecodeJump : public BytecodeInstruction
 	{
 	public:
-		BytecodeJump(BytecodeJumpLabel* target);
+		BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;

@@ -9,8 +9,11 @@ namespace lang
 		"==",
 		">=",
 		"<=",
+		"!=",
 		"->",
 		"::",
+		"&&",
+		"||",
 	};
 
 	static std::set<char> specialChars = {
@@ -21,6 +24,9 @@ namespace lang
 		'-',
 		'*',
 		'/',
+		'!',
+		'|',
+		'&',
 		':',
 		'(',
 		')',
@@ -106,6 +112,12 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 			do
 			{
 				newChar = getNextChar(stream);
+
+				if (newChar == EOF)
+				{
+					errors->error(ErrorCode::tokenUnexpectedEof, currentWord, "Unexpected EOF");
+					break;
+				}
 				currentWord.addChar(newChar);
 			} while (newChar != '"');
 			addToken(currentWord);
@@ -414,6 +426,14 @@ size_t lang::TokenLine::savePosition()
 void lang::TokenLine::loadPosition(size_t oldPos)
 {
 	this->position = oldPos;
+}
+
+void lang::TokenLine::expectEndOfLine(ErrorContext* errors)
+{
+	if (!empty())
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, peek(), "Unexpected '" + peek().string + "'");
+	}
 }
 
 TokenLine lang::TokenStream::next(ErrorContext* errors)

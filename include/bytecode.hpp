@@ -17,6 +17,7 @@ namespace lang
 		call,
 		/// Sets the current instruction position to the given argument.
 		jump,
+		jumpIfNot,
 		/// Calls an external function in the BytecodeStream::externalFunctions list
 		/// with the index for that call being the given argument.
 		callExternal,
@@ -32,6 +33,8 @@ namespace lang
 		mulInt,
 		/// Divides the 2 topmost 32 bit ints on the stack and pushes the result.
 		divInt,
+		greaterInt,
+		lessInt,
 		/// Adds the 2 topmost 32 bit floats on the stack and pushes the result.
 		addFloat,
 		/// Multiplies the 2 topmost 32 bit floats on the stack and pushes the result.
@@ -40,6 +43,7 @@ namespace lang
 		mulFloat,
 		/// Divides the 2 topmost 32 bit floats on the stack and pushes the result.
 		divFloat,
+		boolAnd,
 		/// Takes the topmost int in the stack and pushes it's float equivalent.
 		intToFloat,
 		/// Takes the topmost float in the stack and pushes it's int equivalent.
@@ -55,8 +59,6 @@ namespace lang
 		allocClass,
 		/// Adds a reference to the class object on the stack, will push the reference again
 		refClass,
-		/// Adds a reference to the class object on the stack, will push the reference again. The reference is automatically removed when the current function returns.
-		refClassScoped,
 		/// Removes a reference to the class object on the stack
 		unrefClass,
 		/// Pops a pointer of the class from the stack, pushes the given member of the class onto the stack
