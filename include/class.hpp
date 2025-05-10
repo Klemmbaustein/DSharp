@@ -32,7 +32,6 @@ namespace lang
 
 			if (header->references == 0)
 			{
-				std::printf("str : %s", (const char*)header->getBody());
 				delete[] header->vtable;
 				free(header);
 				return 0;

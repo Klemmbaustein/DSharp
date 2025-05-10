@@ -266,8 +266,8 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 	args.addValue<uint32_t>(0);
 	if (copy)
 	{
-		code->addBuffer(type->compileMove(this));
-		code->addBuffer(type->compileEndMove(this));
+		//code->addBuffer(type->compileMove(this));
+		//code->addBuffer(type->compileEndMove(this));
 	}
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
@@ -329,8 +329,14 @@ void lang::ParsedScope::compileScopeExit(bool full)
 void lang::ParsedScope::setClass(ParsedClass* inClass)
 {
 	this->inClass = inClass;
+	
+	bool copy = !this->scopeFunction || this->scopeFunction->name != "delete";
 
-	pushVariableValue(inClass->thisType, !this->scopeFunction || this->scopeFunction->name != "delete");
+	if (copy)
+	{
+		this->code->addBuffer(inClass->thisType->compileMove(this));
+	}
+	pushVariableValue(inClass->thisType, copy);
 	this->thisVariable = &addVariable(Token("this"), inClass->thisType);
 }
 
