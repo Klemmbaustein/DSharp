@@ -55,4 +55,4 @@ namespace lang
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with) override;
 	};
-}
+} // namespace lang

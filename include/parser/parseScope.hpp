@@ -1,6 +1,7 @@
 #pragma once
 #include "parser.hpp"
 #include "parseClass.hpp"
+#include "compileBytecodeVariables.hpp"
 
 namespace lang
 {
@@ -16,11 +17,9 @@ namespace lang
 		struct ScopeVariable
 		{
 			Token name;
-			uint32_t stackPosition = 0;
+			BytecodePushVariable* variableInstruction = nullptr;
 			ParsedScope* ownedBy = nullptr;
 			Type* type = 0;
-
-			uint32_t getRelativePosition(ParsedScope* scope) const;
 
 			BytecodeBuffer readValue(ParsedScope* scope) const;
 			BytecodeBuffer writeValue(ParsedScope* scope) const;

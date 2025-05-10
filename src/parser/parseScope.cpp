@@ -1,5 +1,6 @@
 #include <parser/parseScope.hpp>
 #include <modules/system.hpp>
+#include <parser/compileBytecodeVariables.hpp>
 using namespace lang;
 
 ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, ErrorContext* errors, bool setExpression)
@@ -198,6 +199,7 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors)
 	conditionScope.scopeFunction = this->scopeFunction;
 	conditionScope.tokenStream = &conditionTokens;
 	conditionScope.code = this->code;
+	conditionScope.tempCounter = this->tempCounter;
 
 	for (auto& i : this->variables)
 	{
@@ -220,16 +222,21 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 	args.addValue<uint32_t>(0);
 	buffer.addOperation(BytecodeOp::storeVariable, args);
 
-	args.clear();
-	args.addValue<uint32_t>(type->size);
-	buffer.addOperation(BytecodeOp::pushVariable, args);
+	std::string tempName = ".temp_" + std::to_string(tempCounter++);
 
-	auto& result = this->variables.insert({ Token(".temp_" + std::to_string(tempCounter++)), ScopeVariable{
-		.name = ".temp_",
-		.stackPosition = this->variableStackPosition,
+	auto instruction = new BytecodePushVariable(tempName, type);
+
+	code->add(instruction);
+
+	// clang-format off
+	auto& result = this->variables.insert(
+	{Token(tempName), ScopeVariable{
+		.name = tempName,
+		.variableInstruction = instruction,
 		.ownedBy = this,
 		.type = type,
 	} }).first->second;
+	// clang-format on
 
 	this->variableStackPosition += type->size;
 
@@ -252,14 +259,13 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 
 ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type)
 {
-	BinaryBuffer args;
-	args.addValue<uint32_t>(type->size);
-	code->addOperation(BytecodeOp::pushVariable, args);
+	auto instruction = new BytecodePushVariable(name.string, type);
+	code->add(instruction);
 
 	auto result = this->variables.insert({ name,
 		ScopeVariable{
 			.name = name,
-			.stackPosition = this->variableStackPosition,
+			.variableInstruction = instruction,
 			.ownedBy = this,
 			.type = type,
 		} });
@@ -299,9 +305,7 @@ void lang::ParsedScope::compileScopeExit(bool full)
 
 	if (size)
 	{
-		BinaryBuffer args;
-		args.addValue<uint32_t>(size);
-		code->addOperation(BytecodeOp::popVariable, args);
+		code->add(new BytecodePopVariable(size));
 
 		this->variableStackPosition -= size;
 	}
@@ -490,37 +494,16 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	return;
 }
 
-uint32_t lang::ParsedScope::ScopeVariable::getRelativePosition(ParsedScope* scope) const
-{
-	return scope->variableStackPosition - this->stackPosition;
-}
-
 BytecodeBuffer lang::ParsedScope::ScopeVariable::readValue(ParsedScope* scope) const
 {
 	BytecodeBuffer result;
-	BinaryBuffer args;
-
-	// Size
-	args.addValue(this->type->size);
-	// stack position
-	args.addValue(getRelativePosition(scope));
-
-	result.addOperation(BytecodeOp::readVariable, args);
-
+	result.add(new BytecodeReadVariable(this->variableInstruction));
 	return result;
 }
 
 BytecodeBuffer lang::ParsedScope::ScopeVariable::writeValue(ParsedScope* scope) const
 {
 	BytecodeBuffer result;
-	BinaryBuffer args;
-
-	// Size
-	args.addValue(this->type->size);
-	// stack position
-	args.addValue(getRelativePosition(scope));
-	result.addBuffer(type->compileMove(scope));
-	result.addOperation(BytecodeOp::storeVariable, args);
-
+	result.add(new BytecodeStoreVariable(this->variableInstruction));
 	return result;
 }

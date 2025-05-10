@@ -48,8 +48,12 @@ BytecodeStream lang::ParseContext::compile()
 	}
 
 	BytecodeStream out;
-	this->compiler.compileTo(out);
+	this->compiler.compileTo(out, &errors);
 	this->compiler.printAssembly();
+	if (!errors.isOk())
+	{
+		return BytecodeStream();
+	}
 	return out;
 }
 

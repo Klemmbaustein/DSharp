@@ -157,11 +157,10 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 		constructorScope.code->addBuffer(varExpr.code);
 		constructorScope.code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 
-		BinaryBuffer args;
-		args.addValue(member.offset);
-		args.addValue(member.type->size);
+		constructorScope.code->pushInt(member.offset);
+		constructorScope.code->pushInt(member.type->size);
 
-		constructorScope.code->addOperation(BytecodeOp::setClassMember, args);
+		constructorScope.code->addOperation(BytecodeOp::setClassMember);
 	}
 
 	for (auto& i : this->methods)

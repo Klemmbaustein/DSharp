@@ -79,3 +79,26 @@ ExpressionResult lang::StringType::compileCast(ExpressionResult value)
 {
 	return ExpressionResult();
 }
+
+ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
+{
+	Token memberName = line.get();
+
+	if (memberName == "length")
+	{
+		ExpressionResult result;
+		result.code.addBuffer(value.code);
+		// string length offset (0 bytse)
+		result.code.pushInt(0);
+		// string length size (sizeof uint32_t bytes)
+		result.code.pushInt(sizeof(uint32_t));
+		result.code.addOperation(BytecodeOp::classMember);
+		result.type = IntType::instance;
+		result.valid = true;
+		return result;
+	}
+
+	errors->error(ErrorCode::parseUnknowmMember, memberName, "The type " + this->name + " does not contain a member called '" + memberName.string + "'");
+
+	return ExpressionResult();
+}

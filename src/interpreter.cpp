@@ -174,9 +174,9 @@ void lang::InterpretContext::run()
 			break;
 		}
 		case lang::BytecodeOp::setClassMember: {
+			uint32_t size = popValue<uint32_t>();
+			uint32_t offset = popValue<uint32_t>();
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			uint32_t offset = *(uint32_t*)&argumentBuffer[0];
-			uint32_t size = *(uint32_t*)&argumentBuffer[sizeof(offset)];
 			popBytes(ptr->getBody() + offset, size);
 			break;
 		}
@@ -211,9 +211,11 @@ void lang::InterpretContext::run()
 			auto second = popStringLength();
 			auto first = popStringLength();
 
-			uint32_t newSize = first.length + second.length + 1;
+			uint32_t newSize = first.length + second.length;
+			// Space for null terminator
+			uint32_t contentSize = newSize + 1;
 
-			RuntimeClass* newClass = RuntimeClass::allocateClass(newSize + sizeof(uint32_t), 0);
+			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
 
 			(*(uint32_t*)newClass->getBody()) = newSize;
 			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));

@@ -12,8 +12,9 @@ namespace lang
 			this->size = sizeof(size_t);
 		}
 
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
-		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
-		virtual ExpressionResult compileCast(ExpressionResult value) override;
+		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
+		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		ExpressionResult compileCast(ExpressionResult value) override;
+		ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with) override;
 	};
 }

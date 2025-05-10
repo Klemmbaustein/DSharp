@@ -13,7 +13,6 @@ lang::BytecodeOperation::BytecodeOperation(BytecodeOp operation, BinaryBuffer ar
 	this->operation = operation;
 	this->arguments = arguments;
 }
-
 void lang::BytecodeOperation::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	stream.addBuffer(this->arguments);
@@ -138,7 +137,6 @@ bytecodeOffset lang::BytecodeCallNative::getArgsSize()
 // JumpLabel     //
 // ------------- //
 
-
 lang::BytecodeJumpLabel::BytecodeJumpLabel(std::string name)
 {
 	this->name = name;
@@ -223,7 +221,7 @@ void lang::BytecodeCompiler::printAssembly()
 	}
 }
 
-void lang::BytecodeCompiler::compileTo(BytecodeStream& stream)
+void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, ErrorContext* errors)
 {
 	bytecodeOffset bytecodePos = 0;
 
@@ -268,6 +266,13 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream)
 				stream.addOperation(instr->operation, argsBuffer);
 			}
 		}
+
+		if (this->variableStackPosition != 0)
+		{
+			errors->error(ErrorCode::internalError, Token(),
+				"Internal compiler error. The variable stack position did not return to 0 after a function call. "
+				"This is a compiler bug and should never happen.");
+		}
 	}
 
 	stream.externalFunctions = this->externals;
@@ -300,7 +305,12 @@ void lang::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)
 {
 	this->instructions.reserve(this->instructions.size() + other.instructions.size());
 
+#ifdef _WIN32
+	// GCC doesnt have thise function yet, cool
 	this->instructions.insert_range(instructions.begin(), other.instructions);
+#else
+//	this->instructions.insert(instructions.begin(), other.instructions);
+#endif
 }
 void lang::BytecodeBuffer::addBuffer(const BytecodeBuffer& other)
 {

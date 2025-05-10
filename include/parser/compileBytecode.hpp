@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include "error.hpp"
 
 namespace lang
 {
@@ -117,9 +118,10 @@ namespace lang
 		std::map<std::string, BytecodeFunction> functions;
 		std::vector<std::string> externals;
 		std::map<std::string, uint32_t> usedExternals;
+		uint32_t variableStackPosition = 0;
 
 		void printAssembly();
 
-		void compileTo(BytecodeStream& stream);
+		void compileTo(BytecodeStream& stream, ErrorContext* errors);
 	};
 } // namespace lang

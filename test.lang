@@ -2,21 +2,19 @@ using system
 
 module test
 
-class TestClass
+fn padString(string in) -> string
 {
-	int num = 42
-	fn delete()
+	while in.length < 10
 	{
-		println(num)
+		in = in + "!"
 	}
+	return in
 }
 
 [EntryPoint]
 fn main() -> int
 {
-	var testing = new TestClass()
+	println(padString("hello"))
 
-	testing = new TestClass()
-
-	return 0
+	return 42
 }

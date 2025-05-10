@@ -33,12 +33,14 @@ BytecodeBuffer lang::ClassType::compileMove(ParsedScope* with)
 	return outBuffer;
 }
 
-ExpressionResult lang::ClassType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
+ExpressionResult lang::ClassType::compileOperator(Operator operatorType,
+	ExpressionResult& first, ExpressionResult& second)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
 {
 	ExpressionResult result;
 
@@ -70,7 +72,8 @@ ExpressionResult lang::ClassType::compileCast(ExpressionResult value)
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
+ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLine& line,
+	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	Token memberName = line.get();
 
@@ -100,7 +103,8 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 			return result;
 		}
 
-		errors->error(ErrorCode::parseUnknowmMember, memberName, "The type " + this->name + " does not contain a method called '" + memberName.string + "'");
+		errors->error(ErrorCode::parseUnknowmMember, memberName,
+			"The type " + this->name + " does not contain a method called '" + memberName.string + "'");
 
 		return ExpressionResult();
 	}
@@ -129,7 +133,8 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 		return result;
 	}
 
-	errors->error(ErrorCode::parseUnknowmMember, memberName, "The type " + this->name + " does not contain a member called '" + memberName.string + "'");
+	errors->error(ErrorCode::parseUnknowmMember, memberName,
+		"The type " + this->name + " does not contain a member called '" + memberName.string + "'");
 
 	return ExpressionResult();
 }
