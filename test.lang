@@ -4,7 +4,7 @@ module test
 
 fn yellString(string in) -> string
 {
-	while in.length < 50
+	while in.length < 1000000
 	{
 		in = in + "!"
 	}
@@ -14,8 +14,7 @@ fn yellString(string in) -> string
 [EntryPoint]
 fn main() -> int
 {
-	string initial = "hello"
-	println(yellString(initial))
+	println(yellString("hello"))
 
 	return 1
 }

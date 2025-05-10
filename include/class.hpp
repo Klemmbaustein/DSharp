@@ -25,8 +25,14 @@ namespace lang
 				return 0;
 			}
 
+			if (header->references > 5)
+			{
+				abort();
+			}
+
 			if (header->references == 0)
 			{
+				std::printf("str : %s", (const char*)header->getBody());
 				delete[] header->vtable;
 				free(header);
 				return 0;

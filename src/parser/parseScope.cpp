@@ -151,6 +151,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 
 				this->code->addBuffer(expr.code);
 
+				this->code->addBuffer(expr.type->compileMove(this));
+
 				if (argsLine.empty())
 					break;
 				else if (argsLine.get() != ",")
@@ -238,7 +240,7 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 
 	auto instruction = new BytecodePushVariable(tempName, type);
 
-	code->add(instruction);
+	buffer.add(instruction);
 
 	// clang-format off
 	auto& result = this->variables.insert(
@@ -439,7 +441,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			}
 
 			code->addBuffer(expr.code);
-			pushVariableValue(expr.type, true);
+			pushVariableValue(expr.type, false);
 		}
 		else if (isVar)
 		{
@@ -471,13 +473,8 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		valueExpr.compileToType(equals, expr.type, errors);
 		this->code->addBuffer(valueExpr.code);
 
-		auto moveCode = expr.type->compileEndMove(this);
-		if (moveCode.instructions.size())
-		{
-			this->code->addBuffer(moveCode);
-		}
-
 		this->code->addBuffer(expr.setCode.value());
+
 		line.expectEndOfLine(errors);
 	}
 	else if (expr.valid)

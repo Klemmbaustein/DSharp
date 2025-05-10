@@ -28,7 +28,7 @@ namespace lang
 			return *(T*)&this->stack[stackPos];
 		}
 
-		const char* popString();
+		std::string popString();
 		RuntimeStr popStringLength();
 
 		template <typename T>

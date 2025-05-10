@@ -234,11 +234,14 @@ void lang::InterpretContext::run()
 	}
 }
 
-const char* lang::InterpretContext::popString()
+std::string lang::InterpretContext::popString()
 {
 	RuntimeClass* ptr = popValue<RuntimeClass*>();
 
-	return (const char*)(ptr->getBody() + sizeof(uint32_t));
+	std::string out = { (const char*)(ptr->getBody() + sizeof(uint32_t)),
+		*(uint32_t*)ptr->getBody() };
+	RuntimeClass::unref(ptr);
+	return out;
 }
 
 lang::RuntimeStr lang::InterpretContext::popStringLength()

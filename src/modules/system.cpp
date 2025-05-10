@@ -9,9 +9,8 @@ lang::NativeModule lang::modules::system::createModule()
 		{ FunctionArgument(IntType::instance, Token("intArg")) },
 		"println",
 		[](InterpretContext* context) {
-			auto popped = context->popStringLength();
-			std::string str = std::string(popped.ptr, popped.length);
-			std::puts(str.c_str());
+			auto popped = context->popString();
+			std::puts(popped.c_str());
 		}));
 	out.functions.push_back(NativeFunction(
 		{ FunctionArgument(IntType::instance, Token("intArg")) },
