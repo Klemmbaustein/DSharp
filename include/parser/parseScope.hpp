@@ -43,6 +43,7 @@ namespace lang
 
 		void compile(ParseContext* context, ParsedFile* file, ErrorContext* errors);
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);
+		void compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		ExpressionResult pushExpression(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);

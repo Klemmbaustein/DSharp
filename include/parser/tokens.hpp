@@ -71,6 +71,7 @@ namespace lang
 		void fromStream(std::istream& stream, std::string name, ErrorContext* errors);
 
 		TokenLine next(ErrorContext* errors);
+		TokenLine peek(ErrorContext* errors);
 		void addLine(TokenLine ln);
 		void getScope(TokenStream& addTo, ErrorContext* errors, size_t beginDepth = 1);
 

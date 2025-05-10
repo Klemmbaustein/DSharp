@@ -27,6 +27,7 @@ namespace lang
 
 			if (header->references == 0)
 			{
+				delete[] header->vtable;
 				free(header);
 				return 0;
 			}
@@ -36,7 +37,10 @@ namespace lang
 			if (header->references == 0)
 			{
 				if (!header->vtable[0])
+				{
+					delete[] header->vtable;
 					free(header);
+				}
 				else
 					return header->vtable[0];
 			}

@@ -444,7 +444,20 @@ TokenLine lang::TokenStream::next(ErrorContext* errors)
 	}
 	return TokenLine{
 		.lineTokens = &this->lineTokens[currentStreamLine++]
-	}.postProcessTokens(errors);
+	}
+		.postProcessTokens(errors);
+}
+
+TokenLine lang::TokenStream::peek(ErrorContext* errors)
+{
+	if (currentStreamLine == this->lineTokens.size())
+	{
+		return TokenLine();
+	}
+	return TokenLine{
+		.lineTokens = &this->lineTokens[currentStreamLine]
+	}
+		.postProcessTokens(errors);
 }
 
 void lang::TokenStream::addLine(TokenLine ln)

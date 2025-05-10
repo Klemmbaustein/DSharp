@@ -2,9 +2,9 @@ using system
 
 module test
 
-fn padString(string in) -> string
+fn yellString(string in) -> string
 {
-	while in.length < 10
+	while in.length < 50
 	{
 		in = in + "!"
 	}
@@ -14,7 +14,8 @@ fn padString(string in) -> string
 [EntryPoint]
 fn main() -> int
 {
-	println(padString("hello"))
+	string initial = "hello"
+	println(yellString(initial))
 
-	return 42
+	return 1
 }

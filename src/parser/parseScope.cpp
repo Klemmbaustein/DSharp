@@ -107,11 +107,23 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 		ExpressionResult result;
 		result.valid = true;
 		result.type = foundVariable->second.type;
+		result.code = foundVariable->second.readValue(this);
 		if (setExpression)
 		{
-			result.setCode = foundVariable->second.writeValue(this);
+			auto unrefCode = result.type->compileUnref();
+
+			if (unrefCode.instructions.size())
+			{
+				result.setCode = result.code;
+				result.setCode->addBuffer(unrefCode);
+			}
+			else
+			{
+				result.setCode = BytecodeBuffer();
+			}
+
+			result.setCode->addBuffer(foundVariable->second.writeValue(this));
 		}
-		result.code = foundVariable->second.readValue(this);
 		return result;
 	}
 
@@ -253,6 +265,7 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 	if (copy)
 	{
 		code->addBuffer(type->compileMove(this));
+		code->addBuffer(type->compileEndMove(this));
 	}
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
@@ -372,17 +385,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	}
 	if (first.string == "if")
 	{
-		auto condition = pushExpression(line, errors, false);
-		this->code->addBuffer(condition.code);
-
-		auto endLabel = new BytecodeJumpLabel("endif");
-
-		this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
-
-		parseSubScope(file, errors);
-
-		this->code->add(endLabel);
-
+		compileIf(line, file, errors);
 		return;
 	}
 
@@ -492,6 +495,48 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		line.expectEndOfLine(errors);
 	}
 	return;
+}
+
+void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
+{
+	auto condition = pushExpression(line, errors, false);
+	this->code->addBuffer(condition.code);
+
+	auto endLabel = new BytecodeJumpLabel("endif");
+
+	this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
+
+	parseSubScope(file, errors);
+
+	auto nextLine = this->tokenStream->peek(errors);
+
+	if (nextLine.peek() == "else")
+	{
+		this->tokenStream->next(errors);
+		
+		nextLine.get();
+
+		auto endElseLabel = new BytecodeJumpLabel("endElseLabel");
+		this->code->add(new BytecodeJump(BytecodeOp::jump, endElseLabel));
+
+		if (nextLine.peek() == "if")
+		{
+			nextLine.get();
+			this->code->add(endLabel);
+			compileIf(nextLine, file, errors);
+			this->code->add(endElseLabel);
+		}
+		else
+		{
+			this->code->add(endLabel);
+			parseSubScope(file, errors);
+			this->code->add(endElseLabel);
+		}
+	}
+	else
+	{
+		this->code->add(endLabel);
+	}
 }
 
 BytecodeBuffer lang::ParsedScope::ScopeVariable::readValue(ParsedScope* scope) const
