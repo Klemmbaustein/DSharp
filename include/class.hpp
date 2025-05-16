@@ -12,7 +12,7 @@ namespace lang
 		size_t references;
 
 		static RuntimeClass* allocateClass(size_t bodySize, bytecodeOffset destructor);
-		
+
 		void addRef()
 		{
 			references++;
@@ -25,10 +25,13 @@ namespace lang
 				return 0;
 			}
 
-			if (header->references > 5)
+#ifdef _DEBUG
+			if (header->references > UINT16_MAX)
 			{
+				// If the refcount is this high we're probably reading invalid data
 				abort();
 			}
+#endif
 
 			if (header->references == 0)
 			{
@@ -57,4 +60,4 @@ namespace lang
 			return (uint8_t*)(this) + sizeof(RuntimeClass);
 		}
 	};
-}
+} // namespace lang

@@ -35,6 +35,9 @@ namespace lang
 		divInt,
 		greaterInt,
 		lessInt,
+		/// Checks if the 2 topmost values on the stack are equal.
+		/// Arguments: 4 bytes value size
+		equals,
 		/// Adds the 2 topmost 32 bit floats on the stack and pushes the result.
 		addFloat,
 		/// Multiplies the 2 topmost 32 bit floats on the stack and pushes the result.
@@ -72,6 +75,8 @@ namespace lang
 		/// Arguments: 4 bytes offset, 4 bytes size
 		setClassMemberPushAgain,
 		concatString,
+		indexString,
+		setStringIndexCopy,
 	};
 
 	struct BytecodeStream

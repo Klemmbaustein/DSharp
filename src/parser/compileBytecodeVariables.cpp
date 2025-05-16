@@ -35,7 +35,7 @@ lang::BytecodeReadVariable::BytecodeReadVariable(BytecodePushVariable* variableP
 
 std::string BytecodeReadVariable::toString()
 {
-	return std::format("\tREAD_VAR {} {} {}", this->variable->variableType->name, this->variable->name, this->variable->variablePos);
+	return std::format("\tREAD_VAR {} {} <pos {}>", this->variable->variableType->name, this->variable->name, this->variable->variablePos);
 }
 void BytecodeReadVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {

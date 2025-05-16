@@ -4,13 +4,12 @@
 
 void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
 {
-	//if (this->discardable || !this->type)
+	if (this->discardable || !this->type)
 	{
 		return;
 	}
 	errors->error(ErrorCode::returnValueDiscarded, at,
-		"This value is discarded, but it isn't marked as [Discard].\n"
-			"If the return value of this function is supposed to be discardable, add the system::Discard attribute in front of the function.");
+		"This value is discarded, but isn't discardable.\nIf this is a function and the return value is supposed to be discardable, add the Discard attribute.");
 }
 
 void lang::ExpressionResult::compileToType(Token at, Type* target, ErrorContext* errors)

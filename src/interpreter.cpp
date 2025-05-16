@@ -100,6 +100,13 @@ void lang::InterpretContext::run()
 			pushValue(popValue<int32_t>() < first);
 			break;
 		}
+		case lang::BytecodeOp::equals: {
+			uint32_t size = popValue<uint32_t>();
+			pushValue<bool>(memcmp(
+				&this->stack[stackPos - size],
+				&this->stack[stackPos - size * 2], size) == 0);
+			break;
+		}
 		case lang::BytecodeOp::addFloat:
 			pushValue(popValue<float>() + popValue<float>());
 			break;
@@ -132,7 +139,7 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::ret:
 			if (functionStackPos == 0)
 			{
-				std::print("program returned: {}\n", popValue<int>());
+				std::print("program returned: '{}'\n", popValue<int>());
 				return;
 			}
 			bytecodeBuffer->streamPos = functionStack[--functionStackPos];
@@ -208,10 +215,10 @@ void lang::InterpretContext::run()
 			break;
 		}
 		case lang::BytecodeOp::concatString: {
-			auto second = popStringLength();
-			auto first = popStringLength();
+			auto second = popRuntimeStringRef();
+			auto first = popRuntimeStringRef();
 
-			uint32_t newSize = first.length + second.length;
+			uint32_t newSize = first.length() + second.length();
 			// Space for null terminator
 			uint32_t contentSize = newSize + 1;
 
@@ -219,14 +226,37 @@ void lang::InterpretContext::run()
 
 			(*(uint32_t*)newClass->getBody()) = newSize;
 			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
-			memcpy(strBegin, first.ptr, first.length);
-			memcpy(strBegin + first.length, second.ptr, second.length);
-			strBegin[first.length + second.length] = 0;
+			memcpy(strBegin, first.ptr(), first.length());
+			memcpy(strBegin + first.length(), second.ptr(), second.length());
+			strBegin[first.length() + second.length()] = 0;
 			pushValue<size_t>(size_t(newClass));
 
 			break;
 		}
+		case lang::BytecodeOp::indexString: {
+			auto index = popValue<int32_t>();
+			auto first = popRuntimeString();
+			pushValue<char>(char(first.ptr()[index]));
+			break;
+		}
+		case lang::BytecodeOp::setStringIndexCopy: {
+			auto index = popValue<int32_t>();
+			auto str = popRuntimeString();
+			char newChar = popValue<char>();
 
+			// Space for null terminator
+			uint32_t strLength = str.length();
+			uint32_t contentSize = str.length() + 1;
+
+			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
+
+			(*(uint32_t*)newClass->getBody()) = strLength;
+			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
+			memcpy(strBegin, str.ptr(), strLength);
+			strBegin[index] = newChar;
+			pushValue<size_t>(size_t(newClass));
+			break;
+		}
 		default:
 			abort();
 			break;
@@ -244,9 +274,18 @@ std::string lang::InterpretContext::popString()
 	return out;
 }
 
-lang::RuntimeStr lang::InterpretContext::popStringLength()
+void lang::InterpretContext::pushRuntimeString(RuntimeStr str)
 {
-	RuntimeClass* ptr = popValue<RuntimeClass*>();
+	str.classPtr->addRef();
+	pushValue<RuntimeClass*>(str.classPtr);
+}
 
-	return { (const char*)(ptr->getBody() + sizeof(uint32_t)), *(uint32_t*)ptr->getBody() };
+lang::RuntimeStr lang::InterpretContext::popRuntimeString()
+{
+	return RuntimeStr(popValue<RuntimeClass*>());
+}
+
+lang::RuntimeStrRef lang::InterpretContext::popRuntimeStringRef()
+{
+	return RuntimeStrRef(popValue<RuntimeClass*>());
 }

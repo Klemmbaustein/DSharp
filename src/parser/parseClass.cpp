@@ -147,6 +147,8 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	constructorScope.code = &this->constructor.code;
 	constructorScope.setClass(this);
 
+	auto& code = constructorScope.code;
+
 	for (auto& [name, member] : this->members)
 	{
 		if (member.value.empty())
@@ -154,13 +156,16 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 		TokenLine valueLine = TokenLine(&member.value);
 		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false);
-		constructorScope.code->addBuffer(varExpr.code);
-		constructorScope.code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+		varExpr.compileToType(member.name, member.type, errors);
+		code->addBuffer(varExpr.code);
+		code->addBuffer(varExpr.type->compileMove(&constructorScope));
+		code->addBuffer(varExpr.type->compileMove(&constructorScope));
+		code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 
-		constructorScope.code->pushInt(member.offset);
-		constructorScope.code->pushInt(member.type->size);
+		code->pushInt(member.offset);
+		code->pushInt(member.type->size);
 
-		constructorScope.code->addOperation(BytecodeOp::setClassMember);
+		code->addOperation(BytecodeOp::setClassMember);
 	}
 
 	for (auto& i : this->methods)
@@ -178,9 +183,9 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	}
 
 	// Return a reference to this.
-	constructorScope.code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 	constructorScope.compileScopeExit(true);
-	constructorScope.code->addOperation(BytecodeOp::ret);
+	code->addOperation(BytecodeOp::ret);
 
 
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];

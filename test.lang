@@ -2,19 +2,24 @@ using system
 
 module test
 
-fn yellString(string in) -> string
+class SomeClass
 {
-	while in.length < 1000000
+	string message
+
+	fn new()
 	{
-		in = in + "!"
+		message = "world"
 	}
-	return in
+
+	fn delete()
+	{
+	}
 }
 
 [EntryPoint]
 fn main() -> int
 {
-	println(yellString("hello"))
+	println(new SomeClass().message)
 
-	return 1
+	return 0
 }

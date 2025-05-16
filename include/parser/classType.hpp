@@ -50,9 +50,12 @@ namespace lang
 			return this == classType || this->classReference == classType || classType->classReference == this;
 		}
 
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
-		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
+			ExpressionResult& second, ParsedScope* with) override;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
-		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with) override;
+		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
+			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 	};
 } // namespace lang

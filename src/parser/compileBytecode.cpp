@@ -39,6 +39,8 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 		{ BytecodeOp::divInt, "DIV_I32" },
 		{ BytecodeOp::greaterInt, "GREATER_I32" },
 		{ BytecodeOp::lessInt, "LESS_I32" },
+		{ BytecodeOp::equals, "EQUALS" },
+		{ BytecodeOp::lessInt, "LESS_I32" },
 		{ BytecodeOp::addFloat, "ADD_F32" },
 		{ BytecodeOp::subFloat, "SUB_F32" },
 		{ BytecodeOp::mulFloat, "MUL_F32" },
@@ -56,6 +58,8 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 		{ BytecodeOp::setClassMember, "SET_CLASS_MEMBER" },
 		{ BytecodeOp::setClassMemberPushAgain, "SET_CLASS_MEMBER_PUSH" },
 		{ BytecodeOp::concatString, "CONCAT_STRING" },
+		{ BytecodeOp::indexString, "INDEX_STRING" },
+		{ BytecodeOp::setStringIndexCopy, "SET_STR_AT" },
 	};
 
 	std::string op = operations[this->operation];
@@ -102,27 +106,32 @@ bytecodeOffset lang::BytecodeCallFunction::getArgsSize()
 
 lang::BytecodeCallNative::BytecodeCallNative(NativeFunction* function)
 {
-	this->function = function;
+	this->functionName = function->getFullName();
 	this->operation = BytecodeOp::callExternal;
+}
+
+lang::BytecodeCallNative::BytecodeCallNative(std::string functionName)
+{
+	this->operation = BytecodeOp::callExternal;
+	this->functionName = functionName;
 }
 
 std::string BytecodeCallNative::toString()
 {
-	return std::format("\tNATIVE_CALL {}", this->function->getFullName());
+	return std::format("\tNATIVE_CALL {}", functionName);
 }
 
 void lang::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
-	std::string fullName = this->function->getFullName();
-	auto foundPosition = compiler->usedExternals.find(fullName);
+	auto foundPosition = compiler->usedExternals.find(this->functionName);
 
 	uint32_t position = 0;
 
 	if (foundPosition == compiler->usedExternals.end())
 	{
 		position = uint32_t(compiler->externals.size());
-		compiler->externals.push_back(fullName);
-		compiler->usedExternals.insert({ fullName, position });
+		compiler->externals.push_back(this->functionName);
+		compiler->usedExternals.insert({ this->functionName, position });
 	}
 
 	stream.addValue(position);

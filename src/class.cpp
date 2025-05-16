@@ -3,7 +3,7 @@ using namespace lang;
 
 RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, bytecodeOffset destructor)
 {
-	void* classMemory = malloc(sizeof(RuntimeClass) + bodySize);
+	void* classMemory = calloc(sizeof(RuntimeClass) + bodySize, 1);
 
 	if (!classMemory)
 	{

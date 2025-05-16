@@ -18,7 +18,8 @@ namespace lang
 
 		virtual ~Type() = default;
 
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) = 0;
+		virtual ExpressionResult compileOperator(Operator operatorType,
+			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) = 0;
 
 		virtual bool sameAs(Type* other)
 		{
@@ -37,15 +38,23 @@ namespace lang
 			return BytecodeBuffer();
 		}
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) = 0;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with) = 0;
 		virtual ExpressionResult compileCast(ExpressionResult value) = 0;
 
-		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with);
-		
+		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
+			ErrorContext* errors, bool setMember, ParsedScope* with);
+
+		virtual ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second);
+		virtual ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+			ErrorContext* errors, bool setMember, ParsedScope* with);
+		virtual ExpressionResult compileToString(ExpressionResult thisValue,
+			ErrorContext* errors, ParsedScope* with);
+
 		/**
-		* @brief
-		* Returns the name of the type, or <void> if the type is null.
-		*/
+		 * @brief
+		 * Returns the name of the type, or <void> if the type is null.
+		 */
 		static std::string toString(Type* target);
 	};
 
@@ -57,19 +66,61 @@ namespace lang
 	class IntType : public PrimitiveType
 	{
 	public:
-		static inline IntType* instance;
-
 		IntType()
 		{
 			this->name = "int";
 			this->size = sizeof(int32_t);
-			instance = this;
 		}
 
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
+		virtual ExpressionResult compileOperator(Operator operatorType,
+			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
+		virtual ExpressionResult compileToString(ExpressionResult thisValue,
+			ErrorContext* errors, ParsedScope* with);
+
+		static IntType* getInstance()
+		{
+			if (!instance)
+			{
+				instance = new IntType();
+			}
+			return instance;
+		}
+
+	private:
+		static inline IntType* instance = nullptr;
+	};
+
+	class CharType : public PrimitiveType
+	{
+	public:
+		CharType()
+		{
+			this->name = "char";
+			this->size = sizeof(uint8_t);
+		}
+
+		virtual ExpressionResult compileOperator(Operator operatorType,
+			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
+
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with) override;
+		virtual ExpressionResult compileCast(ExpressionResult value) override;
+
+		static CharType* getInstance()
+		{
+			if (!instance)
+			{
+				instance = new CharType();
+			}
+			return instance;
+		}
+
+	private:
+		static inline CharType* instance = nullptr;
 	};
 
 	class FloatType : public PrimitiveType
@@ -81,9 +132,11 @@ namespace lang
 			this->size = sizeof(float);
 		}
 
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
+		virtual ExpressionResult compileOperator(Operator operatorType,
+			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
 	};
 
@@ -96,9 +149,11 @@ namespace lang
 			this->size = sizeof(bool);
 		}
 
-		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second) override;
+		virtual ExpressionResult compileOperator(Operator operatorType,
+			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
-		virtual ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
 	};
 

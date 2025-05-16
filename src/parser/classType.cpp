@@ -34,7 +34,7 @@ BytecodeBuffer lang::ClassType::compileMove(ParsedScope* with)
 }
 
 ExpressionResult lang::ClassType::compileOperator(Operator operatorType,
-	ExpressionResult& first, ExpressionResult& second)
+	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
@@ -125,11 +125,22 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 
 		if (setMember)
 		{
-			result.setCode = result.code;
+			auto unrefCode = i.type->compileUnref();
+			result.setCode = BytecodeBuffer();
+			if (unrefCode.instructions.size())
+			{
+				result.setCode->addBuffer(result.code);
+				result.setCode->addOperation(BytecodeOp::classMember, args);
+				result.setCode->addBuffer(unrefCode);
+			}
+
+			result.setCode->addBuffer(i.type->compileMove(with));
+			result.setCode->addBuffer(result.code);
 			result.setCode->addOperation(BytecodeOp::setClassMember, args);
 		}
 
 		result.code.addOperation(BytecodeOp::classMember, args);
+
 		return result;
 	}
 

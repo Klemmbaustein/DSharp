@@ -2,7 +2,8 @@
 #include <parser/parseScope.hpp>
 using namespace lang;
 
-ExpressionResult lang::StringType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
+ExpressionResult lang::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
+	ExpressionResult& second, ParsedScope* with)
 {
 	if (second.type != this)
 	{
@@ -18,30 +19,81 @@ ExpressionResult lang::StringType::compileOperator(Operator operatorType, Expres
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
 	result.code.addOperation(BytecodeOp::concatString);
+	result.code.addBuffer(this->compileEndMove(with));
 	result.type = this;
 	result.valid = true;
 	return result;
 }
 
-ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
 {
+	if (first.string.size() > 3 && first.string[0] == '$')
+	{
+		std::string content = first.string.substr(2, first.string.size() - 3);
+		ExpressionResult result = compileStringValue(content, with);
+
+		result.code.add(new BytecodeCallNative("system::format"));
+
+		return result;
+	}
+
 	if (first.string.size() < 2 || first.string[0] != '"' || first.string[first.string.size() - 1] != '"')
 	{
 		return ExpressionResult();
 	}
 
 	std::string content = first.string.substr(1, first.string.size() - 2);
+	return compileStringValue(content, with);
+}
 
+ExpressionResult lang::StringType::compileCast(ExpressionResult value)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult lang::StringType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+	ErrorContext* errors, bool setMember, ParsedScope* with)
+{
+	if (!indexValue.type->sameAs(IntType::getInstance()))
+	{
+		return ExpressionResult();
+	}
+
+	ExpressionResult result;
+	result.type = CharType::getInstance();
+	result.valid = true;
+	result.code.addBuffer(thisValue.code);
+	result.code.addBuffer(indexValue.code);
+	result.code.addOperation(BytecodeOp::indexString);
+
+	if (setMember)
+	{
+		result.setCode = BytecodeBuffer();
+		result.setCode->addBuffer(thisValue.code);
+
+		BinaryBuffer args;
+		args.addValue<uint32_t>(this->size);
+		result.setCode->addBuffer(indexValue.code);
+		result.setCode->addOperation(BytecodeOp::setStringIndexCopy);
+		result.setCode->addBuffer(*thisValue.setCode);
+	}
+
+	return result;
+}
+
+ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedScope* with)
+{
 	ExpressionResult result;
 
 	// Include the null terminator as well
-	size_t strLength = content.size();
+	size_t strLength = str.size();
 	size_t dataSize = strLength + 1;
 	size_t sizeOffset = sizeof(uint32_t);
 	size_t fullSize = dataSize + sizeOffset;
 
 	BinaryBuffer args;
-	args.add((uint8_t*)content.data(), dataSize);
+	args.add((uint8_t*)str.data(), dataSize);
 	result.code.addOperation(BytecodeOp::push, args);
 
 	result.code.pushInt(strLength);
@@ -57,7 +109,7 @@ ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line, Er
 	result.code.pushInt(0);
 	result.code.pushInt(sizeOffset);
 	result.code.addOperation(BytecodeOp::setClassMemberPushAgain);
-	
+
 	// Everything else -> string
 	result.code.pushInt(sizeOffset);
 	result.code.pushInt(dataSize);
@@ -75,12 +127,8 @@ ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line, Er
 	return result;
 }
 
-ExpressionResult lang::StringType::compileCast(ExpressionResult value)
-{
-	return ExpressionResult();
-}
-
-ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
+ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLine& line,
+	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	Token memberName = line.get();
 
@@ -93,7 +141,7 @@ ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLi
 		// string length size (sizeof uint32_t bytes)
 		result.code.pushInt(sizeof(uint32_t));
 		result.code.addOperation(BytecodeOp::classMember);
-		result.type = IntType::instance;
+		result.type = IntType::getInstance();
 		result.valid = true;
 		return result;
 	}

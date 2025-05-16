@@ -51,12 +51,13 @@ namespace lang
 	{
 	public:
 		BytecodeCallNative(NativeFunction* function);
+		BytecodeCallNative(std::string functionName);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
-		NativeFunction* function = nullptr;
+		std::string functionName;
 	};
 	class BytecodeAllocClass : public BytecodeInstruction
 	{

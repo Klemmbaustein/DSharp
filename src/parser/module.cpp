@@ -17,13 +17,20 @@ Type* lang::Module::getType(TokenLine& from)
 {
 	auto name = from.get();
 
+	auto foundType = this->moduleTypes.find(name.string);
+
+	if (foundType == this->moduleTypes.end())
+	{
+		return nullptr;
+	}
+
 	// array
 	if (from.peek() == "[")
 	{
 		abort();
 	}
 
-	return this->moduleTypes[name.string];
+	return foundType->second;
 }
 
 Attribute* lang::Module::getAttribute(TokenLine& from)

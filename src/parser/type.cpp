@@ -1,8 +1,11 @@
 #include <parser/type.hpp>
 #include <parser/stringUtils.hpp>
+#include <parser/parseScope.hpp>
+#include <parser/stringType.hpp>
 using namespace lang;
 
-ExpressionResult lang::IntType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
+ExpressionResult lang::IntType::compileOperator(Operator operatorType,
+	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
 
@@ -15,7 +18,7 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType, Expressio
 		firstCopy.type = second.type;
 		firstCopy.code.addOperation(BytecodeOp::intToFloat);
 		result.type = firstCopy.type;
-		return firstCopy.type->compileOperator(operatorType, firstCopy, second);
+		return firstCopy.type->compileOperator(operatorType, firstCopy, second, with);
 	}
 
 	result.code.addBuffer(second.code);
@@ -51,7 +54,8 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType, Expressio
 	return result;
 }
 
-ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
 {
 	bool isNegative = false;
 	if (first == "+")
@@ -97,7 +101,50 @@ ExpressionResult lang::IntType::compileCast(ExpressionResult value)
 	return ExpressionResult();
 }
 
-ExpressionResult lang::Type::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
+ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
+{
+	ExpressionResult result;
+	result.code.add(new BytecodeCallNative("system::int.toString"));
+	result.valid = true;
+	result.type = StringType::getInstance();
+	return result;
+}
+
+ExpressionResult lang::Type::compileMember(ExpressionResult value, TokenLine& line,
+	ErrorContext* errors, bool setMember, ParsedScope* with)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionResult second)
+{
+	if (!first.type->sameAs(second.type))
+	{
+		return ExpressionResult();
+	}
+
+	ExpressionResult result;
+	result.valid = true;
+	result.type = first.type;
+
+	result.code.addBuffer(first.code);
+	result.code.addBuffer(second.code);
+	
+	BinaryBuffer args;
+	args.addValue<uint32_t>(first.type->size);
+
+	result.code.addOperation(BytecodeOp::equals, args);
+
+	return result;
+}
+
+ExpressionResult lang::Type::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+	ErrorContext* errors, bool setMember, ParsedScope* scope)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult lang::Type::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
 {
 	return ExpressionResult();
 }
@@ -107,7 +154,8 @@ std::string lang::Type::toString(Type* target)
 	return target ? target->name : "<void>";
 }
 
-ExpressionResult lang::FloatType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
+ExpressionResult lang::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,
+	ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
 
@@ -145,7 +193,8 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 	return result;
 }
 
-ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
 {
 	bool isNegative = false;
 	if (first == "+")
@@ -190,7 +239,8 @@ ExpressionResult lang::FloatType::compileCast(ExpressionResult value)
 
 	return ExpressionResult();
 }
-ExpressionResult lang::BoolType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second)
+ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
+	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
 
@@ -211,7 +261,8 @@ ExpressionResult lang::BoolType::compileOperator(Operator operatorType, Expressi
 	return result;
 }
 
-ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
 {
 	bool value = false;
 	if (first == "true")
@@ -233,6 +284,50 @@ ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line, Erro
 }
 
 ExpressionResult lang::BoolType::compileCast(ExpressionResult value)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult lang::CharType::compileOperator(Operator operatorType,
+	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
+{
+	ExpressionResult result;
+
+	result.code.addBuffer(first.code);
+	result.code.addBuffer(second.code);
+
+	switch (operatorType)
+	{
+	case lang::Operator::logicalAnd:
+		result.code.addOperation(BytecodeOp::boolAnd);
+		break;
+	default:
+		return ExpressionResult();
+	}
+
+	result.type = this;
+	result.valid = true;
+	return result;
+}
+
+ExpressionResult lang::CharType::compileValue(Token first, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
+{
+	if (first.string[0] != '\'')
+	{
+		return ExpressionResult();
+	}
+
+	ExpressionResult result;
+	BinaryBuffer valueBuffer;
+	valueBuffer.addValue<char>(first.string[1]);
+	result.code.addOperation(BytecodeOp::push, valueBuffer);
+	result.valid = true;
+	result.type = this;
+	return result;
+}
+
+ExpressionResult lang::CharType::compileCast(ExpressionResult value)
 {
 	return ExpressionResult();
 }

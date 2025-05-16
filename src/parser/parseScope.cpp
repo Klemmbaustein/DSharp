@@ -1,9 +1,11 @@
 #include <parser/parseScope.hpp>
 #include <modules/system.hpp>
 #include <parser/compileBytecodeVariables.hpp>
+#include <format>
 using namespace lang;
 
-ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, ErrorContext* errors, bool setExpression)
+ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
+	ErrorContext* errors, bool setExpression)
 {
 	ExpressionResult result = pushValue(currentLine, errors, setExpression);
 
@@ -19,6 +21,24 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, Error
 		}
 
 		Token operatorToken = currentLine.peek();
+
+		if (operatorToken == "[")
+		{
+			currentLine.get();
+			auto index = pushExpression(currentLine, errors, false);
+
+			result = result.type->compileIndex(result, index, errors, setExpression, this);
+
+			if (currentLine.get() != "]")
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
+					"Unexpected '" + currentLine.previous().string + "'");
+				break;
+			}
+
+			continue;
+		}
+
 		auto exprOperator = stringToOperator(operatorToken.string);
 		if (exprOperator == Operator::unknown)
 		{
@@ -52,14 +72,31 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine, Error
 		//	}
 		//}
 
-		result = result.type->compileOperator(exprOperator, result, secondValue);
+		auto oldType = result.type;
+
+		if (exprOperator == Operator::equals)
+		{
+			result = result.type->compileEqualsTo(result, secondValue);
+		}
+		else
+		{
+			result = result.type->compileOperator(exprOperator, result, secondValue, this);
+		}
+		if (!result.valid)
+		{
+			errors->error(ErrorCode::parseInvalidType, operatorToken,
+				std::format("The operator '{}' does not accept types '{}' and '{}'",
+					operatorToken.string, oldType->name, secondValue.type->name));
+			break;
+		}
 	}
 
 	result.valid = true;
 	return result;
 }
 
-ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression)
+ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
+	ErrorContext* errors, bool setExpression)
 {
 	Token value = currentLine.peek();
 
@@ -145,12 +182,23 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 			TokenLine argsLine;
 			argsLine.lineTokens = &args;
 
+			size_t argIndex = 0;
+			auto functionArgs = function->getArguments();
+
 			while (!argsLine.empty())
 			{
+				auto exprToken = argsLine.peek();
 				auto expr = this->pushExpression(argsLine, errors, false);
 
-				this->code->addBuffer(expr.code);
+				auto& currentArg = functionArgs[argIndex];
+				expr.compileToType(exprToken, currentArg.type, errors);
 
+				if (!expr.type)
+				{
+					return ExpressionResult();
+				}
+
+				this->code->addBuffer(expr.code);
 				this->code->addBuffer(expr.type->compileMove(this));
 
 				if (argsLine.empty())
@@ -195,14 +243,16 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine, ErrorConte
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression)
+ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine,
+	ErrorContext* errors, bool setExpression)
 {
 	ExpressionResult result;
 	result.valid = true;
 	result.type = this->inClass->thisType;
 	result.code = thisVariable->readValue(this);
 
-	result = this->inClass->thisType->compileMember(result, currentLine, errors, setExpression, this);
+	result = this->inClass->thisType->compileMember(result, currentLine,
+		errors, setExpression, this);
 	return result;
 }
 
@@ -266,8 +316,7 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 	args.addValue<uint32_t>(0);
 	if (copy)
 	{
-		//code->addBuffer(type->compileMove(this));
-		//code->addBuffer(type->compileEndMove(this));
+		code->addBuffer(type->compileMove(this));
 	}
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
@@ -329,14 +378,14 @@ void lang::ParsedScope::compileScopeExit(bool full)
 void lang::ParsedScope::setClass(ParsedClass* inClass)
 {
 	this->inClass = inClass;
-	
+
 	bool copy = !this->scopeFunction || this->scopeFunction->name != "delete";
 
 	if (copy)
 	{
 		this->code->addBuffer(inClass->thisType->compileMove(this));
 	}
-	pushVariableValue(inClass->thisType, copy);
+	pushVariableValue(inClass->thisType, false);
 	this->thisVariable = &addVariable(Token("this"), inClass->thisType);
 }
 
@@ -399,7 +448,12 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 	if (first.string == "while")
 	{
-		auto condition = pushExpression(line, errors, false);
+		auto conditionLine = line.getUntil("{", errors);
+
+		TokenLine conditionTokens;
+		conditionTokens.lineTokens = &conditionLine;
+
+		auto condition = pushExpression(conditionTokens, errors, false);
 
 		auto beginLabel = new BytecodeJumpLabel("while_begin");
 		this->code->add(beginLabel);
@@ -447,7 +501,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			}
 
 			code->addBuffer(expr.code);
-			pushVariableValue(expr.type, false);
+			pushVariableValue(expr.type, true);
 		}
 		else if (isVar)
 		{
@@ -502,7 +556,12 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
-	auto condition = pushExpression(line, errors, false);
+	auto conditionLine = line.getUntil("{", errors);
+
+	TokenLine conditionTokens;
+	conditionTokens.lineTokens = &conditionLine;
+
+	auto condition = pushExpression(conditionTokens, errors, false);
 	this->code->addBuffer(condition.code);
 
 	auto endLabel = new BytecodeJumpLabel("endif");
@@ -516,7 +575,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 	if (nextLine.peek() == "else")
 	{
 		this->tokenStream->next(errors);
-		
+
 		nextLine.get();
 
 		auto endElseLabel = new BytecodeJumpLabel("endElseLabel");

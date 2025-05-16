@@ -24,10 +24,11 @@ void lang::ParseContext::addFile(std::string string)
 
 BytecodeStream lang::ParseContext::compile()
 {
-	this->defaultTypes.push_back(new IntType());
+	this->defaultTypes.push_back(IntType::getInstance());
 	this->defaultTypes.push_back(new FloatType());
 	this->defaultTypes.push_back(new BoolType());
-	this->defaultTypes.push_back(new StringType());
+	this->defaultTypes.push_back(StringType::getInstance());
+	this->defaultTypes.push_back(CharType::getInstance());
 
 	scanModules();
 
@@ -231,7 +232,7 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 	// They're added in reverse order because they're pushed onto the stack in this order.
 	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
 	{
-		functionScope.pushVariableValue(it->type, true);
+		functionScope.pushVariableValue(it->type, false);
 		functionScope.addVariable(it->name, it->type);
 	}
 
@@ -350,6 +351,7 @@ ExpressionResult lang::ParsedFunction::compileCall()
 	result.code.add(new BytecodeCallFunction(getFullName()));
 	result.type = returnType;
 	result.valid = true;
+	result.discardable = this->discardable();
 	return result;
 }
 

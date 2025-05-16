@@ -2,16 +2,11 @@
 #include "bytecode.hpp"
 #include <array>
 #include <native/externalFunction.hpp>
+#include "runtimeString.hpp"
 
 namespace lang
 {
 	struct LanguageContext;
-
-	struct RuntimeStr
-	{
-		const char* ptr = nullptr;
-		uint32_t length = 0;
-	};
 
 	struct InterpretContext
 	{
@@ -29,7 +24,8 @@ namespace lang
 		}
 
 		std::string popString();
-		RuntimeStr popStringLength();
+		RuntimeStr popRuntimeString();
+		void pushRuntimeString(RuntimeStr str);
 
 		template <typename T>
 		void pushValue(const T& value)
@@ -66,6 +62,7 @@ namespace lang
 	private:
 		constexpr static size_t STACK_SIZE = 8000;
 		constexpr static size_t FUNCTION_STACK_SIZE = 512;
+		RuntimeStrRef popRuntimeStringRef();
 
 		LanguageContext* language = nullptr;
 
@@ -74,9 +71,9 @@ namespace lang
 		std::array<uint8_t, STACK_SIZE> stack = {};
 		std::array<uint8_t, STACK_SIZE> variableStack = {};
 		std::array<bytecodeOffset, FUNCTION_STACK_SIZE> functionStack = {};
-		size_t stackPos = 0;
-		size_t variableStackPos = 0;
-		size_t functionStackPos = 0;
+		uint32_t stackPos = 0;
+		uint32_t variableStackPos = 0;
+		uint32_t functionStackPos = 0;
 		BinaryBuffer* bytecodeBuffer = nullptr;
 	};
 } // namespace lang

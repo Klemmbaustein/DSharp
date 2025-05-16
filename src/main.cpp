@@ -3,15 +3,17 @@
 
 int main()
 {
-	lang::LanguageContext language;
-	lang::modules::registerStandardLibrary(&language);
+	using namespace lang;
 
-	lang::ParseContext* compiler = language.createCompiler();
+	LanguageContext language;
+	modules::registerStandardLibrary(&language);
+
+	ParseContext* compiler = language.createCompiler();
 	compiler->addFile("test.lang");
-	lang::BytecodeStream compiled = compiler->compile();
+	BytecodeStream compiled = compiler->compile();
 	delete compiler;
 
-	lang::InterpretContext* interpreter = language.createInterpreter();
+	InterpretContext* interpreter = language.createInterpreter();
 	interpreter->loadBytecode(&compiled);
 	interpreter->run();
 	delete interpreter;
