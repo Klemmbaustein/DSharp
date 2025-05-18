@@ -1,5 +1,6 @@
 #include <parser/stringType.hpp>
 #include <parser/parseScope.hpp>
+#include <parser/varArgs.hpp>
 using namespace lang;
 
 ExpressionResult lang::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
@@ -30,12 +31,7 @@ ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line,
 {
 	if (first.string.size() > 3 && first.string[0] == '$')
 	{
-		std::string content = first.string.substr(2, first.string.size() - 3);
-		ExpressionResult result = compileStringValue(content, with);
-
-		result.code.add(new BytecodeCallNative("system::format"));
-
-		return result;
+		return compileFormatString(first, line, errors, with);
 	}
 
 	if (first.string.size() < 2 || first.string[0] != '"' || first.string[first.string.size() - 1] != '"')
@@ -82,6 +78,70 @@ ExpressionResult lang::StringType::compileIndex(ExpressionResult thisValue, Expr
 	return result;
 }
 
+ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+{
+	std::string content = first.string.substr(2, first.string.size() - 3);
+
+	std::string resultString;
+	std::string currentExprCode;
+	bool inExpr = false;
+
+	std::vector<ExpressionResult> formatArguments;
+
+	for (char c : content)
+	{
+		if (c == '{')
+		{
+			if (inExpr)
+			{
+				errors->error(ErrorCode::parseInvalidFormat, first,
+					"Unexpected '{' after another '{' without a closing '}'");
+			}
+			resultString.push_back(c);
+			inExpr = true;
+			continue;
+		}
+		if (c == '}')
+		{
+			if (!inExpr)
+			{
+				errors->error(ErrorCode::parseInvalidFormat, first,
+					"Unexpected '}'");
+			}
+			inExpr = false;
+			resultString.push_back(c);
+
+			TokenStream expressionStream;
+			expressionStream.fromString(currentExprCode, with->scopeFile->name, errors);
+			auto nextLine = expressionStream.next(errors);
+
+			ExpressionResult formatArg = with->pushExpression(nextLine, errors, false);
+
+			formatArg = formatArg.type->compileToString(formatArg, errors, with);
+
+			formatArguments.push_back(formatArg);
+			currentExprCode.clear();
+
+			continue;
+		}
+
+		if (inExpr)
+		{
+			currentExprCode.push_back(c);
+		}
+		else
+		{
+			resultString.push_back(c);
+		}
+	}
+
+	ExpressionResult result = compileStringValue(resultString, with);
+	result.code.addBuffer(compileMove(with));
+	result.code.addBuffer(varArgs::writeVarArgs(formatArguments));
+	result.code.add(new BytecodeCallNative("system::format"));
+	return result;
+}
+
 ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedScope* with)
 {
 	ExpressionResult result;
@@ -92,14 +152,26 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 	size_t sizeOffset = sizeof(uint32_t);
 	size_t fullSize = dataSize + sizeOffset;
 
-	BinaryBuffer args;
-	args.add((uint8_t*)str.data(), dataSize);
-	result.code.addOperation(BytecodeOp::push, args);
+	size_t chunkPos = 0;
+	size_t remainingSize = dataSize;
+
+	// Push can only push 255 bytes at once, because instruction arguments can
+	// at most be 255 bytes long.
+	do
+	{
+		size_t chunkSize = std::min(remainingSize, size_t(UINT8_MAX));
+
+		remainingSize -= chunkSize;
+
+		BinaryBuffer args;
+		args.add((uint8_t*)str.data() + chunkPos, chunkSize);
+		result.code.addOperation(BytecodeOp::push, args);
+
+		chunkPos += chunkSize;
+
+	} while (remainingSize > 0);
 
 	result.code.pushInt(strLength);
-
-	args.clear();
-	args.addValue<uint32_t>(fullSize);
 
 	result.code.pushInt(fullSize);
 
@@ -118,8 +190,7 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 	result.valid = true;
 	result.type = this;
 
-	args.clear();
-
+	BinaryBuffer args;
 	args.addValue<uint32_t>(this->size);
 
 	result.code.addOperation(BytecodeOp::copy, args);

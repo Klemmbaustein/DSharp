@@ -39,7 +39,7 @@ namespace lang
 		bool compileReturn = false;
 		bool returnThis = false;
 
-		void setClass(ParsedClass* inClass);
+		void setClass(ParsedClass* inClass, bool copy);
 
 		void compile(ParseContext* context, ParsedFile* file, ErrorContext* errors);
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);

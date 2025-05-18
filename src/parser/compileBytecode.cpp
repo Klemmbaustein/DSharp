@@ -47,6 +47,8 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 		{ BytecodeOp::divFloat, "DIV_F32" },
 		{ BytecodeOp::intToFloat, "INT_TO_FLOAT" },
 		{ BytecodeOp::floatToInt, "FLOAT_TO_INT" },
+		{ BytecodeOp::boolAnd, "BOOL_AND" },
+		{ BytecodeOp::boolOr, "BOOL_OR" },
 		{ BytecodeOp::pushVariable, "PUSH_VAR" },
 		{ BytecodeOp::storeVariable, "STORE_VAR" },
 		{ BytecodeOp::readVariable, "READ_VAR" },
@@ -133,6 +135,12 @@ void lang::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* c
 		compiler->externals.push_back(this->functionName);
 		compiler->usedExternals.insert({ this->functionName, position });
 	}
+	else
+	{
+		position = foundPosition->second;
+	}
+
+	std::println("{}: {}", this->functionName, position);
 
 	stream.addValue(position);
 }
@@ -264,14 +272,19 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, ErrorContext* err
 		}
 	}
 
+	BinaryBuffer argsBuffer;
 	for (auto& code : orderedFunctions)
 	{
 		for (BytecodeInstruction* instr : code->instructions)
 		{
 			if (instr->baseSize != 0)
 			{
-				BinaryBuffer argsBuffer;
+				argsBuffer.clear();
 				instr->getArgs(argsBuffer, this);
+				if (argsBuffer.buffer.size() != instr->getArgsSize())
+				{
+					abort();
+				}
 				stream.addOperation(instr->operation, argsBuffer);
 			}
 		}

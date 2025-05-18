@@ -2,24 +2,23 @@ using system
 
 module test
 
-class SomeClass
-{
-	string message
-
-	fn new()
-	{
-		message = "world"
-	}
-
-	fn delete()
-	{
-	}
-}
-
 [EntryPoint]
-fn main() -> int
+fn fibonacci() -> int
 {
-	println(new SomeClass().message)
+	int number = 0
+	int next = 1
+	int i = 0
+
+	println("Fibonacci sequence:")
+
+	while i < 10
+	{
+		println($"{i}: {number}")
+		int temp = number
+		number = next
+		next += temp
+		i += 1
+	}
 
 	return 0
 }

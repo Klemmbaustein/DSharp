@@ -59,6 +59,11 @@ namespace lang
 			stackPos += size;
 		}
 
+		uint32_t getVarArgsCount()
+		{
+			return popValue<uint32_t>();
+		}
+
 	private:
 		constexpr static size_t STACK_SIZE = 8000;
 		constexpr static size_t FUNCTION_STACK_SIZE = 512;

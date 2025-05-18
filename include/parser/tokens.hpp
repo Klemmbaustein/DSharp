@@ -69,6 +69,7 @@ namespace lang
 	{
 		void fromFile(std::string path, ErrorContext* errors);
 		void fromStream(std::istream& stream, std::string name, ErrorContext* errors);
+		void fromString(std::string stringData, std::string path, ErrorContext* errors);
 
 		TokenLine next(ErrorContext* errors);
 		TokenLine peek(ErrorContext* errors);

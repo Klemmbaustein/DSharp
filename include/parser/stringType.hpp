@@ -32,6 +32,10 @@ namespace lang
 		}
 
 	private:
+
+		ExpressionResult compileFormatString(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with);
+
 		static inline StringType* instance = nullptr;
 		ExpressionResult compileStringValue(std::string str, ParsedScope* with);
 	};

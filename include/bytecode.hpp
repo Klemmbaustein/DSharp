@@ -47,6 +47,7 @@ namespace lang
 		/// Divides the 2 topmost 32 bit floats on the stack and pushes the result.
 		divFloat,
 		boolAnd,
+		boolOr,
 		/// Takes the topmost int in the stack and pushes it's float equivalent.
 		intToFloat,
 		/// Takes the topmost float in the stack and pushes it's int equivalent.

@@ -185,6 +185,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 			size_t argIndex = 0;
 			auto functionArgs = function->getArguments();
 
+			ExpressionResult callCode;
+
 			while (!argsLine.empty())
 			{
 				auto exprToken = argsLine.peek();
@@ -198,8 +200,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 					return ExpressionResult();
 				}
 
-				this->code->addBuffer(expr.code);
-				this->code->addBuffer(expr.type->compileMove(this));
+				callCode.code.addBuffer(expr.code);
+				callCode.code.addBuffer(expr.type->compileMove(this));
 
 				if (argsLine.empty())
 					break;
@@ -214,7 +216,13 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 			{
 				fn.code.addBuffer(fn.type->compileEndMove(this));
 			}
-			return fn;
+
+			callCode.code.addBuffer(fn.code);
+			callCode.discardable = fn.discardable;
+			callCode.type = fn.type;
+			callCode.valid = fn.valid;
+
+			return callCode;
 		}
 	}
 
@@ -375,11 +383,9 @@ void lang::ParsedScope::compileScopeExit(bool full)
 	}
 }
 
-void lang::ParsedScope::setClass(ParsedClass* inClass)
+void lang::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 {
 	this->inClass = inClass;
-
-	bool copy = !this->scopeFunction || this->scopeFunction->name != "delete";
 
 	if (copy)
 	{
@@ -454,6 +460,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		conditionTokens.lineTokens = &conditionLine;
 
 		auto condition = pushExpression(conditionTokens, errors, false);
+		conditionTokens.expectEndOfLine(errors);
 
 		auto beginLabel = new BytecodeJumpLabel("while_begin");
 		this->code->add(beginLabel);
@@ -517,9 +524,8 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	line.position = 0;
 	auto expr = pushExpression(line, errors, true);
 
-	if (line.peek() == "=" && expr.valid)
+	if ((line.peek() == "=" || line.peek() == "+=") && expr.valid)
 	{
-		// Reparse the expression but set the read flag to true.
 		auto equals = line.get();
 
 		if (!expr.setCode)
@@ -531,6 +537,12 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 		auto valueExpr = pushExpression(line, errors, false);
 		valueExpr.compileToType(equals, expr.type, errors);
+
+		if (equals == "+=")
+		{
+			valueExpr = expr.type->compileOperator(Operator::add, expr, valueExpr, this);
+		}
+
 		this->code->addBuffer(valueExpr.code);
 
 		this->code->addBuffer(expr.setCode.value());
@@ -547,7 +559,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			BinaryBuffer args;
 			args.addValue<uint32_t>(expr.type->size);
 			this->code->addOperation(BytecodeOp::pop, args);
-			expr.discard(line.lineTokens->at(0), errors);
+			//expr.discard(line.lineTokens->at(0), errors);
 		}
 		line.expectEndOfLine(errors);
 	}
@@ -562,6 +574,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 	conditionTokens.lineTokens = &conditionLine;
 
 	auto condition = pushExpression(conditionTokens, errors, false);
+	conditionTokens.expectEndOfLine(errors);
 	this->code->addBuffer(condition.code);
 
 	auto endLabel = new BytecodeJumpLabel("endif");

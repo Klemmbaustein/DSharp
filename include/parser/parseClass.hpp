@@ -42,6 +42,9 @@ namespace lang
 
 	struct ParsedClass : public Attributable
 	{
+		ParsedClass() = default;
+		~ParsedClass();
+
 		Token name;
 		TokenPos start;
 		TokenPos end;
@@ -53,7 +56,7 @@ namespace lang
 
 		ClassLifetimeFunction constructor;
 		ClassLifetimeFunction baseDestructor;
-		Function* usedDestructor = nullptr;
+		Function* usedDestructor = &baseDestructor;
 		Type* thisType = nullptr;
 		Module* classModule = nullptr;
 
@@ -63,5 +66,7 @@ namespace lang
 
 		void scan(ErrorContext* errors, ParsedFile* file);
 		bool scanLine(ErrorContext* errors, ParsedFile* file);
+
+		void compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 	};
 } // namespace lang

@@ -1,10 +1,10 @@
 #include <language.hpp>
 #include <modules/standardLibrary.hpp>
 
+using namespace lang;
+
 int main()
 {
-	using namespace lang;
-
 	LanguageContext language;
 	modules::registerStandardLibrary(&language);
 

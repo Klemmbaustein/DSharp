@@ -22,6 +22,8 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 	}
 
 	result.code.addBuffer(second.code);
+	result.type = this;
+	result.valid = true;
 
 	switch (operatorType)
 	{
@@ -39,9 +41,11 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 		break;
 	case lang::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterInt);
+		result.type = BoolType::getInstance();
 		break;
 	case lang::Operator::less:
 		result.code.addOperation(BytecodeOp::lessInt);
+		result.type = BoolType::getInstance();
 		break;
 	case lang::Operator::modulo:
 	case lang::Operator::unknown:
@@ -49,8 +53,6 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 		return ExpressionResult();
 	}
 
-	result.type = this;
-	result.valid = true;
 	return result;
 }
 
@@ -103,7 +105,7 @@ ExpressionResult lang::IntType::compileCast(ExpressionResult value)
 
 ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
 {
-	ExpressionResult result;
+	ExpressionResult result = thisValue;
 	result.code.add(new BytecodeCallNative("system::int.toString"));
 	result.valid = true;
 	result.type = StringType::getInstance();

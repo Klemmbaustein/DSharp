@@ -155,7 +155,17 @@ namespace lang
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
+
+		static BoolType* getInstance()
+		{
+			if (!instance)
+			{
+				instance = new BoolType();
+			}
+			return instance;
+		}
+
+	private:
+		static inline BoolType* instance = nullptr;
 	};
-
-
 } // namespace lang

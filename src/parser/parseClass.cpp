@@ -60,6 +60,43 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 	return true;
 }
 
+void lang::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+{
+	ParsedScope destructorScope;
+	destructorScope.scopeFile = file;
+	destructorScope.context = context;
+	destructorScope.code = &this->baseDestructor.code;
+	destructorScope.setClass(this, false);
+
+	auto cleanupCode = BytecodeBuffer();
+
+	if (usedDestructor == &baseDestructor)
+	{
+		for (auto& i : this->members)
+		{
+			auto unrefCode = i.second.type->compileUnref();
+
+			if (unrefCode.instructions.size())
+			{
+				cleanupCode.addBuffer(destructorScope.thisVariable->readValue(&destructorScope));
+				cleanupCode.addBuffer(i.second.readValue());
+				cleanupCode.addBuffer(unrefCode);
+			}
+		}
+
+		if (cleanupCode.instructions.size())
+		{
+			baseDestructor.code.addBuffer(cleanupCode);
+
+			destructorScope.compileScopeExit(true);
+			baseDestructor.code.addOperation(BytecodeOp::ret);
+			
+			auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
+			destructorBytecode.instructions = baseDestructor.code.instructions;
+		}
+	}
+}
+
 ExpressionResult lang::ClassLifetimeFunction::compileCall()
 {
 	ExpressionResult result;
@@ -82,6 +119,10 @@ std::string lang::ClassLifetimeFunction::getFullName() const
 bool lang::ClassLifetimeFunction::discardable() const
 {
 	return true;
+}
+
+lang::ParsedClass::~ParsedClass()
+{
 }
 
 void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
@@ -145,7 +186,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	constructorScope.scopeFile = file;
 	constructorScope.context = context;
 	constructorScope.code = &this->constructor.code;
-	constructorScope.setClass(this);
+	constructorScope.setClass(this, true);
 
 	auto& code = constructorScope.code;
 
@@ -158,7 +199,6 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false);
 		varExpr.compileToType(member.name, member.type, errors);
 		code->addBuffer(varExpr.code);
-		code->addBuffer(varExpr.type->compileMove(&constructorScope));
 		code->addBuffer(varExpr.type->compileMove(&constructorScope));
 		code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 
@@ -191,15 +231,12 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
 	constructorBytecode.instructions = constructor.code.instructions;
 
-	if (usedDestructor == &baseDestructor)
-	{
-		auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
-		destructorBytecode.instructions = baseDestructor.code.instructions;
-	}
+	compileDestructor(context, errors, file);
 }
 
 void lang::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
+	this->usedDestructor = &baseDestructor;
 	while (scanLine(errors, file))
 	{
 	}
@@ -208,21 +245,19 @@ void lang::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 BytecodeBuffer lang::ParsedClassMember::readValue() const
 {
 	BytecodeBuffer out;
-	BinaryBuffer args;
-	args.addValue(offset);
-	args.addValue(type->size);
+	out.pushInt(offset);
+	out.pushInt(type->size);
 
-	out.addOperation(BytecodeOp::classMember, args);
+	out.addOperation(BytecodeOp::classMember);
 	return out;
 }
 
 BytecodeBuffer lang::ParsedClassMember::writeValue() const
 {
 	BytecodeBuffer out;
-	BinaryBuffer args;
-	args.addValue(offset);
-	args.addValue(type->size);
+	out.pushInt(offset);
+	out.pushInt(type->size);
 
-	out.addOperation(BytecodeOp::setClassMember, args);
+	out.addOperation(BytecodeOp::setClassMember);
 	return out;
 }

@@ -13,12 +13,12 @@ lang::ParseContext::ParseContext(LanguageContext* context)
 	}
 }
 
-void lang::ParseContext::addFile(std::string string)
+void lang::ParseContext::addFile(std::string filePath)
 {
-	this->errors.currentFile = string;
+	this->errors.currentFile = filePath;
 	auto& newFile = this->files.emplace_back();
-	newFile.stream.fromFile(string, &errors);
-	newFile.name = string;
+	newFile.stream.fromFile(filePath, &errors);
+	newFile.name = filePath;
 	newFile.scan(&errors);
 }
 
@@ -26,7 +26,7 @@ BytecodeStream lang::ParseContext::compile()
 {
 	this->defaultTypes.push_back(IntType::getInstance());
 	this->defaultTypes.push_back(new FloatType());
-	this->defaultTypes.push_back(new BoolType());
+	this->defaultTypes.push_back(BoolType::getInstance());
 	this->defaultTypes.push_back(StringType::getInstance());
 	this->defaultTypes.push_back(CharType::getInstance());
 
@@ -196,6 +196,11 @@ ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* er
 	ParsedClass& newClass = this->classes.emplace_back();
 	newClass.name = currentLine.get();
 
+	if (currentLine.get() != "{")
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
+	}
+
 	stream.getScope(newClass.classStream, errors, 1);
 
 	return newClass;
@@ -208,7 +213,7 @@ void lang::ParsedFile::compile(ParseContext* context)
 		fn.compile(context, this, &context->errors);
 	}
 
-	for (auto c : this->classes)
+	for (auto& c : this->classes)
 	{
 		c.compile(context, &context->errors, this);
 	}
@@ -226,7 +231,7 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 	
 	if (this->inClass)
 	{
-		functionScope.setClass(this->inClass);
+		functionScope.setClass(this->inClass, true);
 	}
 	// Read the arguments given to the function and add them as variables in the scope.
 	// They're added in reverse order because they're pushed onto the stack in this order.
@@ -324,6 +329,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 		line = TokenLine(&returnTypeTokens);
 
 		this->returnType = functionModule->getType(line);
+		line.expectEndOfLine(errors);
 
 		if (!returnType)
 		{

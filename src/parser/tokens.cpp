@@ -2,6 +2,7 @@
 #include <parser/error.hpp>
 #include <parser/stringUtils.hpp>
 #include <set>
+#include <sstream>
 
 namespace lang
 {
@@ -14,6 +15,11 @@ namespace lang
 		"::",
 		"&&",
 		"||",
+		"+=",
+		"-=",
+		"*=",
+		"/=",
+		"%=",
 	};
 
 	static std::set<char> specialChars = {
@@ -34,7 +40,8 @@ namespace lang
 		']',
 		'{',
 		'}',
-		','
+		',',
+		'%'
 	};
 
 	static std::set<char> whitespace = {
@@ -70,6 +77,13 @@ void lang::TokenStream::fromFile(std::string path, ErrorContext* errors)
 	std::ifstream file = std::ifstream(path);
 	fromStream(file, path, errors);
 	file.close();
+}
+
+void lang::TokenStream::fromString(std::string stringData, std::string path, ErrorContext* errors)
+{
+	std::stringstream stream;
+	stream << stringData;
+	fromStream(stream, path, errors);
 }
 
 void lang::TokenStream::fromStream(std::istream& stream, std::string name, ErrorContext* errors)

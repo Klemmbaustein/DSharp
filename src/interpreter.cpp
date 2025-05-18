@@ -74,6 +74,7 @@ void lang::InterpretContext::run()
 			}
 			break;
 		}
+
 		case lang::BytecodeOp::addInt:
 			pushValue(popValue<int32_t>() + popValue<int32_t>());
 			break;

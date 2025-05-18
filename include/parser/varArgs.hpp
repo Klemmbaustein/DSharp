@@ -1,7 +1,9 @@
 #pragma once
-#include "type.hpp"
+#include "compileBytecode.hpp"
+#include "expression.hpp"
+#include <vector>
 
 namespace lang::varArgs
 {
-	void writeVarArgs();
+	BytecodeBuffer writeVarArgs(std::vector<ExpressionResult> args);
 }
