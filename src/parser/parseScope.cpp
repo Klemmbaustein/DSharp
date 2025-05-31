@@ -100,6 +100,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 {
 	Token value = currentLine.peek();
 
+	auto initialPosition = currentLine.savePosition();
+
 	// If the value is a bracket it means it's another expression.
 	if (value == "(")
 	{
@@ -182,33 +184,9 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 			TokenLine argsLine;
 			argsLine.lineTokens = &args;
 
-			size_t argIndex = 0;
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode;
-
-			while (!argsLine.empty())
-			{
-				auto exprToken = argsLine.peek();
-				auto expr = this->pushExpression(argsLine, errors, false);
-
-				auto& currentArg = functionArgs[argIndex];
-				expr.compileToType(exprToken, currentArg.type, errors);
-
-				if (!expr.type)
-				{
-					return ExpressionResult();
-				}
-
-				callCode.code.addBuffer(expr.code);
-				callCode.code.addBuffer(expr.type->compileMove(this));
-
-				if (argsLine.empty())
-					break;
-				else if (argsLine.get() != ",")
-					errors->error(ErrorCode::parseUnexpectedToken, argsLine.previous(),
-						"Expected a ',', got '" + argsLine.previous().string + "'");
-			}
+			ExpressionResult callCode = parseFunctionArguments(functionArgs, argsLine, errors);
 
 			auto fn = function->compileCall();
 
@@ -238,9 +216,10 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 		currentLine.loadPosition(pos);
 	}
 
+
 	if (this->inClass)
 	{
-		currentLine.position = 0;
+		currentLine.loadPosition(initialPosition);
 		auto result = pushClassValue(currentLine, errors, setExpression);
 
 		if (result.valid)
@@ -284,6 +263,38 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors)
 	this->tokenStream->getScope(conditionTokens, errors);
 
 	conditionScope.compile(this->context, file, errors);
+}
+
+ExpressionResult lang::ParsedScope::parseFunctionArguments(std::vector<FunctionArgument> arguments,
+	TokenLine& currentLine, ErrorContext* errors)
+{
+	ExpressionResult callCode;
+	size_t argIndex = 0;
+
+	while (!currentLine.empty())
+	{
+		auto exprToken = currentLine.peek();
+		auto expr = this->pushExpression(currentLine, errors, false);
+
+		auto& currentArg = arguments[argIndex];
+		expr.compileToType(exprToken, currentArg.type, errors);
+
+		if (!expr.type)
+		{
+			return ExpressionResult();
+		}
+
+		callCode.code.addBuffer(expr.code);
+		callCode.code.addBuffer(expr.type->compileMove(this));
+
+		if (currentLine.empty())
+			break;
+		else if (currentLine.get() != ",")
+			errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
+				"Expected a ',', got '" + currentLine.previous().string + "'");
+	}
+
+	return callCode;
 }
 
 BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
@@ -372,7 +383,15 @@ void lang::ParsedScope::compileScopeExit(bool full)
 	if (inClass && scopeFunction && scopeFunction->name == "delete")
 	{
 		code->addBuffer(thisVariable->readValue(this));
-		code->addOperation(BytecodeOp::unrefClass);
+
+		if (inClass->baseDestructor.code.instructions.size())
+		{
+			code->addBuffer(inClass->baseDestructor.compileCall().code);
+		}
+		else
+		{
+			code->addOperation(BytecodeOp::unrefClass);
+		}
 	}
 
 	if (size)
@@ -537,6 +556,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 		auto valueExpr = pushExpression(line, errors, false);
 		valueExpr.compileToType(equals, expr.type, errors);
+		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
 
 		if (equals == "+=")
 		{

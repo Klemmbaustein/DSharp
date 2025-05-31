@@ -1,8 +1,7 @@
 #pragma once
-#include "tokens.hpp"
-#include "operator.hpp"
-#include "expression.hpp"
-#include "error.hpp"
+#include <parser/operator.hpp>
+#include <parser/expression.hpp>
+#include <parser/error.hpp>
 
 namespace lang
 {

@@ -1,5 +1,5 @@
 #include <modules/system.hpp>
-#include <parser/stringType.hpp>
+#include <parser/types/stringType.hpp>
 #include <print>
 
 using namespace lang;

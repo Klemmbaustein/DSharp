@@ -70,29 +70,35 @@ void lang::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* e
 
 	auto cleanupCode = BytecodeBuffer();
 
-	if (usedDestructor == &baseDestructor)
+	for (auto& i : this->members)
 	{
-		for (auto& i : this->members)
-		{
-			auto unrefCode = i.second.type->compileUnref();
+		auto unrefCode = i.second.type->compileUnref();
 
-			if (unrefCode.instructions.size())
-			{
-				cleanupCode.addBuffer(destructorScope.thisVariable->readValue(&destructorScope));
-				cleanupCode.addBuffer(i.second.readValue());
-				cleanupCode.addBuffer(unrefCode);
-			}
+		if (unrefCode.instructions.size())
+		{
+			cleanupCode.addBuffer(destructorScope.thisVariable->readValue(&destructorScope));
+			cleanupCode.addBuffer(i.second.readValue());
+			cleanupCode.addBuffer(unrefCode);
 		}
+	}
 
-		if (cleanupCode.instructions.size())
+	if (cleanupCode.instructions.size())
+	{
+		baseDestructor.code.addBuffer(cleanupCode);
+
+		destructorScope.compileScopeExit(true);
+		baseDestructor.code.addOperation(BytecodeOp::ret);
+
+		auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
+		destructorBytecode.instructions = baseDestructor.code.instructions;
+	}
+	else
+	{
+		baseDestructor.code.instructions.clear();
+		if (&baseDestructor == this->usedDestructor)
 		{
-			baseDestructor.code.addBuffer(cleanupCode);
-
-			destructorScope.compileScopeExit(true);
-			baseDestructor.code.addOperation(BytecodeOp::ret);
-			
-			auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
-			destructorBytecode.instructions = baseDestructor.code.instructions;
+			this->usedDestructor = nullptr;
+			thisType->destructor = this->usedDestructor;
 		}
 	}
 }
@@ -161,16 +167,15 @@ void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	constructor.parent = this;
 	baseDestructor.parent = this;
 	baseDestructor.isConstructor = false;
-	auto thisClassType = new ClassType();
-	thisClassType->from = name;
-	thisClassType->name = name.string;
-	thisClassType->members = members;
-	thisClassType->methods = methods;
-	thisClassType->classSize = position;
-	thisClassType->baseConstructor = &this->constructor;
-	thisClassType->destructor = this->usedDestructor;
-	thisClassType->constructors = constructors;
-	thisType = thisClassType;
+	thisType = new ClassType();
+	thisType->from = name;
+	thisType->name = name.string;
+	thisType->members = members;
+	thisType->methods = methods;
+	thisType->classSize = position;
+	thisType->baseConstructor = &this->constructor;
+	thisType->destructor = this->usedDestructor;
+	thisType->constructors = constructors;
 
 	file->fileModule->moduleTypes.insert({ name.string, thisType });
 
@@ -208,6 +213,8 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 		code->addOperation(BytecodeOp::setClassMember);
 	}
 
+	compileDestructor(context, errors, file);
+
 	for (auto& i : this->methods)
 	{
 		if (i->name == "new")
@@ -230,8 +237,6 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
 	constructorBytecode.instructions = constructor.code.instructions;
-
-	compileDestructor(context, errors, file);
 }
 
 void lang::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)

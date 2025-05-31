@@ -1,5 +1,5 @@
 #include <parser/compileBytecode.hpp>
-#include <parser/classType.hpp>
+#include <parser/types/classType.hpp>
 #include <native/nativeModule.hpp>
 #include <print>
 using namespace lang;
@@ -139,8 +139,6 @@ void lang::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* c
 	{
 		position = foundPosition->second;
 	}
-
-	std::println("{}: {}", this->functionName, position);
 
 	stream.addValue(position);
 }

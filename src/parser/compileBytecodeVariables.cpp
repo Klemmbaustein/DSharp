@@ -1,5 +1,5 @@
 #include <parser/compileBytecodeVariables.hpp>
-#include <parser/type.hpp>
+#include <parser/types/type.hpp>
 #include <format>
 
 using namespace lang;

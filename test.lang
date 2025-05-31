@@ -2,23 +2,36 @@ using system
 
 module test
 
+fn getGreeting(string address, string to) -> string
+{
+	return $"{address}, {to}"
+}
+
+class Greeter
+{
+	string message
+	fn new(string message)
+	{
+		this.message = message
+	}
+
+	fn delete()
+	{
+		println(getGreeting("bye", message))
+	}
+
+	fn greet()
+	{
+		println(getGreeting("hello", message))
+	}
+}
+
 [EntryPoint]
 fn fibonacci() -> int
 {
-	int number = 0
-	int next = 1
-	int i = 0
-
-	println("Fibonacci sequence:")
-
-	while i < 10
+	while true
 	{
-		println($"{i}: {number}")
-		int temp = number
-		number = next
-		next += temp
-		i += 1
+		new Greeter("world").greet()
 	}
-
 	return 0
 }

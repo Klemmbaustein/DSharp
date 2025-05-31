@@ -1,4 +1,4 @@
-#include <parser/classType.hpp>
+#include <parser/types/classType.hpp>
 #include <parser/function.hpp>
 #include <parser/parseScope.hpp>
 
@@ -45,18 +45,23 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	ExpressionResult result;
 
 	auto constructorArgs = line.getInBraces(errors);
-
-	result.code.pushInt(this->classSize);
-	result.code.add(new BytecodeAllocClass(this));
+	TokenLine argsLine;
+	argsLine.lineTokens = &constructorArgs;
 
 	if (this->constructors.empty())
 	{
+		result.code.pushInt(this->classSize);
+		result.code.add(new BytecodeAllocClass(this));
 		result.code.addBuffer(baseConstructor->compileCall().code);
 	}
 	else
 	{
 		for (auto& i : this->constructors)
 		{
+			result.code.addBuffer(with->parseFunctionArguments(i->getArguments(), argsLine, errors).code);
+
+			result.code.pushInt(this->classSize);
+			result.code.add(new BytecodeAllocClass(this));
 			result.code.addBuffer(i->compileCall().code);
 			break;
 		}
@@ -134,7 +139,6 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 				result.setCode->addBuffer(unrefCode);
 			}
 
-			result.setCode->addBuffer(i.type->compileMove(with));
 			result.setCode->addBuffer(result.code);
 			result.setCode->addOperation(BytecodeOp::setClassMember, args);
 		}

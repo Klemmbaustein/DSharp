@@ -50,6 +50,9 @@ namespace lang
 
 		void parseSubScope(ParsedFile* file, ErrorContext* errors);
 
+		ExpressionResult parseFunctionArguments(std::vector<FunctionArgument> arguments,
+			TokenLine& currentLine, ErrorContext* errors);
+
 	private:
 		uint32_t tempCounter = 0;
 	};

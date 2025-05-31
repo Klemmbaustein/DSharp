@@ -1,6 +1,6 @@
 #include <parser/parser.hpp>
 #include <parser/parseScope.hpp>
-#include <parser/stringType.hpp>
+#include <parser/types/stringType.hpp>
 #include <modules/system.hpp>
 #include <language.hpp>
 using namespace lang;
@@ -228,10 +228,10 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 	functionScope.compileReturn = true;
 	functionScope.scopeFile = file;
 	functionScope.returnThis = this->inClass && this->name == "new";
-	
+
 	if (this->inClass)
 	{
-		functionScope.setClass(this->inClass, true);
+		functionScope.setClass(this->inClass, this->name != "delete");
 	}
 	// Read the arguments given to the function and add them as variables in the scope.
 	// They're added in reverse order because they're pushed onto the stack in this order.

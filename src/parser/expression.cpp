@@ -1,6 +1,6 @@
 #include <parser/expression.hpp>
 #include <parser/error.hpp>
-#include <parser/type.hpp>
+#include <parser/types/type.hpp>
 
 void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
 {

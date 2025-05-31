@@ -6,7 +6,7 @@
 #include "function.hpp"
 #include "module.hpp"
 #include "tokens.hpp"
-#include "type.hpp"
+#include "types/type.hpp"
 #include <bytecode.hpp>
 #include <map>
 #include <string>

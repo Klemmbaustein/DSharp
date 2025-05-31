@@ -1,4 +1,4 @@
-#include <parser/stringType.hpp>
+#include <parser/types/stringType.hpp>
 #include <parser/parseScope.hpp>
 #include <parser/varArgs.hpp>
 using namespace lang;
@@ -117,8 +117,20 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 
 			ExpressionResult formatArg = with->pushExpression(nextLine, errors, false);
 
-			formatArg = formatArg.type->compileToString(formatArg, errors, with);
+			auto argType = formatArg.type;
+			if (!argType->sameAs(this))
+			{
+				formatArg = formatArg.type->compileToString(formatArg, errors, with);
 
+				if (!formatArg.valid)
+				{
+					errors->error(ErrorCode::parseInvalidType, first, "Cannot cast type " + argType->name + " to string");
+				}
+			}
+			else
+			{
+				formatArg.code.addBuffer(compileMove(with));
+			}
 			formatArguments.push_back(formatArg);
 			currentExprCode.clear();
 
@@ -139,6 +151,7 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 	result.code.addBuffer(compileMove(with));
 	result.code.addBuffer(varArgs::writeVarArgs(formatArguments));
 	result.code.add(new BytecodeCallNative("system::format"));
+	result.code.addBuffer(compileEndMove(with));
 	return result;
 }
 

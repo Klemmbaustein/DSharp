@@ -1,10 +1,10 @@
 #pragma once
 #include "tokens.hpp"
-#include "type.hpp"
+#include "types/type.hpp"
 #include "attribute.hpp"
 #include "function.hpp"
 #include "module.hpp"
-#include "classType.hpp"
+#include "types/classType.hpp"
 
 namespace lang
 {
@@ -57,7 +57,7 @@ namespace lang
 		ClassLifetimeFunction constructor;
 		ClassLifetimeFunction baseDestructor;
 		Function* usedDestructor = &baseDestructor;
-		Type* thisType = nullptr;
+		ClassType* thisType = nullptr;
 		Module* classModule = nullptr;
 
 		void registerType(ParseContext* context, ParsedFile* file);

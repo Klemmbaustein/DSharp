@@ -1,7 +1,7 @@
-#include <parser/type.hpp>
+#include <parser/types/type.hpp>
 #include <parser/stringUtils.hpp>
 #include <parser/parseScope.hpp>
-#include <parser/stringType.hpp>
+#include <parser/types/stringType.hpp>
 using namespace lang;
 
 ExpressionResult lang::IntType::compileOperator(Operator operatorType,
@@ -131,7 +131,7 @@ ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionR
 
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
-	
+
 	BinaryBuffer args;
 	args.addValue<uint32_t>(first.type->size);
 
