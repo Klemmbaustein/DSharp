@@ -1,5 +1,5 @@
 #pragma once
-#include "compileBytecode.hpp"
+#include "bytecode/compileBytecode.hpp"
 #include <parser/tokens.hpp>
 #include <optional>
 

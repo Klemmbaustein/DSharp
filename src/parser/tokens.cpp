@@ -72,6 +72,34 @@ void lang::Token::merge(const Token& other)
 	this->position.endPos = other.position.endPos;
 }
 
+void lang::Token::checkIsName(ErrorContext* errors) const
+{
+	if (this->empty())
+	{
+		errors->error(ErrorCode::parseExpectedName, *this, "Expected a name here.");
+	}
+
+	if (this->string[0] == '"' || this->string[0] == '\'' || this->string[0] == '$')
+	{
+		errors->error(ErrorCode::parseExpectedName, *this, "Expected a name, got a string");
+	}
+
+	bool isValid = true;
+
+	for (auto c : this->string)
+	{
+		if (specialChars.contains(c))
+		{
+			isValid = false;
+		}
+	}
+
+	if (!isValid)
+	{
+		errors->error(ErrorCode::parseExpectedName, *this, "The name '" + this->string + "' contains invalid characters");
+	}
+}
+
 void lang::TokenStream::fromFile(std::string path, ErrorContext* errors)
 {
 	std::ifstream file = std::ifstream(path);
@@ -399,7 +427,7 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 			}
 		}
 
-		if (next.string != token)
+		if (next.string.size() && !token.contains(next.string[0]))
 		{
 			get();
 		}
@@ -432,7 +460,7 @@ Token lang::TokenLine::previous()
 	return this->lineTokens ? this->lineTokens->at(this->position - 1) : Token();
 }
 
-size_t lang::TokenLine::savePosition()
+size_t lang::TokenLine::savePosition() const
 {
 	return this->position;
 }

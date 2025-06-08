@@ -33,6 +33,22 @@ BytecodeBuffer lang::ClassType::compileMove(ParsedScope* with)
 	return outBuffer;
 }
 
+bool lang::ClassType::isSubclassOf(ClassType* parent)
+{
+	for (ClassType* i : parents)
+	{
+		if (i == parent)
+		{
+			return true;
+		}
+		if (i->isSubclassOf(parent))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 ExpressionResult lang::ClassType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
@@ -58,7 +74,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	{
 		for (auto& i : this->constructors)
 		{
-			result.code.addBuffer(with->parseFunctionArguments(i->getArguments(), argsLine, errors).code);
+			result.code.addBuffer(with->parseFunctionArguments(i->getFullName(), i->getArguments(), argsLine, errors).code);
 
 			result.code.pushInt(this->classSize);
 			result.code.add(new BytecodeAllocClass(this));
@@ -74,6 +90,13 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 
 ExpressionResult lang::ClassType::compileCast(ExpressionResult value)
 {
+	auto castValue = dynamic_cast<ClassType*>(value.type);
+
+	if (castValue && (castValue->isSubclassOf(this)))
+	{
+		value.valid = true;
+		return value;
+	}
 	return ExpressionResult();
 }
 

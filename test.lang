@@ -2,36 +2,28 @@ using system
 
 module test
 
-fn getGreeting(string address, string to) -> string
+class A
 {
-	return $"{address}, {to}"
+	virtual fn test()
+	{
+		println("message")
+	}
 }
 
-class Greeter
+class B : A
 {
-	string message
-	fn new(string message)
+	override fn test()
 	{
-		this.message = message
-	}
-
-	fn delete()
-	{
-		println(getGreeting("bye", message))
-	}
-
-	fn greet()
-	{
-		println(getGreeting("hello", message))
+		println("overriden")
 	}
 }
 
 [EntryPoint]
-fn fibonacci() -> int
+fn main() -> int
 {
-	while true
-	{
-		new Greeter("world").greet()
-	}
+	A test = new B()
+
+	test.test()
+
 	return 0
 }

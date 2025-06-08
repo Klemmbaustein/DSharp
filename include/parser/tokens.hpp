@@ -38,6 +38,8 @@ namespace lang
 		{
 			return this->string < other.string;
 		}
+
+		void checkIsName(ErrorContext* errors) const;
 	};
 
 	struct TokenLine
@@ -53,7 +55,7 @@ namespace lang
 
 		Token previous();
 
-		size_t savePosition();
+		size_t savePosition() const;
 
 		void loadPosition(size_t oldPos);
 

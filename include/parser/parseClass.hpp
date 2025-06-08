@@ -46,12 +46,14 @@ namespace lang
 		~ParsedClass();
 
 		Token name;
+		std::vector<std::vector<Token>> derivedFrom;
 		TokenPos start;
 		TokenPos end;
 		TokenStream classStream;
 		size_t refVariableCount = 0;
 
 		std::map<Token, ParsedClassMember> members;
+		std::vector<ParsedClass> parents;
 		std::vector<ParsedFunction*> methods;
 
 		ClassLifetimeFunction constructor;
@@ -61,6 +63,7 @@ namespace lang
 		Module* classModule = nullptr;
 
 		void registerType(ParseContext* context, ParsedFile* file);
+		void scanClass(ParseContext* context, ParsedFile* file);
 
 		void compile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 

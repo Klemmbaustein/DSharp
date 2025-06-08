@@ -80,5 +80,6 @@ namespace lang
 		uint32_t variableStackPos = 0;
 		uint32_t functionStackPos = 0;
 		BinaryBuffer* bytecodeBuffer = nullptr;
+		std::vector<bytecodeOffset>* vTable = nullptr;
 	};
 } // namespace lang

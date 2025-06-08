@@ -1,7 +1,7 @@
 #pragma once
 #include "parser.hpp"
 #include "parseClass.hpp"
-#include "compileBytecodeVariables.hpp"
+#include "bytecode/compileBytecodeVariables.hpp"
 
 namespace lang
 {
@@ -50,7 +50,7 @@ namespace lang
 
 		void parseSubScope(ParsedFile* file, ErrorContext* errors);
 
-		ExpressionResult parseFunctionArguments(std::vector<FunctionArgument> arguments,
+		ExpressionResult parseFunctionArguments(std::string functionName, std::vector<FunctionArgument> arguments,
 			TokenLine& currentLine, ErrorContext* errors);
 
 	private:

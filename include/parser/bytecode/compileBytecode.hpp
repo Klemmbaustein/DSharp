@@ -3,13 +3,14 @@
 #include <string>
 #include <map>
 #include <set>
-#include "error.hpp"
+#include <parser/error.hpp>
 
 namespace lang
 {
 	struct BytecodeCompiler;
 	struct NativeFunction;
 	class ClassType;
+	class Function;
 
 	class BytecodeInstruction
 	{
@@ -123,6 +124,6 @@ namespace lang
 
 		void printAssembly();
 
-		void compileTo(BytecodeStream& stream, ErrorContext* errors);
+		void compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors);
 	};
 } // namespace lang

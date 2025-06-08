@@ -13,6 +13,7 @@ lang::InterpretContext::InterpretContext(LanguageContext* from)
 void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 {
 	this->bytecodeBuffer = &code->code;
+	this->vTable = &code->virtualTable;
 
 	this->externals.reserve(code->externalFunctions.size());
 	for (auto& i : code->externalFunctions)
@@ -96,16 +97,13 @@ void lang::InterpretContext::run()
 			pushValue(popValue<int32_t>() > first);
 			break;
 		}
-		case lang::BytecodeOp::lessInt: {
-			int32_t first = popValue<int32_t>();
-			pushValue(popValue<int32_t>() < first);
-			break;
-		}
 		case lang::BytecodeOp::equals: {
 			uint32_t size = popValue<uint32_t>();
-			pushValue<bool>(memcmp(
-				&this->stack[stackPos - size],
-				&this->stack[stackPos - size * 2], size) == 0);
+			bool same = memcmp(
+							&this->stack[stackPos - size],
+							&this->stack[stackPos - size * 2], size) == 0;
+			stackPos -= size * 2;
+			pushValue<bool>(same);
 			break;
 		}
 		case lang::BytecodeOp::addFloat:
@@ -124,11 +122,19 @@ void lang::InterpretContext::run()
 			pushValue(popValue<float>() / first);
 			break;
 		}
+		case lang::BytecodeOp::greaterFloat: {
+			float first = popValue<float>();
+			pushValue(popValue<float>() > first);
+			break;
+		}
 		case lang::BytecodeOp::intToFloat:
 			pushValue(float(popValue<int32_t>()));
 			break;
 		case lang::BytecodeOp::floatToInt:
 			pushValue(int32_t(popValue<float>()));
+			break;
+		case lang::BytecodeOp::boolNot:
+			pushValue(!popValue<bool>());
 			break;
 		case lang::BytecodeOp::call:
 			functionStack[functionStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
@@ -140,7 +146,7 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::ret:
 			if (functionStackPos == 0)
 			{
-				std::print("program returned: '{}'\n", popValue<int>());
+				std::print("program returned: '{}'\n", popValue<int32_t>());
 				return;
 			}
 			bytecodeBuffer->streamPos = functionStack[--functionStackPos];
@@ -170,8 +176,8 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::allocClass: {
 			uint32_t size = popValue<uint32_t>();
 			uint32_t typeId = *(uint32_t*)&argumentBuffer[0];
-			uint32_t destructor = *(uint32_t*)&argumentBuffer[sizeof(typeId)];
-			pushValue(RuntimeClass::allocateClass(size, destructor));
+			bytecodeOffset vTableOffset = *(bytecodeOffset*)&argumentBuffer[sizeof(typeId)];
+			pushValue(RuntimeClass::allocateClass(size, vTableOffset != UINT32_MAX ? vTable->data() + vTableOffset : nullptr));
 			break;
 		}
 		case lang::BytecodeOp::classMember: {
@@ -256,6 +262,15 @@ void lang::InterpretContext::run()
 			memcpy(strBegin, str.ptr(), strLength);
 			strBegin[index] = newChar;
 			pushValue<size_t>(size_t(newClass));
+			break;
+		}
+		case lang::BytecodeOp::virtualCall: {
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			bytecodeOffset called = *(bytecodeOffset*)&argumentBuffer[0];
+			functionStack[functionStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+			bytecodeBuffer->streamPos = ptr->vtable[called];
+			pushValue(ptr);
+
 			break;
 		}
 		default:

@@ -6,6 +6,14 @@ namespace lang
 {
 	using bytecodeOffset = uint32_t;
 
+	/**
+	 * @brief
+	 * A bytecode instruction.
+	 *
+	 * Each instruction executes some logic in an interpreter context.
+	 *
+	 * @see InterpretContext
+	 */
 	enum class BytecodeOp : uint8_t
 	{
 		/// Pushes the argument on the stack.
@@ -17,6 +25,7 @@ namespace lang
 		call,
 		/// Sets the current instruction position to the given argument.
 		jump,
+		/// Sets the current instruction position to the given argument if the topmost bool on the stack is not true.
 		jumpIfNot,
 		/// Calls an external function in the BytecodeStream::externalFunctions list
 		/// with the index for that call being the given argument.
@@ -34,7 +43,6 @@ namespace lang
 		/// Divides the 2 topmost 32 bit ints on the stack and pushes the result.
 		divInt,
 		greaterInt,
-		lessInt,
 		/// Checks if the 2 topmost values on the stack are equal.
 		/// Arguments: 4 bytes value size
 		equals,
@@ -46,17 +54,21 @@ namespace lang
 		mulFloat,
 		/// Divides the 2 topmost 32 bit floats on the stack and pushes the result.
 		divFloat,
+		greaterFloat,
 		boolAnd,
 		boolOr,
-		/// Takes the topmost int in the stack and pushes it's float equivalent.
+		/// Takes the topmost bool on the stack and pushes it's inverse.
+		boolNot,
+		/// Takes the topmost int on the stack and pushes it's float equivalent.
 		intToFloat,
-		/// Takes the topmost float in the stack and pushes it's int equivalent.
+		/// Takes the topmost float on the stack and pushes it's int equivalent.
 		floatToInt,
 		pushVariable,
 		storeVariable,
 		/// Reads a variable and pushes it's value on the stack.
 		/// Arguments: 4 bytes - size, 4 bytes - stack offset (from top).
 		readVariable,
+		/// Pops n bytes off of the variable stack.
 		popVariable,
 		/// Allocates a managed class object, pushes it's address on the stack.
 		/// Arguments: 4 bytes - size, 4 bytes - type id
@@ -77,9 +89,17 @@ namespace lang
 		setClassMemberPushAgain,
 		concatString,
 		indexString,
+		/// Creates a new string in which a single character is different. Used for:
+		/// string x = "uello world"
+		/// x[0] = 'h'
 		setStringIndexCopy,
+		virtualCall,
 	};
 
+	/**
+	 * @brief
+	 * Contains executable bytecode.
+	 */
 	struct BytecodeStream
 	{
 		void addOperation(BytecodeOp operationCode, const BinaryBuffer& argument);
@@ -87,5 +107,6 @@ namespace lang
 		BinaryBuffer code;
 
 		std::vector<std::string> externalFunctions;
+		std::vector<bytecodeOffset> virtualTable;
 	};
 } // namespace lang

@@ -1,5 +1,5 @@
 #include <native/nativeModule.hpp>
-#include <parser/compileBytecode.hpp>
+#include <parser/bytecode/compileBytecode.hpp>
 using namespace lang;
 
 ExpressionResult NativeFunction::compileCall()

@@ -10,6 +10,7 @@ namespace lang
 		{
 			this->name = "string";
 			this->size = sizeof(size_t);
+			this->vTableOffset = UINT32_MAX;
 		}
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,

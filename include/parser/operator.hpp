@@ -17,10 +17,16 @@ namespace lang
 		modulo,
 		/// a == b operator
 		equals,
+		/// a != b operator
+		notEquals,
 		/// a > b operator
 		greater,
-		/// a<> b operator
+		/// a < b operator
 		less,
+		/// a >= b operator
+		greaterEquals,
+		/// a <= b operator
+		lessEquals,
 		/// a && b operator
 		logicalAnd,
 		/// a.member operator
@@ -29,13 +35,25 @@ namespace lang
 		unknown,
 	};
 
+	enum class CompoundOperator
+	{
+		add,
+		subtract,
+		multiply,
+		divide,
+		modulo,
+		unknown,
+	};
+
 	/**
-	* @brief
-	* Converts a string to an operator enum value.
-	*
-	* @see Operator
-	*/
+	 * @brief
+	 * Converts a string to an operator enum value.
+	 *
+	 * @see Operator
+	 */
 	Operator stringToOperator(std::string opString);
 
+	CompoundOperator stringToCompoundOperator(std::string opString);
+
 	bool operatorHasPriority(Operator op, Operator compareTo);
-}
+} // namespace lang

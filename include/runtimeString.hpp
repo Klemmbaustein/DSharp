@@ -63,7 +63,7 @@ namespace lang
 			return *(uint32_t*)classPtr->getBody();
 		}
 
-		RuntimeStrRef(const RuntimeStr& other)
+		RuntimeStrRef(const RuntimeStrRef& other)
 		{
 			this->classPtr = other.classPtr;
 		}

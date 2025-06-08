@@ -35,8 +35,10 @@ namespace lang
 		parseReadOnlyValue = 3008,
 		/// E3009 variable declared with "var" must have an initializer.
 		parseVarMustHaveInitializer = 3009,
-		/// E3009 This string format is not valid.
+		/// E3010 This string format is not valid.
 		parseInvalidFormat = 3010,
+		/// E3011 Expected a name here.
+		parseExpectedName = 3011,
 		/// E4000 NoDiscard function return value discarded.
 		returnValueDiscarded = 4000,
 	};

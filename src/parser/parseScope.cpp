@@ -1,6 +1,6 @@
 #include <parser/parseScope.hpp>
 #include <modules/system.hpp>
-#include <parser/compileBytecodeVariables.hpp>
+#include <parser/bytecode/compileBytecodeVariables.hpp>
 #include <format>
 using namespace lang;
 
@@ -74,9 +74,20 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 
 		auto oldType = result.type;
 
-		if (exprOperator == Operator::equals)
+		if (exprOperator == Operator::equals || exprOperator == Operator::notEquals)
 		{
 			result = result.type->compileEqualsTo(result, secondValue);
+			if (exprOperator == Operator::notEquals)
+			{
+				result.code.addOperation(BytecodeOp::boolNot);
+			}
+		}
+		// a <= b is the same as !(b < a) and a >= b is the same thing as !(b > a)
+		else if (exprOperator == Operator::greaterEquals || exprOperator == Operator::lessEquals)
+		{
+			exprOperator = exprOperator == Operator::greaterEquals ? Operator::greater : Operator::less;
+			result = result.type->compileOperator(exprOperator, secondValue, result, this);
+			result.code.addOperation(BytecodeOp::boolNot);
 		}
 		else
 		{
@@ -186,7 +197,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = parseFunctionArguments(functionArgs, argsLine, errors);
+			ExpressionResult callCode = parseFunctionArguments(function->getFullName(), functionArgs, argsLine, errors);
 
 			auto fn = function->compileCall();
 
@@ -265,7 +276,7 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors)
 	conditionScope.compile(this->context, file, errors);
 }
 
-ExpressionResult lang::ParsedScope::parseFunctionArguments(std::vector<FunctionArgument> arguments,
+ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionName, std::vector<FunctionArgument> arguments,
 	TokenLine& currentLine, ErrorContext* errors)
 {
 	ExpressionResult callCode;
@@ -276,7 +287,16 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(std::vector<FunctionA
 		auto exprToken = currentLine.peek();
 		auto expr = this->pushExpression(currentLine, errors, false);
 
-		auto& currentArg = arguments[argIndex];
+		if (arguments.size() <= argIndex)
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, exprToken,
+				"Unexpected argument of type " + expr.type->name + " for function '" +
+					functionName + "'. Only " + std::to_string(arguments.size()) +
+					" argument(s) expected.");
+			break;
+		}
+
+		auto& currentArg = arguments[argIndex++];
 		expr.compileToType(exprToken, currentArg.type, errors);
 
 		if (!expr.type)
@@ -513,7 +533,9 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		Token variableName = line.get();
 
 		BinaryBuffer args;
-		if (line.get() == "=")
+
+		Token equals = line.get();
+		if (equals == "=")
 		{
 			auto expr = pushExpression(line, errors, false);
 
@@ -523,7 +545,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			}
 			else
 			{
-				expr.compileToType(line.previous(), type, errors);
+				expr.compileToType(equals, type, errors);
 			}
 
 			code->addBuffer(expr.code);
@@ -543,7 +565,8 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	line.position = 0;
 	auto expr = pushExpression(line, errors, true);
 
-	if ((line.peek() == "=" || line.peek() == "+=") && expr.valid)
+	auto compoundOperator = stringToCompoundOperator(line.peek().string);
+	if ((line.peek() == "=" || compoundOperator != CompoundOperator::unknown) && expr.valid)
 	{
 		auto equals = line.get();
 
@@ -558,9 +581,10 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		valueExpr.compileToType(equals, expr.type, errors);
 		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
 
-		if (equals == "+=")
+		if (compoundOperator != CompoundOperator::unknown)
 		{
-			valueExpr = expr.type->compileOperator(Operator::add, expr, valueExpr, this);
+			valueExpr = expr.type->compileOperator(
+				Operator(compoundOperator), expr, valueExpr, this);
 		}
 
 		this->code->addBuffer(valueExpr.code);
@@ -579,7 +603,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			BinaryBuffer args;
 			args.addValue<uint32_t>(expr.type->size);
 			this->code->addOperation(BytecodeOp::pop, args);
-			//expr.discard(line.lineTokens->at(0), errors);
+			// expr.discard(line.lineTokens->at(0), errors);
 		}
 		line.expectEndOfLine(errors);
 	}

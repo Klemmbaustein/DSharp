@@ -11,7 +11,7 @@ namespace lang
 		bytecodeOffset* vtable;
 		size_t references;
 
-		static RuntimeClass* allocateClass(size_t bodySize, bytecodeOffset destructor);
+		static RuntimeClass* allocateClass(size_t bodySize, bytecodeOffset* vTable);
 
 		void addRef()
 		{
@@ -35,7 +35,6 @@ namespace lang
 
 			if (header->references == 0)
 			{
-				delete[] header->vtable;
 				free(header);
 				return 0;
 			}
@@ -44,9 +43,8 @@ namespace lang
 
 			if (header->references == 0)
 			{
-				if (!header->vtable[0])
+				if (!header->vtable || !header->vtable[0])
 				{
-					delete[] header->vtable;
 					free(header);
 				}
 				else

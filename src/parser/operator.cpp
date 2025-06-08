@@ -11,8 +11,11 @@ Operator lang::stringToOperator(std::string opString)
 		{ "/", Operator::divide },
 		{ "%", Operator::modulo },
 		{ "==", Operator::equals },
+		{ "!=", Operator::notEquals },
 		{ ">", Operator::greater },
 		{ "<", Operator::less },
+		{ ">=", Operator::greaterEquals },
+		{ "<=", Operator::lessEquals },
 		{ "&&", Operator::logicalAnd },
 		{ "||", Operator::modulo },
 		{ ".", Operator::member },
@@ -26,6 +29,26 @@ Operator lang::stringToOperator(std::string opString)
 	}
 
 	return Operator::unknown;
+}
+
+CompoundOperator lang::stringToCompoundOperator(std::string opString)
+{
+	static std::map<std::string, CompoundOperator> operatorStrings = {
+		{ "+=", CompoundOperator::add },
+		{ "-=", CompoundOperator::subtract },
+		{ "*=", CompoundOperator::multiply },
+		{ "/=", CompoundOperator::divide },
+		{ "%=", CompoundOperator::modulo },
+	};
+
+	auto found = operatorStrings.find(opString);
+
+	if (found != operatorStrings.end())
+	{
+		return found->second;
+	}
+
+	return CompoundOperator::unknown;
 }
 
 bool lang::operatorHasPriority(Operator op, Operator compareTo)

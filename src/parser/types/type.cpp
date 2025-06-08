@@ -8,9 +8,6 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
-
-	result.code.addBuffer(first.code);
-
 	auto floatValue = dynamic_cast<FloatType*>(second.type);
 	if (floatValue)
 	{
@@ -21,7 +18,16 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 		return firstCopy.type->compileOperator(operatorType, firstCopy, second, with);
 	}
 
-	result.code.addBuffer(second.code);
+	if (operatorType != Operator::less)
+	{
+		result.code.addBuffer(first.code);
+		result.code.addBuffer(second.code);
+	}
+	else
+	{
+		result.code.addBuffer(second.code);
+		result.code.addBuffer(first.code);
+	}
 	result.type = this;
 	result.valid = true;
 
@@ -39,12 +45,9 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 	case lang::Operator::divide:
 		result.code.addOperation(BytecodeOp::divInt);
 		break;
+	case lang::Operator::less:
 	case lang::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterInt);
-		result.type = BoolType::getInstance();
-		break;
-	case lang::Operator::less:
-		result.code.addOperation(BytecodeOp::lessInt);
 		result.type = BoolType::getInstance();
 		break;
 	case lang::Operator::modulo:
@@ -132,10 +135,8 @@ ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionR
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
 
-	BinaryBuffer args;
-	args.addValue<uint32_t>(first.type->size);
-
-	result.code.addOperation(BytecodeOp::equals, args);
+	result.code.pushInt(first.type->size);
+	result.code.addOperation(BytecodeOp::equals);
 
 	return result;
 }
@@ -159,15 +160,28 @@ std::string lang::Type::toString(Type* target)
 ExpressionResult lang::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
+
 	ExpressionResult result;
 
-	result.code.addBuffer(first.code);
-	result.code.addBuffer(second.code);
-
-	auto intValue = dynamic_cast<IntType*>(second.type);
-	if (intValue)
+	if (operatorType != Operator::less)
 	{
-		result.code.addOperation(BytecodeOp::intToFloat);
+		result.code.addBuffer(first.code);
+		result.code.addBuffer(second.code);
+		auto intValue = dynamic_cast<IntType*>(second.type);
+		if (intValue)
+		{
+			result.code.addOperation(BytecodeOp::intToFloat);
+		}
+	}
+	else
+	{
+		result.code.addBuffer(second.code);
+		auto intValue = dynamic_cast<IntType*>(second.type);
+		if (intValue)
+		{
+			result.code.addOperation(BytecodeOp::intToFloat);
+		}
+		result.code.addBuffer(first.code);
 	}
 
 	switch (operatorType)
@@ -184,6 +198,12 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 	case lang::Operator::divide:
 		result.code.addOperation(BytecodeOp::divFloat);
 		break;
+	case lang::Operator::less:
+	case lang::Operator::greater:
+		result.code.addOperation(BytecodeOp::greaterFloat);
+		result.type = BoolType::getInstance();
+		break;
+
 	case lang::Operator::modulo:
 	case lang::Operator::unknown:
 	default:
@@ -241,6 +261,16 @@ ExpressionResult lang::FloatType::compileCast(ExpressionResult value)
 
 	return ExpressionResult();
 }
+
+ExpressionResult lang::FloatType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
+{
+	ExpressionResult result = thisValue;
+	result.code.add(new BytecodeCallNative("system::float.toString"));
+	result.valid = true;
+	result.type = StringType::getInstance();
+	return result;
+}
+
 ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {

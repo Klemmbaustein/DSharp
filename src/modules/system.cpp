@@ -45,6 +45,12 @@ static void int_toString(InterpretContext* context)
 	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
 }
 
+static void float_toString(InterpretContext* context)
+{
+	auto str = std::to_string(context->popValue<float>());
+	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
+}
+
 lang::NativeModule lang::modules::system::createModule()
 {
 	NativeModule out;
@@ -74,6 +80,10 @@ lang::NativeModule lang::modules::system::createModule()
 	out.functions.push_back(NativeFunction(
 		{ FunctionArgument(IntType::getInstance(), Token("intValue")) },
 		"int.toString", &int_toString));
+
+	out.functions.push_back(NativeFunction(
+		{ FunctionArgument(IntType::getInstance(), Token("floatValue")) },
+		"float.toString", &float_toString));
 
 	out.functions.push_back(NativeFunction(
 		{ FunctionArgument(StringType::getInstance(), Token("str")) },

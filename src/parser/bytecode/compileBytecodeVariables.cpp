@@ -1,4 +1,4 @@
-#include <parser/compileBytecodeVariables.hpp>
+#include <parser/bytecode/compileBytecodeVariables.hpp>
 #include <parser/types/type.hpp>
 #include <format>
 

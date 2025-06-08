@@ -1,6 +1,6 @@
 #pragma once
 #include "attribute.hpp"
-#include "compileBytecode.hpp"
+#include "bytecode/compileBytecode.hpp"
 #include "expression.hpp"
 #include "parseClass.hpp"
 #include "function.hpp"
@@ -38,6 +38,7 @@ namespace lang
 
 		ErrorContext errors;
 		BytecodeCompiler compiler;
+		std::vector<Function*> virtualTable;
 
 	private:
 		void scanModules();
@@ -60,6 +61,10 @@ namespace lang
 		ParsedFile* functionFile = nullptr;
 		Type* returnType = nullptr;
 		std::vector<FunctionArgument> arguments;
+
+		bool isVirtual = false;
+		bool isOverride = false;
+		bytecodeOffset vTableOffset = 0;
 
 		std::string getFullName() const override;
 

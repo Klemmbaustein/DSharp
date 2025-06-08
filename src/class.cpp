@@ -1,7 +1,7 @@
 #include "class.hpp"
 using namespace lang;
 
-RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, bytecodeOffset destructor)
+RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, bytecodeOffset* vTable)
 {
 	void* classMemory = calloc(sizeof(RuntimeClass) + bodySize, 1);
 
@@ -13,8 +13,7 @@ RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, bytecodeOffset 
 
 	RuntimeClass* header = reinterpret_cast<RuntimeClass*>(classMemory);
 
-	header->vtable = new bytecodeOffset[1]();
-	header->vtable[0] = destructor;
+	header->vtable = vTable;
 	header->references = 1;
 
 	return header;

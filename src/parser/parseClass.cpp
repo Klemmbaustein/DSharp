@@ -32,12 +32,31 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 
 	currentLine.position = 0;
 
+	bool isVirutal = false;
+	bool isOverride = false;
+	std::vector<Token> modifiers;
+
+	while (true)
+	{
+		Token nextModifier = currentLine.peek();
+
+		if (nextModifier == "virtual" || nextModifier == "override")
+		{
+			isVirutal = true;
+			modifiers.push_back(currentLine.get());
+			continue;
+		}
+
+		break;
+	}
+
 	auto first = currentLine.get();
 
 	if (first == "fn")
 	{
 		auto* fn = new ParsedFunction();
 		fn->functionModule = file->fileModule;
+		fn->isVirtual = isVirutal;
 		fn->scanDeclaration(currentLine, classStream, file, errors);
 		fn->inClass = this;
 
@@ -55,7 +74,7 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 	}
 
 	errors->error(ErrorCode::parseUnexpectedToken,
-		first, "Unexpected '" + first.string + "' in class definiton");
+		first, "Unexpected '" + first.string + "' in class definition");
 
 	return true;
 }
@@ -133,6 +152,41 @@ lang::ParsedClass::~ParsedClass()
 
 void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 {
+	thisType = new ClassType();
+	thisType->from = name;
+	thisType->name = name.string;
+	file->fileModule->moduleTypes.insert({ name.string, thisType });
+}
+
+void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
+{
+	std::vector<ClassType*> parents;
+	for (auto& i : this->derivedFrom)
+	{
+		TokenLine line;
+		line.lineTokens = &i;
+
+		Type* type = file->fileModule->getType(line);
+
+		if (!type)
+		{
+			context->errors.error(ErrorCode::parseExpectedName, line.previous(),
+				"Expected a type name, got " + line.previous().string);
+			continue;
+		}
+
+		auto classType = dynamic_cast<ClassType*>(type);
+
+		if (!classType && type)
+		{
+			context->errors.error(ErrorCode::parseInvalidType, line.previous(),
+				"Cannot inherit from '" + type->name + "', it isn't a class.");
+			continue;
+		}
+
+		parents.push_back(classType);
+	}
+
 	std::vector<ClassMember> members;
 	std::map<std::string, Function*> methods;
 
@@ -167,17 +221,13 @@ void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	constructor.parent = this;
 	baseDestructor.parent = this;
 	baseDestructor.isConstructor = false;
-	thisType = new ClassType();
-	thisType->from = name;
-	thisType->name = name.string;
 	thisType->members = members;
 	thisType->methods = methods;
 	thisType->classSize = position;
 	thisType->baseConstructor = &this->constructor;
 	thisType->destructor = this->usedDestructor;
 	thisType->constructors = constructors;
-
-	file->fileModule->moduleTypes.insert({ name.string, thisType });
+	thisType->parents = parents;
 
 	for (auto& m : this->methods)
 	{
@@ -237,6 +287,19 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
 	constructorBytecode.instructions = constructor.code.instructions;
+
+	this->thisType->vTableOffset = context->virtualTable.size();
+	size_t it = 1;
+	context->virtualTable.push_back(usedDestructor);
+
+	for (auto& i : this->methods)
+	{
+		if (i->isVirtual)
+		{
+			i->vTableOffset = it++;
+			context->virtualTable.push_back(i);
+		}
+	}
 }
 
 void lang::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)

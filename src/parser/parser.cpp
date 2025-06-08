@@ -1,5 +1,6 @@
 #include <parser/parser.hpp>
 #include <parser/parseScope.hpp>
+#include <parser/bytecode/compileBytecodeVirtual.hpp>
 #include <parser/types/stringType.hpp>
 #include <modules/system.hpp>
 #include <language.hpp>
@@ -49,7 +50,7 @@ BytecodeStream lang::ParseContext::compile()
 	}
 
 	BytecodeStream out;
-	this->compiler.compileTo(out, &errors);
+	this->compiler.compileTo(out, virtualTable, &errors);
 	this->compiler.printAssembly();
 	if (!errors.isOk())
 	{
@@ -63,6 +64,7 @@ void lang::ParseContext::scanModules()
 	// Register all modules
 	for (ParsedFile& file : this->files)
 	{
+		this->errors.currentFile = file.name;
 		Module& mod = this->programModules[file.scopeName];
 		mod.name = file.scopeName;
 		file.fileModule = &mod;
@@ -82,6 +84,7 @@ void lang::ParseContext::scanModules()
 	// Resolve module dependencies
 	for (ParsedFile& file : this->files)
 	{
+		this->errors.currentFile = file.name;
 		for (auto& [name, module] : file.usings)
 		{
 			auto foundModule = this->programModules.find(name.string);
@@ -103,15 +106,24 @@ void lang::ParseContext::scanModules()
 		}
 	}
 
-	// Parse functions in modules
+	// Scan class types
 	for (ParsedFile& file : this->files)
 	{
+		this->errors.currentFile = file.name;
 		for (auto& i : file.classes)
 		{
 			i.registerType(this, &file);
 		}
+	}
 
+	// Scan classes
+	for (ParsedFile& file : this->files)
+	{
 		this->errors.currentFile = file.name;
+		for (auto& i : file.classes)
+		{
+			i.scanClass(this, &file);
+		}
 		for (auto& function : file.functions)
 		{
 			function.resolveTypes(this, &errors);
@@ -195,6 +207,29 @@ ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* er
 {
 	ParsedClass& newClass = this->classes.emplace_back();
 	newClass.name = currentLine.get();
+	newClass.name.checkIsName(errors);
+
+	if (currentLine.peek() == ":")
+	{
+		currentLine.get();
+		while (true)
+		{
+			newClass.derivedFrom.push_back(currentLine.getUntil("{,", errors));
+
+			if (currentLine.peek() == "{")
+			{
+				break;
+			}
+			else if (currentLine.empty())
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
+			}
+			else if (currentLine.get() != ",")
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Unexpected " + currentLine.previous().string);
+			}
+		}
+	}
 
 	if (currentLine.get() != "{")
 	{
@@ -354,7 +389,14 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 ExpressionResult lang::ParsedFunction::compileCall()
 {
 	ExpressionResult result;
-	result.code.add(new BytecodeCallFunction(getFullName()));
+	if (this->isVirtual)
+	{
+		result.code.add(new BytecodeCallVirtual(this, this->inClass->thisType));
+	}
+	else
+	{
+		result.code.add(new BytecodeCallFunction(getFullName()));
+	}
 	result.type = returnType;
 	result.valid = true;
 	result.discardable = this->discardable();

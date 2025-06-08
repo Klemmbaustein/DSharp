@@ -137,6 +137,8 @@ namespace lang
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with) override;
 		virtual ExpressionResult compileCast(ExpressionResult value) override;
+		virtual ExpressionResult compileToString(ExpressionResult thisValue,
+			ErrorContext* errors, ParsedScope* with);
 	};
 
 	class BoolType : public PrimitiveType

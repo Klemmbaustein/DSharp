@@ -1,4 +1,4 @@
-#include <parser/compileBytecode.hpp>
+#include <parser/bytecode/compileBytecode.hpp>
 #include <parser/types/classType.hpp>
 #include <native/nativeModule.hpp>
 #include <print>
@@ -38,17 +38,17 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 		{ BytecodeOp::mulInt, "MUL_I32" },
 		{ BytecodeOp::divInt, "DIV_I32" },
 		{ BytecodeOp::greaterInt, "GREATER_I32" },
-		{ BytecodeOp::lessInt, "LESS_I32" },
 		{ BytecodeOp::equals, "EQUALS" },
-		{ BytecodeOp::lessInt, "LESS_I32" },
 		{ BytecodeOp::addFloat, "ADD_F32" },
 		{ BytecodeOp::subFloat, "SUB_F32" },
 		{ BytecodeOp::mulFloat, "MUL_F32" },
 		{ BytecodeOp::divFloat, "DIV_F32" },
+		{ BytecodeOp::greaterInt, "GREATER_F32" },
 		{ BytecodeOp::intToFloat, "INT_TO_FLOAT" },
 		{ BytecodeOp::floatToInt, "FLOAT_TO_INT" },
 		{ BytecodeOp::boolAnd, "BOOL_AND" },
 		{ BytecodeOp::boolOr, "BOOL_OR" },
+		{ BytecodeOp::boolNot, "BOOL_NOT" },
 		{ BytecodeOp::pushVariable, "PUSH_VAR" },
 		{ BytecodeOp::storeVariable, "STORE_VAR" },
 		{ BytecodeOp::readVariable, "READ_VAR" },
@@ -64,12 +64,14 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 		{ BytecodeOp::setStringIndexCopy, "SET_STR_AT" },
 	};
 
-	std::string op = operations[this->operation];
+	const char* op = operations[this->operation];
+	std::string opString;
+	if (!op)
+		opString = std::to_string(int(this->operation));
+	else
+		opString = op;
 
-	if (op.empty())
-		op = std::to_string(int(this->operation));
-
-	return std::format("\t{} {}", op, arguments.toString());
+	return std::format("\t{} {}", opString, arguments.toString());
 }
 
 std::string BytecodeOperation::toString()
@@ -210,7 +212,7 @@ void lang::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* c
 	// typeid
 	stream.addValue(uint32_t(0));
 	// vtable
-	stream.addValue(uint32_t(languageClass->destructor ? compiler->functions[languageClass->destructor->getFullName()].offset : 0));
+	stream.addValue(languageClass->vTableOffset);
 }
 
 bytecodeOffset lang::BytecodeAllocClass::getArgsSize()
@@ -236,7 +238,7 @@ void lang::BytecodeCompiler::printAssembly()
 	}
 }
 
-void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, ErrorContext* errors)
+void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors)
 {
 	bytecodeOffset bytecodePos = 0;
 
@@ -265,8 +267,20 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, ErrorContext* err
 			{
 				bytecodePos +=
 					/* operation */ sizeof(BytecodeOp) + /* arguments size */ sizeof(uint8_t) +
-					/* arguments */ +instr->getArgsSize();
+					/* arguments */ instr->getArgsSize();
 			}
+		}
+	}
+
+	for (auto& i : virtualTable)
+	{
+		if (i)
+		{
+			stream.virtualTable.push_back(functions[i->getFullName()].offset);
+		}
+		else
+		{
+			stream.virtualTable.push_back(0);
 		}
 	}
 
