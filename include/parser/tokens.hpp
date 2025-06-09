@@ -77,11 +77,11 @@ namespace lang
 		TokenLine peek(ErrorContext* errors);
 		void addLine(TokenLine ln);
 		void getScope(TokenStream& addTo, ErrorContext* errors, size_t beginDepth = 1);
+		uint32_t character = 0, line = 0;
 
 	private:
 		std::vector<std::vector<Token>> lineTokens;
 		std::vector<Token>* currentLine = nullptr;
-		uint32_t character = 0, line = 0;
 		size_t currentStreamLine = 0;
 
 		bool tryReadWord(std::istream& stream, std::string word, size_t beginAt);

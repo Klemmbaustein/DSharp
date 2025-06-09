@@ -4,17 +4,24 @@ module test
 
 class A
 {
+	string message = "hi"
+
 	virtual fn test()
 	{
-		println("message")
+		println(this.message)
 	}
 }
 
 class B : A
 {
+	fn new()
+	{
+		this.message = "hi B"
+	}
+
 	override fn test()
 	{
-		println("overriden")
+		println($"overriden message: {this.message}")
 	}
 }
 
@@ -22,6 +29,10 @@ class B : A
 fn main() -> int
 {
 	A test = new B()
+
+	test.test()
+
+	test = new A()
 
 	test.test()
 

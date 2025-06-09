@@ -53,7 +53,6 @@ namespace lang
 		size_t refVariableCount = 0;
 
 		std::map<Token, ParsedClassMember> members;
-		std::vector<ParsedClass> parents;
 		std::vector<ParsedFunction*> methods;
 
 		ClassLifetimeFunction constructor;
@@ -61,6 +60,8 @@ namespace lang
 		Function* usedDestructor = &baseDestructor;
 		ClassType* thisType = nullptr;
 		Module* classModule = nullptr;
+
+		bool scanned = false;
 
 		void registerType(ParseContext* context, ParsedFile* file);
 		void scanClass(ParseContext* context, ParsedFile* file);

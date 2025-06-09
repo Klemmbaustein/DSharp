@@ -520,13 +520,14 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	line.position = 0;
 	Type* type = file->getType(line);
 	// If there is a type, it's probably a variable declaration.
-	if (type || first == "var")
+	if (type || first == "var" || first == "const")
 	{
 		bool isVar = first == "var";
+		bool isConst = first == "const";
 
-		if (isVar)
+		if (isVar || isConst)
 		{
-			// var
+			// var/const
 			line.get();
 		}
 
@@ -539,7 +540,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		{
 			auto expr = pushExpression(line, errors, false);
 
-			if (isVar)
+			if (isVar || isConst)
 			{
 				type = expr.type;
 			}
@@ -551,10 +552,10 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			code->addBuffer(expr.code);
 			pushVariableValue(expr.type, true);
 		}
-		else if (isVar)
+		else if (isVar || isConst)
 		{
 			errors->error(ErrorCode::parseVarMustHaveInitializer, variableName,
-				"A variable declared with 'var' must have an initializer.");
+				"A variable declared with 'var' or 'const' must have an initializer.");
 		}
 
 		addVariable(variableName, type);

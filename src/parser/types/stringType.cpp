@@ -112,19 +112,24 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 			resultString.push_back(c);
 
 			TokenStream expressionStream;
+			expressionStream.line = first.position.line;
+			expressionStream.character = first.position.startPos + 1;
 			expressionStream.fromString(currentExprCode, with->scopeFile->name, errors);
 			auto nextLine = expressionStream.next(errors);
 
 			ExpressionResult formatArg = with->pushExpression(nextLine, errors, false);
 
 			auto argType = formatArg.type;
-			if (!argType->sameAs(this))
+			if (!argType || !argType->sameAs(this))
 			{
-				formatArg = formatArg.type->compileToString(formatArg, errors, with);
+				if (argType)
+				{
+					formatArg = formatArg.type->compileToString(formatArg, errors, with);
+				}
 
 				if (!formatArg.valid)
 				{
-					errors->error(ErrorCode::parseInvalidType, first, "Cannot cast type " + argType->name + " to string");
+					errors->error(ErrorCode::parseInvalidType, first, "Cannot cast type " + Type::toString(argType) + " to string");
 				}
 			}
 			else

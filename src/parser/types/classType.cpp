@@ -111,6 +111,10 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 
 		for (auto& [name, function] : this->methods)
 		{
+			if (name == "delete")
+			{
+				continue;
+			}
 			if (name != memberName.string)
 			{
 				continue;

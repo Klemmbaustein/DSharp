@@ -3,6 +3,8 @@
 
 namespace lang
 {
+	struct ParsedClass;
+
 	struct ClassMember
 	{
 		Token name;
@@ -26,6 +28,7 @@ namespace lang
 		bytecodeOffset vTableOffset = 0;
 		Function* baseConstructor = nullptr;
 		Function* destructor = nullptr;
+		ParsedClass* languageClass = nullptr;
 		std::vector<ClassMember> members;
 		std::map<std::string, Function*> methods;
 		std::vector<Function*> constructors;

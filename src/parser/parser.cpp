@@ -51,7 +51,7 @@ BytecodeStream lang::ParseContext::compile()
 
 	BytecodeStream out;
 	this->compiler.compileTo(out, virtualTable, &errors);
-	this->compiler.printAssembly();
+	//this->compiler.printAssembly();
 	if (!errors.isOk())
 	{
 		return BytecodeStream();

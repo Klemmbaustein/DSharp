@@ -66,6 +66,10 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 		}
 		else if (fn->name == "delete")
 		{
+			if (fn->returnTypeTokens.size())
+			{
+				errors->error(ErrorCode::parseInvalidType, fn->returnTypeTokens[0], "The delete function cannot have a return value.");
+			}
 			this->usedDestructor = fn;
 		}
 
@@ -155,11 +159,20 @@ void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	thisType = new ClassType();
 	thisType->from = name;
 	thisType->name = name.string;
+	thisType->languageClass = this;
 	file->fileModule->moduleTypes.insert({ name.string, thisType });
 }
 
 void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 {
+	if (scanned)
+	{
+		return;
+	}
+	scanned = true;
+	uint32_t position = 0;
+	std::vector<ClassMember> members;
+
 	std::vector<ClassType*> parents;
 	for (auto& i : this->derivedFrom)
 	{
@@ -177,22 +190,31 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 
 		auto classType = dynamic_cast<ClassType*>(type);
 
-		if (!classType && type)
+		if (!classType)
 		{
 			context->errors.error(ErrorCode::parseInvalidType, line.previous(),
-				"Cannot inherit from '" + type->name + "', it isn't a class.");
+				"Cannot inherit from '" + Type::toString(type) + "', it isn't a class.");
 			continue;
 		}
+
+		if (classType->languageClass)
+		{
+			classType->languageClass->scanClass(context, file);
+		}
+
+		for (auto& i : classType->members)
+		{
+			members.push_back(i);
+		}
+		position += classType->size;
 
 		parents.push_back(classType);
 	}
 
-	std::vector<ClassMember> members;
 	std::map<std::string, Function*> methods;
 
 	this->classModule = file->fileModule;
 
-	uint32_t position = 0;
 	for (auto& m : this->members)
 	{
 		members.push_back(ClassMember{
@@ -241,9 +263,14 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	constructorScope.scopeFile = file;
 	constructorScope.context = context;
 	constructorScope.code = &this->constructor.code;
-	constructorScope.setClass(this, true);
-
 	auto& code = constructorScope.code;
+
+	for (auto& i : thisType->parents)
+	{
+		code->addBuffer(i->baseConstructor->compileCall().code);
+	}
+
+	constructorScope.setClass(this, true);
 
 	for (auto& [name, member] : this->members)
 	{
@@ -283,7 +310,6 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 	constructorScope.compileScopeExit(true);
 	code->addOperation(BytecodeOp::ret);
-
 
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
 	constructorBytecode.instructions = constructor.code.instructions;
