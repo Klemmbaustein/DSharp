@@ -16,6 +16,16 @@ std::vector<FunctionArgument> NativeFunction::getArguments()
 	return this->arguments;
 }
 
+Type* lang::NativeFunction::getReturnType()
+{
+	return nullptr;
+}
+
+std::string lang::NativeFunction::getShortName() const
+{
+	return this->name;
+}
+
 std::string NativeFunction::getFullName() const
 {
 	return this->moduleName + "::" + this->name;
@@ -28,6 +38,7 @@ bool lang::NativeFunction::discardable() const
 Module lang::NativeModule::create() const
 {
 	Module outModule;
+	outModule.name = this->name;
 
 	for (auto& i : this->functions)
 	{

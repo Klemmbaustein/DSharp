@@ -41,7 +41,8 @@ namespace lang
 		'{',
 		'}',
 		',',
-		'%'
+		'%',
+		';'
 	};
 
 	static std::set<char> whitespace = {
@@ -88,7 +89,7 @@ void lang::Token::checkIsName(ErrorContext* errors) const
 
 	for (auto c : this->string)
 	{
-		if (specialChars.contains(c))
+		if (c != ':' && specialChars.contains(c))
 		{
 			isValid = false;
 		}

@@ -62,11 +62,12 @@ namespace lang
 		Type* returnType = nullptr;
 		std::vector<FunctionArgument> arguments;
 
-		bool isVirtual = false;
+		bool functionIsVirtual = false;
 		bool isOverride = false;
 		bytecodeOffset vTableOffset = 0;
 
 		std::string getFullName() const override;
+		std::string getShortName() const override;
 
 		void scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors);
 
@@ -77,9 +78,14 @@ namespace lang
 		void resolveTypes(ParseContext* context, ErrorContext* errors);
 		void compile(ParseContext* context, ParsedFile* file, ErrorContext* errors);
 
-		virtual ExpressionResult compileCall();
-		virtual std::vector<FunctionArgument> getArguments();
-		virtual bool discardable() const override;
+		ExpressionResult compileCall();
+		std::vector<FunctionArgument> getArguments();
+		Type* getReturnType() override;
+		bool discardable() const override;
+		bool isVirtual() const
+		{
+			return functionIsVirtual;
+		}
 	};
 
 	struct ParsedClassMethod : public ParsedFunction

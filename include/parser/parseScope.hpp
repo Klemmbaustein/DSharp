@@ -20,6 +20,7 @@ namespace lang
 			BytecodePushVariable* variableInstruction = nullptr;
 			ParsedScope* ownedBy = nullptr;
 			Type* type = 0;
+			bool readOnly = false;
 
 			BytecodeBuffer readValue(ParsedScope* scope) const;
 			BytecodeBuffer writeValue(ParsedScope* scope) const;

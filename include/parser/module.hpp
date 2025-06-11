@@ -19,5 +19,7 @@ namespace lang
 		Function* getMethod(std::string name);
 		Type* getType(TokenLine& from);
 		Attribute* getAttribute(TokenLine& from);
+
+		Module* checkForSubmodule(std::string& name);
 	};
 } // namespace lang

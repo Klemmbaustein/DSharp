@@ -119,20 +119,23 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 			{
 				continue;
 			}
-			ExpressionResult result;
-			result.valid = true;
-			result.code.addBuffer(value.code);
+			TokenLine argsLine;
+			argsLine.lineTokens = &inBraces;
 
+			auto functionArgs = function->getArguments();
+
+			ExpressionResult callCode = with->parseFunctionArguments(function->getFullName(), functionArgs, argsLine, errors);
+			callCode.code.addBuffer(value.code);
 			auto compiled = function->compileCall();
 			if (compiled.type)
 			{
 				compiled.code.addBuffer(compiled.type->compileEndMove(with));
 			}
 
-			result.type = compiled.type;
-			result.code.addBuffer(compiled.code);
+			callCode.type = compiled.type;
+			callCode.code.addBuffer(compiled.code);
 
-			return result;
+			return callCode;
 		}
 
 		errors->error(ErrorCode::parseUnknowmMember, memberName,

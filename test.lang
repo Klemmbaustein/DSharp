@@ -6,35 +6,42 @@ class A
 {
 	string message = "hi"
 
-	virtual fn test()
+	fn delete()
 	{
-		println(this.message)
+		io::writeln("bye")
+	}
+
+	virtual fn sayHi()
+	{
+		io::writeln(message)
 	}
 }
 
 class B : A
 {
-	fn new()
+	override fn sayHi()
 	{
-		this.message = "hi B"
+		io::writeln($"message: {message}")
 	}
+}
 
-	override fn test()
-	{
-		println($"overriden message: {this.message}")
-	}
+[Discard]
+fn a() -> A
+{
+	return new B()
 }
 
 [EntryPoint]
 fn main() -> int
 {
-	A test = new B()
+	A x
 
-	test.test()
+	if true
+	{
+		x = a()
+	}
 
-	test = new A()
-
-	test.test()
+	x.sayHi()
 
 	return 0
 }

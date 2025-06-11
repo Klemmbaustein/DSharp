@@ -1,4 +1,5 @@
 #pragma once
+#include <native/nativeModule.hpp>
 
 namespace lang::modules::system
 {
@@ -9,6 +10,12 @@ namespace lang::modules::system
 	 */
 	namespace io
 	{
-
+		/**
+		 * @brief
+		 * Creates the system module.
+		 *
+		 * @see lang::modules::createStandardLibrary
+		 */
+		NativeModule createModule();
 	}
 }

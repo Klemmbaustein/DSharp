@@ -12,6 +12,19 @@ lang::ParseContext::ParseContext(LanguageContext* context)
 	{
 		this->programModules.insert({ name, module->create() });
 	}
+
+	for (auto& i : this->programModules)
+	{
+		std::string moduleName = i.first + "::";
+
+		for (auto& m : this->programModules)
+		{
+			if (m.first.substr(0, moduleName.size()) == moduleName)
+			{
+				i.second.submodules.insert({ m.first, &m.second });
+			}
+		}
+	}
 }
 
 void lang::ParseContext::addFile(std::string filePath)
@@ -51,7 +64,7 @@ BytecodeStream lang::ParseContext::compile()
 
 	BytecodeStream out;
 	this->compiler.compileTo(out, virtualTable, &errors);
-	//this->compiler.printAssembly();
+	this->compiler.printAssembly();
 	if (!errors.isOk())
 	{
 		return BytecodeStream();
@@ -81,6 +94,17 @@ void lang::ParseContext::scanModules()
 		}
 	}
 
+	// Create global module
+	auto& globalModule = this->programModules.insert({ "", Module() }).first->second;
+
+	for (auto& i : this->programModules)
+	{
+		if (i.second.name != globalModule.name)
+		{
+			globalModule.submodules.insert({ i.first, &i.second });
+		}
+	}
+
 	// Resolve module dependencies
 	for (ParsedFile& file : this->files)
 	{
@@ -95,6 +119,7 @@ void lang::ParseContext::scanModules()
 			}
 			module = &foundModule->second;
 		}
+		file.usings.insert({ Token(""), &globalModule });
 	}
 
 	// Parse classes in modules
@@ -171,7 +196,15 @@ bool lang::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, Erro
 	// Attribute
 	if (first == "[")
 	{
-		currentAttributes.push_back(AttribInfo(currentLine.getUntil("]", errors)));
+		auto attribTokens = currentLine.getUntil("]", errors);
+
+		if (attribTokens.empty())
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, first, "Expected an attribute name after '['");
+			return true;
+		}
+
+		currentAttributes.push_back(AttribInfo(attribTokens));
 		return true;
 	}
 
@@ -290,6 +323,11 @@ std::string lang::ParsedFunction::getFullName() const
 	return this->functionModule->name + "::" + this->name.string;
 }
 
+std::string lang::ParsedFunction::getShortName() const
+{
+	return this->name.string;
+}
+
 void lang::ParsedFunction::scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors)
 {
 	name = currentLine.get();
@@ -376,6 +414,8 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 
 	for (auto& i : this->attributes)
 	{
+		i.attributeTokens[0].checkIsName(errors);
+
 		line = TokenLine(&i.attributeTokens);
 		i.attribute = this->functionFile->getAttribute(line);
 		if (!i.attribute)
@@ -389,7 +429,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 ExpressionResult lang::ParsedFunction::compileCall()
 {
 	ExpressionResult result;
-	if (this->isVirtual)
+	if (this->functionIsVirtual)
 	{
 		result.code.add(new BytecodeCallVirtual(this, this->inClass->thisType));
 	}
@@ -406,6 +446,11 @@ ExpressionResult lang::ParsedFunction::compileCall()
 std::vector<FunctionArgument> lang::ParsedFunction::getArguments()
 {
 	return this->arguments;
+}
+
+Type* lang::ParsedFunction::getReturnType()
+{
+	return this->returnType;
 }
 
 bool lang::ParsedFunction::discardable() const

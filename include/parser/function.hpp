@@ -9,6 +9,11 @@ namespace lang
 	{
 		Type* type = nullptr;
 		Token name;
+
+		bool operator==(const FunctionArgument& other) const
+		{
+			return other.type->sameAs(this->type);
+		}
 	};
 
 	/**
@@ -29,6 +34,25 @@ namespace lang
 		 * Gets all arguments for this function.
 		 */
 		virtual std::vector<FunctionArgument> getArguments() = 0;
+		virtual Type* getReturnType() = 0;
+
+		static bool signaturesMatch(Function* a, Function* b)
+		{
+			auto aReturnType = a->getReturnType();
+			auto bReturnType = b->getReturnType();
+
+			if (!aReturnType && !bReturnType)
+			{
+				return a->getArguments() == b->getArguments();
+			}
+
+			if (aReturnType && !bReturnType || !aReturnType && bReturnType)
+			{
+				return false;
+			}
+
+			return a->getArguments() == b->getArguments() && (aReturnType->sameAs(bReturnType));
+		}
 
 		/**
 		 * @brief
@@ -37,6 +61,13 @@ namespace lang
 		 * Example: system::io::println for the system::io::println() function
 		 */
 		virtual std::string getFullName() const = 0;
+		virtual std::string getShortName() const = 0;
 		virtual bool discardable() const = 0;
+		virtual bool isVirtual() const
+		{
+			return false;
+		};
+
+		std::string getSignatureText();
 	};
 } // namespace lang

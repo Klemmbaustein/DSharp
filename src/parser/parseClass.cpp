@@ -43,6 +43,10 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 		if (nextModifier == "virtual" || nextModifier == "override")
 		{
 			isVirutal = true;
+			if (nextModifier == "override")
+			{
+				isOverride = true;
+			}
 			modifiers.push_back(currentLine.get());
 			continue;
 		}
@@ -56,7 +60,8 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 	{
 		auto* fn = new ParsedFunction();
 		fn->functionModule = file->fileModule;
-		fn->isVirtual = isVirutal;
+		fn->functionIsVirtual = isVirutal;
+		fn->isOverride = isOverride;
 		fn->scanDeclaration(currentLine, classStream, file, errors);
 		fn->inClass = this;
 
@@ -140,6 +145,11 @@ std::vector<FunctionArgument> lang::ClassLifetimeFunction::getArguments()
 	return {};
 }
 
+std::string lang::ClassLifetimeFunction::getShortName() const
+{
+	return std::string();
+}
+
 std::string lang::ClassLifetimeFunction::getFullName() const
 {
 	return this->parent->classModule->name + "::" + this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
@@ -172,6 +182,7 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 	scanned = true;
 	uint32_t position = 0;
 	std::vector<ClassMember> members;
+	std::map<std::string, Function*> methods;
 
 	std::vector<ClassType*> parents;
 	for (auto& i : this->derivedFrom)
@@ -206,12 +217,16 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		{
 			members.push_back(i);
 		}
+
+		for (auto& i : classType->methods)
+		{
+			methods.insert(i);
+		}
 		position += classType->size;
 
 		parents.push_back(classType);
 	}
 
-	std::map<std::string, Function*> methods;
 
 	this->classModule = file->fileModule;
 
@@ -267,7 +282,8 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	for (auto& i : thisType->parents)
 	{
-		code->addBuffer(i->baseConstructor->compileCall().code);
+		if (i->baseConstructor)
+			code->addBuffer(i->baseConstructor->compileCall().code);
 	}
 
 	constructorScope.setClass(this, true);
@@ -318,9 +334,42 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	size_t it = 1;
 	context->virtualTable.push_back(usedDestructor);
 
+	for (auto& p : thisType->parents)
+	{
+		for (auto& m : p->methods)
+		{
+			if (!m.second->isVirtual())
+			{
+				continue;
+			}
+
+			for (auto& i : this->methods)
+			{
+				if (!i->isOverride || i->getShortName() != m.second->getShortName())
+				{
+					continue;
+				}
+				if (!Function::signaturesMatch(i, m.second))
+				{
+					errors->error(ErrorCode::parseInvalidType, i->name,
+						"Function signatures of " + i->getFullName() + " and " +
+							m.second->getFullName() + " do not match.\nExpected signature: " +
+							m.second->getSignatureText() + "\nGot:                " + i->getSignatureText());
+				}
+
+				context->virtualTable.push_back(i);
+				i->vTableOffset = it++;
+				it++;
+				continue;
+			}
+			context->virtualTable.push_back(m.second);
+			it++;
+		}
+	}
+
 	for (auto& i : this->methods)
 	{
-		if (i->isVirtual)
+		if (i->functionIsVirtual)
 		{
 			i->vTableOffset = it++;
 			context->virtualTable.push_back(i);

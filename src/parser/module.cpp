@@ -10,6 +10,13 @@ Function* lang::Module::getMethod(std::string name)
 		return foundFunction->second;
 	}
 
+	Module* foundModule = checkForSubmodule(name);
+
+	if (foundModule)
+	{
+		return foundModule->getMethod(name);
+	}
+
 	return nullptr;
 }
 
@@ -35,7 +42,7 @@ Type* lang::Module::getType(TokenLine& from)
 
 Attribute* lang::Module::getAttribute(TokenLine& from)
 {
-	auto name = from.get();
+	Token name = from.get();
 
 	auto foundFunction = this->moduleAttributes.find(name.string);
 
@@ -43,6 +50,31 @@ Attribute* lang::Module::getAttribute(TokenLine& from)
 	{
 		return foundFunction->second;
 	}
+	Module* foundModule = checkForSubmodule(name.string);
 
+	if (foundModule)
+	{
+		from.position -= 1;
+		from.lineTokens->at(from.position) = name;
+		return foundModule->getAttribute(from);
+	}
+
+	return nullptr;
+}
+
+Module* lang::Module::checkForSubmodule(std::string& name)
+{
+	for (auto& [modName, module] : this->submodules)
+	{
+		std::string moduleName = this->name.empty() ? modName : modName.substr(this->name.size() + 2);
+
+		moduleName.append("::");
+
+		if (name.substr(0, moduleName.size()) == moduleName)
+		{
+			name = name.substr(moduleName.size());
+			return module;
+		}
+	}
 	return nullptr;
 }

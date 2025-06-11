@@ -35,7 +35,12 @@ namespace lang
 		ExpressionResult compileCall() override;
 
 		std::vector<FunctionArgument> getArguments() override;
+		virtual Type* getReturnType() override
+		{
+			return nullptr;
+		}
 
+		std::string getShortName() const override;
 		std::string getFullName() const override;
 		bool discardable() const override;
 	};

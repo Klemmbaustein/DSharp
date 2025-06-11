@@ -8,21 +8,24 @@ namespace lang
 {
 	struct NativeFunction : public Function
 	{
-		NativeFunction(std::vector<FunctionArgument> arguments,
-			std::string name,
-			ExternalFunctionPointer function)
+		NativeFunction(std::vector<FunctionArgument> arguments, Type* returnType,
+			std::string name, ExternalFunctionPointer function)
 		{
 			this->arguments = arguments;
 			this->name = name;
 			this->function = function;
+			this->returnType = returnType;
 		}
 
 		std::vector<FunctionArgument> arguments;
 		std::string name;
 		ExternalFunctionPointer function = nullptr;
+		Type* returnType = nullptr;
 
 		ExpressionResult compileCall() override;
 		std::vector<FunctionArgument> getArguments() override;
+		Type* getReturnType() override;
+		std::string getShortName() const override;
 		std::string getFullName() const override;
 		bool discardable() const override;
 

@@ -1,6 +1,5 @@
 #include <modules/system.hpp>
 #include <parser/types/stringType.hpp>
-#include <print>
 
 using namespace lang;
 
@@ -57,36 +56,22 @@ lang::NativeModule lang::modules::system::createModule()
 	out.name = "system";
 
 	out.functions.push_back(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), Token("toPrint")) },
-		"println",
-		[](InterpretContext* context) {
-			auto popped = context->popString();
-			std::puts(popped.c_str());
-		}));
-	out.functions.push_back(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("toPrint")) },
-		"printInt",
-		[](InterpretContext* context) {
-			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
-		}));
-
-	out.functions.push_back(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("position")), FunctionArgument(IntType::getInstance(), Token("length")) },
+		{ FunctionArgument(IntType::getInstance(), Token("position")), FunctionArgument(IntType::getInstance(), Token("length")) }, StringType::getInstance(),
 		"string.substr",
 		[](InterpretContext* context) {
 			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
 		}));
 
 	out.functions.push_back(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("intValue")) },
+		{ FunctionArgument(IntType::getInstance(), Token("intValue")) }, StringType::getInstance(),
 		"int.toString", &int_toString));
 
 	out.functions.push_back(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("floatValue")) },
+		{ FunctionArgument(IntType::getInstance(), Token("floatValue")) }, StringType::getInstance(),
 		"float.toString", &float_toString));
 
 	out.functions.push_back(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), Token("str")) },
+		{ FunctionArgument(StringType::getInstance(), Token("str")) }, StringType::getInstance(),
 		"format", &format));
 
 	out.attributes.push_back(new EntryPointAttribute());

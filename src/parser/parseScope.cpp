@@ -1,5 +1,4 @@
 #include <parser/parseScope.hpp>
-#include <modules/system.hpp>
 #include <parser/bytecode/compileBytecodeVariables.hpp>
 #include <format>
 using namespace lang;
@@ -158,7 +157,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 		result.valid = true;
 		result.type = foundVariable->second.type;
 		result.code = foundVariable->second.readValue(this);
-		if (setExpression)
+		if (setExpression && !foundVariable->second.readOnly)
 		{
 			auto unrefCode = result.type->compileUnref();
 
@@ -432,6 +431,7 @@ void lang::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 	}
 	pushVariableValue(inClass->thisType, false);
 	this->thisVariable = &addVariable(Token("this"), inClass->thisType);
+	this->thisVariable->readOnly = true;
 }
 
 void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
@@ -601,10 +601,18 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		// Pop the return value from the stack because we're not using it.
 		if (expr.type)
 		{
-			BinaryBuffer args;
-			args.addValue<uint32_t>(expr.type->size);
-			this->code->addOperation(BytecodeOp::pop, args);
-			// expr.discard(line.lineTokens->at(0), errors);
+			//auto unrefCode = expr.type->compileUnref();
+			//if (unrefCode.instructions.size())
+			//{
+			//	this->code->addBuffer(unrefCode);
+			//}
+			//else
+			{
+				BinaryBuffer args;
+				args.addValue<uint32_t>(expr.type->size);
+				this->code->addOperation(BytecodeOp::pop, args);
+			}
+			expr.discard(line.lineTokens->at(0), errors);
 		}
 		line.expectEndOfLine(errors);
 	}
