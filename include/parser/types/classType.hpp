@@ -50,7 +50,7 @@ namespace lang
 			ExpressionResult& second, ParsedScope* with) override;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with) override;
-		virtual ExpressionResult compileCast(ExpressionResult value) override;
+		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 	};

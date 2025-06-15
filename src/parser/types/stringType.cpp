@@ -43,7 +43,7 @@ ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line,
 	return compileStringValue(content, with);
 }
 
-ExpressionResult lang::StringType::compileCast(ExpressionResult value)
+ExpressionResult lang::StringType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
@@ -234,8 +234,6 @@ ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLi
 		result.valid = true;
 		return result;
 	}
-
-	errors->error(ErrorCode::parseUnknowmMember, memberName, "The type " + this->name + " does not contain a member called '" + memberName.string + "'");
 
 	return ExpressionResult();
 }

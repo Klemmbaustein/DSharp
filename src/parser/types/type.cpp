@@ -94,7 +94,7 @@ ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::IntType::compileCast(ExpressionResult value)
+ExpressionResult lang::IntType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto floatValue = dynamic_cast<FloatType*>(value.type);
 	if (floatValue)
@@ -112,6 +112,22 @@ ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, Erro
 	result.code.add(new BytecodeCallNative("system::int.toString"));
 	result.valid = true;
 	result.type = StringType::getInstance();
+	return result;
+}
+
+ExpressionResult lang::Type::defaultValue()
+{
+	ExpressionResult result;
+	result.valid = true;
+	result.type = this;
+
+	BinaryBuffer args;
+	for (uint32_t i = 0; i < this->size; i++)
+	{
+		args.addValue<char>(0);
+	}
+
+	result.code.addOperation(BytecodeOp::push, args);
 	return result;
 }
 
@@ -250,7 +266,7 @@ ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::FloatType::compileCast(ExpressionResult value)
+ExpressionResult lang::FloatType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto intValue = dynamic_cast<IntType*>(value.type);
 	if (intValue)
@@ -315,7 +331,7 @@ ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::BoolType::compileCast(ExpressionResult value)
+ExpressionResult lang::BoolType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
@@ -359,7 +375,7 @@ ExpressionResult lang::CharType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::CharType::compileCast(ExpressionResult value)
+ExpressionResult lang::CharType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }

@@ -17,7 +17,7 @@ namespace lang
 			ExpressionResult& second, ParsedScope* with) override;
 		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors,
 			ParsedScope* with) override;
-		ExpressionResult compileCast(ExpressionResult value) override;
+		ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 		ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
@@ -33,11 +33,11 @@ namespace lang
 		}
 
 	private:
+		static inline StringType* instance = nullptr;
 
 		ExpressionResult compileFormatString(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with);
 
-		static inline StringType* instance = nullptr;
 		ExpressionResult compileStringValue(std::string str, ParsedScope* with);
 	};
 } // namespace lang

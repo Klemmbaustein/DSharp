@@ -441,6 +441,7 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 
 	} while (!next.empty());
 
+	get();
 	return result;
 }
 

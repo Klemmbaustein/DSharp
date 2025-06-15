@@ -204,7 +204,10 @@ void lang::InterpretContext::run()
 		}
 		case lang::BytecodeOp::refClass: {
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			ptr->addRef();
+			if (ptr)
+			{
+				ptr->addRef();
+			}
 			pushValue(ptr);
 			break;
 		}

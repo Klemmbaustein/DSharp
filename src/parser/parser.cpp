@@ -2,6 +2,7 @@
 #include <parser/parseScope.hpp>
 #include <parser/bytecode/compileBytecodeVirtual.hpp>
 #include <parser/types/stringType.hpp>
+#include <parser/types/listType.hpp>
 #include <modules/system.hpp>
 #include <language.hpp>
 using namespace lang;
@@ -43,6 +44,7 @@ BytecodeStream lang::ParseContext::compile()
 	this->defaultTypes.push_back(BoolType::getInstance());
 	this->defaultTypes.push_back(StringType::getInstance());
 	this->defaultTypes.push_back(CharType::getInstance());
+	this->defaultTypes.push_back(ListType::getInstance());
 
 	scanModules();
 
@@ -122,15 +124,6 @@ void lang::ParseContext::scanModules()
 		file.usings.insert({ Token(""), &globalModule });
 	}
 
-	// Parse classes in modules
-	for (ParsedFile& file : this->files)
-	{
-		for (auto& i : file.classes)
-		{
-			i.scan(&errors, &file);
-		}
-	}
-
 	// Scan class types
 	for (ParsedFile& file : this->files)
 	{
@@ -138,6 +131,15 @@ void lang::ParseContext::scanModules()
 		for (auto& i : file.classes)
 		{
 			i.registerType(this, &file);
+		}
+	}
+
+	// Parse classes in modules
+	for (ParsedFile& file : this->files)
+	{
+		for (auto& i : file.classes)
+		{
+			i.scan(&errors, &file);
 		}
 	}
 
@@ -347,14 +349,6 @@ void lang::ParsedFunction::scanDeclaration(TokenLine currentLine, TokenStream& s
 	else if (next == "->")
 	{
 		returnTypeTokens = currentLine.getUntil("{", errors);
-
-		next = currentLine.get();
-
-		if (next != "{")
-		{
-			errors->error(ErrorCode::parseUnexpectedToken, next,
-				"Unexpected '" + next.string + "' after function definition. Expected '{'");
-		}
 	}
 	else
 	{

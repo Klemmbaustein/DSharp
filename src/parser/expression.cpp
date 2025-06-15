@@ -13,7 +13,7 @@ void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
 		"If this is a function and the return value is supposed to be discardable, add the Discard attribute.");
 }
 
-void lang::ExpressionResult::compileToType(Token at, Type* target, ErrorContext* errors)
+void lang::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* with, ErrorContext* errors)
 {
 	if (!type)
 	{
@@ -25,7 +25,7 @@ void lang::ExpressionResult::compileToType(Token at, Type* target, ErrorContext*
 		return;
 	}
 
-	auto cast = target->compileCast(*this);
+	auto cast = target->compileCast(*this, with);
 	if (!cast.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, at,

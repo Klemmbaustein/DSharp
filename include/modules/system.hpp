@@ -63,5 +63,13 @@ namespace lang::modules
 		 * @see lang::modules::createStandardLibrary
 		 */
 		NativeModule createModule();
+
+		class ArrayData
+		{
+		public:
+			uint32_t length = 0;
+			void* data = nullptr;
+		};
+
 	} // namespace system
 } // namespace lang::modules

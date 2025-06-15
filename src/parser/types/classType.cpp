@@ -88,7 +88,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::ClassType::compileCast(ExpressionResult value)
+ExpressionResult lang::ClassType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto castValue = dynamic_cast<ClassType*>(value.type);
 
@@ -177,9 +177,6 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 
 		return result;
 	}
-
-	errors->error(ErrorCode::parseUnknowmMember, memberName,
-		"The type " + this->name + " does not contain a member called '" + memberName.string + "'");
 
 	return ExpressionResult();
 }

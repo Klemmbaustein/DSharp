@@ -58,4 +58,59 @@ namespace lang
 			return (uint8_t*)(this) + sizeof(RuntimeClass);
 		}
 	};
+
+	template<typename T>
+	struct ClassPtr
+	{
+		ClassPtr(RuntimeClass* classPtr)
+		{
+			this->classPtr = classPtr;
+		}
+		ClassPtr(const char* stringPtr, size_t stringLength)
+		{
+			uint32_t contentSize = stringLength + 1;
+
+			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
+
+			(*(uint32_t*)this->classPtr->getBody()) = stringLength;
+			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(uint32_t));
+			memcpy(strBegin, stringPtr, stringLength);
+		}
+
+		RuntimeClass* classPtr = nullptr;
+
+		T* get() const
+		{
+			return reinterpret_cast<T*>(this->classPtr->getBody());
+		}
+
+		T* operator->()
+		{
+			return get();
+		}
+		const T* operator->() const
+		{
+			return get();
+		}
+		T& operator*()
+		{
+			return *get();
+		}
+		const T& operator*() const
+		{
+			return *get();
+		}
+
+		ClassPtr(const ClassPtr& other)
+		{
+			this->classPtr = other.classPtr;
+			this->classPtr->addRef();
+		}
+
+		~ClassPtr()
+		{
+			RuntimeClass::unref(classPtr);
+		}
+	};
+
 } // namespace lang

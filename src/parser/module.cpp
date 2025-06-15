@@ -1,4 +1,5 @@
 #include <parser/module.hpp>
+#include <parser/types/arrayType.hpp>
 using namespace lang;
 
 Function* lang::Module::getMethod(std::string name)
@@ -34,7 +35,9 @@ Type* lang::Module::getType(TokenLine& from)
 	// array
 	if (from.peek() == "[")
 	{
-		abort();
+		from.get();
+		from.get();
+		return ArrayType::getInstance(foundType->second);
 	}
 
 	return foundType->second;

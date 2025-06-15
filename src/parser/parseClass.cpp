@@ -295,7 +295,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 		TokenLine valueLine = TokenLine(&member.value);
 		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false);
-		varExpr.compileToType(member.name, member.type, errors);
+		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
 		code->addBuffer(varExpr.code);
 		code->addBuffer(varExpr.type->compileMove(&constructorScope));
 		code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));

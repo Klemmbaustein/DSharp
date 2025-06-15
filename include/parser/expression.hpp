@@ -6,6 +6,7 @@
 namespace lang
 {
 	class Type;
+	struct ParsedScope;
 	struct ErrorContext;
 
 	struct ExpressionResult
@@ -17,6 +18,6 @@ namespace lang
 		BytecodeBuffer code;
 
 		void discard(Token at, ErrorContext* errors);
-		void compileToType(Token at, Type* target, ErrorContext* errors);
+		void compileToType(Token at, Type* target, ParsedScope* with, ErrorContext* errors);
 	};
 }

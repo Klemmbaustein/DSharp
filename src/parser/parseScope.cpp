@@ -26,7 +26,15 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 			currentLine.get();
 			auto index = pushExpression(currentLine, errors, false);
 
+			Type* oldType = result.type;
+
 			result = result.type->compileIndex(result, index, errors, setExpression, this);
+
+			if (!result.valid)
+			{
+				errors->error(ErrorCode::parseInvalidType, operatorToken,
+					"Cannot use operator [] with the type " + Type::toString(oldType));
+			}
 
 			if (currentLine.get() != "]")
 			{
@@ -48,7 +56,15 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 
 		if (exprOperator == Operator::member)
 		{
+			auto memberName = currentLine.peek();
+			auto oldType = result.type;
 			result = result.type->compileMember(result, currentLine, errors, setExpression, this);
+
+			if (!result.valid)
+			{
+				errors->error(ErrorCode::parseUnknowmMember, memberName,
+					"The type " + Type::toString(oldType) + " does not contain a member called '" + memberName.string + "'");
+			}
 			continue;
 		}
 
@@ -296,7 +312,7 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionN
 		}
 
 		auto& currentArg = arguments[argIndex++];
-		expr.compileToType(exprToken, currentArg.type, errors);
+		expr.compileToType(exprToken, currentArg.type, this, errors);
 
 		if (!expr.type)
 		{
@@ -475,7 +491,11 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		{
 			auto expr = pushExpression(line, errors, false);
 
-			expr.compileToType(first, scopeFunction->returnType, errors);
+			if (!expr.type)
+			{
+				return;
+			}
+			expr.compileToType(first, scopeFunction->returnType, this, errors);
 
 			this->code->addBuffer(expr.code);
 			this->code->addBuffer(expr.type->compileMove(this));
@@ -532,6 +552,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		}
 
 		Token variableName = line.get();
+		variableName.checkIsName(errors);
 
 		BinaryBuffer args;
 
@@ -546,17 +567,27 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			}
 			else
 			{
-				expr.compileToType(equals, type, errors);
+				expr.compileToType(equals, type, this, errors);
 			}
 
 			code->addBuffer(expr.code);
-			pushVariableValue(expr.type, true);
+		}
+		else if (!equals.empty())
+		{
+			errors->error(ErrorCode::parseVarMustHaveInitializer, equals,
+				"Expected a '=', got: '" + equals.string + "'");
+
 		}
 		else if (isVar || isConst)
 		{
 			errors->error(ErrorCode::parseVarMustHaveInitializer, variableName,
 				"A variable declared with 'var' or 'const' must have an initializer.");
 		}
+		else
+		{
+			code->addBuffer(type->defaultValue().code);
+		}
+		pushVariableValue(type, true);
 
 		addVariable(variableName, type);
 		line.expectEndOfLine(errors);
@@ -579,7 +610,11 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		}
 
 		auto valueExpr = pushExpression(line, errors, false);
-		valueExpr.compileToType(equals, expr.type, errors);
+		if (!valueExpr.type)
+		{
+			return;
+		}
+		valueExpr.compileToType(equals, expr.type, this, errors);
 		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
 
 		if (compoundOperator != CompoundOperator::unknown)
