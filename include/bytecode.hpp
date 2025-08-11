@@ -1,10 +1,13 @@
 #pragma once
 #include <cstdint>
 #include "binaryBuffer.hpp"
+#include "debug.hpp"
 
 namespace lang
 {
 	using bytecodeOffset = uint32_t;
+
+	class InterpretContext;
 
 	/**
 	 * @brief
@@ -90,11 +93,24 @@ namespace lang
 		concatString,
 		indexString,
 		/// Creates a new string in which a single character is different. Used for:
-		/// string x = "uello world"
+		/// string x = "hello world"
 		/// x[0] = 'h'
 		setStringIndexCopy,
 		virtualCall,
+		/// Verifies that the current pointer on the stack is not null.
+		nullCheck,
 
+	};
+	
+	struct VTableEntry
+	{
+		bytecodeOffset codeOffset = UINT32_MAX;
+		void (*nativeFn)(InterpretContext*) = nullptr;
+
+		operator bool()
+		{
+			return codeOffset != UINT32_MAX || bool(nativeFn);
+		}
 	};
 
 	/**
@@ -107,7 +123,9 @@ namespace lang
 		void addOperation(BytecodeOp operationCode);
 		BinaryBuffer code;
 
+		DebugInfo debug;
+
 		std::vector<std::string> externalFunctions;
-		std::vector<bytecodeOffset> virtualTable;
+		std::vector<VTableEntry> virtualTable;
 	};
 } // namespace lang

@@ -1,0 +1,49 @@
+using system::io
+using system
+
+module commands
+
+class Command
+{
+	string name
+
+	virtual fn execute()
+	{
+
+	}
+}
+
+class ListCommand : Command
+{
+	fn new()
+	{
+		this.name = "ls"
+	}
+
+	override fn execute()
+	{
+		const path = new fs::Path(".")
+		fs::Path[] paths = path.getFiles()
+
+		int i = 0
+
+		while i < paths.length
+		{
+			writeln(paths[i].pathString)
+			i += 1
+		}
+	}
+}
+
+class CurrentDirCommand : Command
+{
+	fn new()
+	{
+		this.name = "pwd"
+	}
+
+	override fn execute()
+	{
+		writeln(fs::getCurrentPath().full())
+	}
+}

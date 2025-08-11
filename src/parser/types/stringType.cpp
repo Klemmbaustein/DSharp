@@ -78,7 +78,28 @@ ExpressionResult lang::StringType::compileIndex(ExpressionResult thisValue, Expr
 	return result;
 }
 
-ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::StringType::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+	ErrorContext* errors, ParsedScope* with)
+{
+	first.code.addOperation(BytecodeOp::refClass);
+	second.compileToType(opToken, this, with, errors);
+	first.code.addBuffer(second.code);
+	first.code.addOperation(BytecodeOp::refClass);
+	first.code.add(new BytecodeCallNative("system::compareString"));
+
+	// compare value, if compareString returns 0 they're the same
+	first.code.pushInt(0);
+	// compare size
+	first.code.pushInt(sizeof(uint32_t));
+
+	first.code.addOperation(BytecodeOp::equals);
+	first.valid = true;
+	first.type = BoolType::getInstance();
+	return first;
+}
+
+ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& line, ErrorContext* errors,
+	ParsedScope* with)
 {
 	std::string content = first.string.substr(2, first.string.size() - 3);
 
@@ -225,7 +246,7 @@ ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLi
 	{
 		ExpressionResult result;
 		result.code.addBuffer(value.code);
-		// string length offset (0 bytse)
+		// string length offset (0 bytes)
 		result.code.pushInt(0);
 		// string length size (sizeof uint32_t bytes)
 		result.code.pushInt(sizeof(uint32_t));

@@ -42,7 +42,6 @@ ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLin
 		result.valid = true;
 		return result;
 	}
-
 	if (memberName == "push")
 	{
 		auto inBraces = line.getInBraces(errors);
@@ -97,6 +96,7 @@ ExpressionResult lang::ArrayType::makeArrayValue(std::vector<ExpressionResult> v
 	for (auto& i : values)
 	{
 		result.code.addBuffer(i.code);
+		result.code.addBuffer(i.type->compileMove(with));
 	}
 
 	result.code.pushInt(values.size());

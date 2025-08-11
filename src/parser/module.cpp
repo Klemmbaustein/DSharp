@@ -29,7 +29,23 @@ Type* lang::Module::getType(TokenLine& from)
 
 	if (foundType == this->moduleTypes.end())
 	{
+		Module* foundModule = checkForSubmodule(name.string);
+
+		if (foundModule)
+		{
+			from.position -= 1;
+			from.lineTokens->at(from.position) = name;
+			return foundModule->getType(from);
+		}
 		return nullptr;
+	}
+
+	if (from.peek() == "?")
+	{
+		auto nullableType = dynamic_cast<ClassType*>(foundType->second);
+		from.get();
+
+		return nullableType->nullable;
 	}
 
 	// array

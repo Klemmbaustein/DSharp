@@ -46,6 +46,9 @@ namespace lang
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		void compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		ExpressionResult pushExpression(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
+		ExpressionResult getExpressionValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
+		ExpressionResult compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op, Token opToken,
+			ErrorContext* errors, bool setExpression);
 		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 
@@ -55,6 +58,7 @@ namespace lang
 			TokenLine& currentLine, ErrorContext* errors);
 
 	private:
+
 		uint32_t tempCounter = 0;
 	};
 } // namespace lang

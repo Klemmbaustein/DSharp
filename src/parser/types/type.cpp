@@ -106,7 +106,8 @@ ExpressionResult lang::IntType::compileCast(ExpressionResult value, ParsedScope*
 	return ExpressionResult();
 }
 
-ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, ErrorContext* errors,
+	ParsedScope* with)
 {
 	ExpressionResult result = thisValue;
 	result.code.add(new BytecodeCallNative("system::int.toString"));
@@ -137,8 +138,10 @@ ExpressionResult lang::Type::compileMember(ExpressionResult value, TokenLine& li
 	return ExpressionResult();
 }
 
-ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionResult second)
+ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+	ErrorContext* errors, ParsedScope* with)
 {
+	second.compileToType(opToken, first.type, with, errors);
 	if (!first.type->sameAs(second.type))
 	{
 		return ExpressionResult();
@@ -146,7 +149,7 @@ ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionR
 
 	ExpressionResult result;
 	result.valid = true;
-	result.type = first.type;
+	result.type = BoolType::getInstance();
 
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
@@ -293,12 +296,23 @@ ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
 	ExpressionResult result;
 
 	result.code.addBuffer(first.code);
+
+	if (second.type && !second.type->sameAs(this))
+	{
+		return ExpressionResult();
+	}
 	result.code.addBuffer(second.code);
 
 	switch (operatorType)
 	{
 	case lang::Operator::logicalAnd:
 		result.code.addOperation(BytecodeOp::boolAnd);
+		break;
+	case lang::Operator::logicalNot:
+		result.code.addOperation(BytecodeOp::boolNot);
+		break;
+	case lang::Operator::logicalOr:
+		result.code.addOperation(BytecodeOp::boolOr);
 		break;
 	default:
 		return ExpressionResult();

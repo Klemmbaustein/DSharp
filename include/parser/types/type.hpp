@@ -45,7 +45,8 @@ namespace lang
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with);
 
-		virtual ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second);
+		virtual ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+			ErrorContext* errors, ParsedScope* with);
 		virtual ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 			ErrorContext* errors, bool setMember, ParsedScope* with);
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,

@@ -45,6 +45,7 @@ BytecodeStream lang::ParseContext::compile()
 	this->defaultTypes.push_back(StringType::getInstance());
 	this->defaultTypes.push_back(CharType::getInstance());
 	this->defaultTypes.push_back(ListType::getInstance());
+	this->defaultTypes.push_back(NullType::getInstance());
 
 	scanModules();
 
@@ -66,7 +67,7 @@ BytecodeStream lang::ParseContext::compile()
 
 	BytecodeStream out;
 	this->compiler.compileTo(out, virtualTable, &errors);
-	this->compiler.printAssembly();
+	//this->compiler.printAssembly();
 	if (!errors.isOk())
 	{
 		return BytecodeStream();
@@ -137,6 +138,7 @@ void lang::ParseContext::scanModules()
 	// Parse classes in modules
 	for (ParsedFile& file : this->files)
 	{
+		this->errors.currentFile = file.name;
 		for (auto& i : file.classes)
 		{
 			i.scan(&errors, &file);
@@ -251,24 +253,30 @@ ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* er
 		{
 			newClass.derivedFrom.push_back(currentLine.getUntil("{,", errors));
 
-			if (currentLine.peek() == "{")
+			if (currentLine.previous() == "{")
 			{
 				break;
 			}
 			else if (currentLine.empty())
 			{
 				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
+				break;
 			}
-			else if (currentLine.get() != ",")
+			else if (currentLine.previous() != ",")
 			{
-				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Unexpected " + currentLine.previous().string);
+				errors->error(ErrorCode::parseUnexpectedToken, currentLine.peek(), "Unexpected " + currentLine.peek().string);
+				break;
 			}
 		}
 	}
-
-	if (currentLine.get() != "{")
+	else
 	{
-		errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
+		auto found = currentLine.get();
+
+		if (found != "{" && !found.empty())
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, found, "Expected a '{', got: '" + found.string + "'");
+		}
 	}
 
 	stream.getScope(newClass.classStream, errors, 1);
@@ -371,7 +379,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 		while (true)
 		{
 			FunctionArgument newArgument;
-			newArgument.type = functionModule->getType(line);
+			newArgument.type = functionFile->getType(line);
 			newArgument.name = line.get();
 
 			if (!newArgument.type)
@@ -395,7 +403,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 	{
 		line = TokenLine(&returnTypeTokens);
 
-		this->returnType = functionModule->getType(line);
+		this->returnType = functionFile->getType(line);
 		line.expectEndOfLine(errors);
 
 		if (!returnType)

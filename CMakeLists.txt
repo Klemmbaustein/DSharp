@@ -11,19 +11,19 @@ project(ProgrammingLanguage)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if(POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+	cmake_policy(SET CMP0141 NEW)
+	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 file(
-    GLOB_RECURSE
-    SRCS
-    "${SRC_DIR}/**.cpp"
+	GLOB_RECURSE
+	SRCS
+	"${SRC_DIR}/**.cpp"
 )
 file(
-    GLOB_RECURSE
-    HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/**.hpp"
+	GLOB_RECURSE
+	HEADERS
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/**.hpp"
 )
 
 add_executable(

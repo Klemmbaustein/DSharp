@@ -1,6 +1,7 @@
 #pragma once
 #include <native/nativeModule.hpp>
 #include <parser/attribute.hpp>
+#include <cstring>
 
 namespace lang::modules
 {
@@ -41,7 +42,7 @@ namespace lang::modules
 		 * @brief
 		 * No discard.
 		 *
-		 * Marks the return value of the function as Discard. If this attribute isn't appled to a function,
+		 * Marks the return value of the function as Discard. If this attribute isn't applied to a function,
 		 * the compiler will emit an error if the return value of this function is ignored.
 		 *
 		 * @see Attribute
@@ -70,6 +71,28 @@ namespace lang::modules
 			uint32_t length = 0;
 			void* data = nullptr;
 		};
+
+		RuntimeClass* createArrayObject();
+
+		template<typename T>
+		RuntimeClass* createArray(T* items, size_t length)
+		{
+			size_t sizeInBytes = length * sizeof(T);
+			void* buffer = malloc(sizeInBytes);
+
+			if (!buffer)
+			{
+				abort();
+			}
+
+			memcpy(buffer, items, sizeInBytes);
+
+			RuntimeClass* array = createArrayObject();
+			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
+			data->data = buffer;
+			data->length = length;
+			return array;
+		}
 
 	} // namespace system
 } // namespace lang::modules

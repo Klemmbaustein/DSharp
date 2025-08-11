@@ -8,13 +8,14 @@ namespace lang
 {
 	struct LanguageContext;
 
-	struct InterpretContext
+	class InterpretContext
 	{
+	public:
 		InterpretContext(LanguageContext* from);
 
 		void loadBytecode(BytecodeStream* code);
 
-		void run();
+		void run(bytecodeOffset position = 0);
 
 		template <typename T>
 		T popValue()
@@ -64,9 +65,13 @@ namespace lang
 			return popValue<uint32_t>();
 		}
 
+		std::vector<DebugSection*> getStackTrace() const;
+
+		void virtualCall(VTableEntry target);
+
 	private:
 		constexpr static size_t STACK_SIZE = 8000;
-		constexpr static size_t FUNCTION_STACK_SIZE = 512;
+		constexpr static size_t CALL_STACK_SIZE = 512;
 		RuntimeStrRef popRuntimeStringRef();
 
 		LanguageContext* language = nullptr;
@@ -75,11 +80,12 @@ namespace lang
 
 		std::array<uint8_t, STACK_SIZE> stack = {};
 		std::array<uint8_t, STACK_SIZE> variableStack = {};
-		std::array<bytecodeOffset, FUNCTION_STACK_SIZE> functionStack = {};
+		std::array<bytecodeOffset, CALL_STACK_SIZE> callStack = {};
 		uint32_t stackPos = 0;
 		uint32_t variableStackPos = 0;
-		uint32_t functionStackPos = 0;
+		uint32_t callStackPos = 0;
+		DebugInfo* debug = nullptr;
 		BinaryBuffer* bytecodeBuffer = nullptr;
-		std::vector<bytecodeOffset>* vTable = nullptr;
+		std::vector<VTableEntry>* vTable = nullptr;
 	};
 } // namespace lang

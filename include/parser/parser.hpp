@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include "error.hpp"
+#include <list>
 
 namespace lang
 {
@@ -45,7 +46,7 @@ namespace lang
 
 		std::map<std::string, Module> programModules;
 		std::vector<Type*> defaultTypes;
-		std::vector<ParsedFile> files;
+		std::list<ParsedFile> files;
 	};
 
 	struct ParsedFile;

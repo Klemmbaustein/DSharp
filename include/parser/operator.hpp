@@ -27,8 +27,14 @@ namespace lang
 		greaterEquals,
 		/// a <= b operator
 		lessEquals,
-		/// a && b operator
+		/// a and b operator
 		logicalAnd,
+		/// a or b operator
+		logicalOr,
+		/// not a operator
+		logicalNot,
+		/// *a operator
+		dereference,
 		/// a.member operator
 		member,
 		/// Unknown operator
@@ -55,5 +61,5 @@ namespace lang
 
 	CompoundOperator stringToCompoundOperator(std::string opString);
 
-	bool operatorHasPriority(Operator op, Operator compareTo);
+	int32_t getOperatorPriority(Operator op);
 } // namespace lang

@@ -33,6 +33,28 @@ BytecodeBuffer lang::ClassType::compileMove(ParsedScope* with)
 	return outBuffer;
 }
 
+lang::NullableClassType::NullableClassType(ClassType* from)
+{
+	this->size = from->size;
+	this->from = from;
+	this->name = from->name + "?";
+}
+
+BytecodeBuffer lang::NullableClassType::compileUnref()
+{
+	return from->compileUnref();
+}
+
+BytecodeBuffer lang::NullableClassType::compileMove(ParsedScope* with)
+{
+	return from->compileMove(with);
+}
+
+BytecodeBuffer lang::NullableClassType::compileEndMove(ParsedScope* with)
+{
+	return from->compileEndMove(with);
+}
+
 bool lang::ClassType::isSubclassOf(ClassType* parent)
 {
 	for (ClassType* i : parents)
@@ -47,6 +69,61 @@ bool lang::ClassType::isSubclassOf(ClassType* parent)
 		}
 	}
 	return false;
+}
+
+ExpressionResult lang::NullableClassType::compileOperator(Operator operatorType,
+	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
+{
+	if (operatorType == Operator::dereference)
+	{
+		first.type = this->from;
+		first.code.addBuffer(compileNullCheck());
+		return first;
+	}
+
+	return from->compileOperator(operatorType, first, second, with);
+}
+
+ExpressionResult lang::NullableClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult lang::NullableClassType::compileCast(ExpressionResult value, ParsedScope* with)
+{
+	if (!value.type)
+	{
+		return ExpressionResult();
+	}
+
+	if (value.type->sameAs(this->from))
+	{
+		value.type = this;
+		return value;
+	}
+
+	auto nullValue = dynamic_cast<NullType*>(value.type);
+
+	if (nullValue)
+	{
+		value.type = this;
+		return value;
+	}
+
+	return from->compileCast(value, with);
+}
+
+ExpressionResult lang::NullableClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
+{
+	value.code.addBuffer(compileNullCheck());
+	return from->compileMember(value, line, errors, setMember, with);
+}
+
+BytecodeBuffer lang::NullableClassType::compileNullCheck() const
+{
+	BytecodeBuffer result;
+	result.addOperation(BytecodeOp::nullCheck);
+	return result;
 }
 
 ExpressionResult lang::ClassType::compileOperator(Operator operatorType,
@@ -68,7 +145,10 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	{
 		result.code.pushInt(this->classSize);
 		result.code.add(new BytecodeAllocClass(this));
-		result.code.addBuffer(baseConstructor->compileCall().code);
+		if (baseConstructor)
+		{
+			result.code.addBuffer(baseConstructor->compileCall().code);
+		}
 	}
 	else
 	{
@@ -134,12 +214,10 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 
 			callCode.type = compiled.type;
 			callCode.code.addBuffer(compiled.code);
+			callCode.valid = true;
 
 			return callCode;
 		}
-
-		errors->error(ErrorCode::parseUnknowmMember, memberName,
-			"The type " + this->name + " does not contain a method called '" + memberName.string + "'");
 
 		return ExpressionResult();
 	}
@@ -178,5 +256,32 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 		return result;
 	}
 
+	return ExpressionResult();
+}
+
+ExpressionResult lang::NullType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult lang::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+{
+	if (first == "null")
+	{
+		ExpressionResult result;
+		result.valid = true;
+		result.type = this;
+
+		BinaryBuffer value;
+		value.addValue(size_t(0));
+
+		result.code.addOperation(BytecodeOp::push, value);
+		return result;
+	}
+	return ExpressionResult();
+}
+
+ExpressionResult lang::NullType::compileCast(ExpressionResult value, ParsedScope* with)
+{
 	return ExpressionResult();
 }

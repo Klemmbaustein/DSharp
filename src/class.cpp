@@ -1,8 +1,9 @@
 #include "class.hpp"
 using namespace lang;
 
-RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, bytecodeOffset* vTable)
+RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, VTableEntry* vTable)
 {
+	classRefCount++;
 	void* classMemory = calloc(sizeof(RuntimeClass) + bodySize, 1);
 
 	if (!classMemory)

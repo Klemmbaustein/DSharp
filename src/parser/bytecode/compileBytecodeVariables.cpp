@@ -13,7 +13,7 @@ lang::BytecodePushVariable::BytecodePushVariable(std::string name, Type* variabl
 
 std::string BytecodePushVariable::toString()
 {
-	return std::format("\tPUSH_VAR {} {}", this->variableType->name, this->name);
+	return std::format("\tPUSH_VAR {} {} {}", this->variableType->name, this->name, this->variableType->size);
 }
 void BytecodePushVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {

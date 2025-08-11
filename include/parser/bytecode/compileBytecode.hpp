@@ -112,6 +112,7 @@ namespace lang
 	struct BytecodeFunction : BytecodeBuffer
 	{
 		bool isEntryPoint = false;
+		std::string name;
 		bytecodeOffset offset = 0;
 	};
 

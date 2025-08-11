@@ -12,7 +12,7 @@ namespace lang::modules::system
 	{
 		/**
 		 * @brief
-		 * Creates the system module.
+		 * Creates the system::io module.
 		 *
 		 * @see lang::modules::createStandardLibrary
 		 */

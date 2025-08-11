@@ -1,10 +1,11 @@
 #include <modules/system.hpp>
 #include <parser/types/stringType.hpp>
+#include <cstring>
 
 using namespace lang;
 using namespace lang::modules::system;
 
-static void format(InterpretContext* context)
+static void string_format(InterpretContext* context)
 {
 	uint32_t varArgsCount = context->getVarArgsCount();
 
@@ -39,6 +40,16 @@ static void format(InterpretContext* context)
 	context->pushRuntimeString(RuntimeStr(result.data(), result.size()));
 }
 
+static void string_compare(InterpretContext* context)
+{
+	auto second = context->popRuntimeString();
+	auto first = context->popRuntimeString();
+
+	auto cmp = std::strcmp(second.ptr(), first.ptr());
+
+	context->pushValue(cmp);
+}
+
 static void int_toString(InterpretContext* context)
 {
 	auto str = std::to_string(context->popValue<uint32_t>());
@@ -51,12 +62,25 @@ static void float_toString(InterpretContext* context)
 	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
 }
 
+static void array_delete(InterpretContext* context)
+{
+	ClassPtr<ArrayData> array = context->popValue<RuntimeClass*>();
+
+	for (uint32_t i = 0; i < array->length; i++)
+	{
+		RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
+		context->pushValue(elem[i]);
+		context->virtualCall(RuntimeClass::unref(elem[i]));
+	}
+	free(array->data);
+}
+
 static void array_new(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
 	uint32_t length = context->popValue<uint32_t>();
 
-	auto newClass = RuntimeClass::allocateClass(sizeof(ArrayData), nullptr);
+	auto newClass = createArrayObject();
 
 	ArrayData* data = (ArrayData*)newClass->getBody();
 	data->length = length;
@@ -73,23 +97,25 @@ static void array_new(InterpretContext* context)
 
 static void array_push(InterpretContext* context)
 {
-	ClassPtr<ArrayData> array = context->popValue<RuntimeClass*>();
+	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 	uint32_t elementSize = context->popValue<uint32_t>();
 
-	array.classPtr->addRef();
 	array->length++;
 
-	array->data = realloc(array->data, array->length * elementSize);
+	void* newData = realloc(array->data, array->length * elementSize);
 
-	context->popBytes((uint8_t*)array->data + elementSize * (array->length - 1), elementSize);
+	if (newData)
+	{
+		array->data = newData;
+		context->popBytes((uint8_t*)array->data + elementSize * (array->length - 1), elementSize);
+	}
 }
 
 static void array_at(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
 	uint32_t index = context->popValue<uint32_t>();
-	ClassPtr<ArrayData> array = context->popValue<RuntimeClass*>();
-	array.classPtr->addRef();
+	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 
 	if (array->length <= index)
 	{
@@ -104,39 +130,56 @@ lang::NativeModule lang::modules::system::createModule()
 	NativeModule out;
 	out.name = "system";
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{ FunctionArgument(IntType::getInstance(), Token("position")), FunctionArgument(IntType::getInstance(), Token("length")) }, StringType::getInstance(),
 		"string.substr",
 		[](InterpretContext* context) {
 			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
 		}));
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{ FunctionArgument(IntType::getInstance(), Token("intValue")) }, StringType::getInstance(),
 		"int.toString", &int_toString));
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{ FunctionArgument(IntType::getInstance(), Token("floatValue")) }, StringType::getInstance(),
 		"float.toString", &float_toString));
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.push", &array_push));
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.new", &array_new));
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.at", &array_at));
 
-	out.functions.push_back(NativeFunction(
+	out.addFunction(NativeFunction(
 		{ FunctionArgument(StringType::getInstance(), Token("str")) }, StringType::getInstance(),
-		"format", &format));
+		"format", &string_format));
+
+	out.addFunction(NativeFunction(
+		{
+			FunctionArgument(StringType::getInstance(), Token("str1")),
+			FunctionArgument(StringType::getInstance(), Token("str2"))
+		},
+		IntType::getInstance(),
+		"compareString", &string_compare));
 
 	out.attributes.push_back(new EntryPointAttribute());
 	out.attributes.push_back(new DiscardAttribute());
 
 	return out;
+}
+
+RuntimeClass* lang::modules::system::createArrayObject()
+{
+	static VTableEntry arrayVTable = VTableEntry{
+		.nativeFn = &array_delete
+	};
+
+	return RuntimeClass::allocateClass(sizeof(ArrayData), &arrayVTable);
 }

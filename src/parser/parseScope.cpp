@@ -1,12 +1,23 @@
 #include <parser/parseScope.hpp>
 #include <parser/bytecode/compileBytecodeVariables.hpp>
 #include <format>
+#include <list>
+#include <optional>
+#include <print>
 using namespace lang;
 
 ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression)
 {
-	ExpressionResult result = pushValue(currentLine, errors, setExpression);
+	ExpressionResult result = getExpressionValue(currentLine, errors, setExpression);
+
+	// 1 + 1 -> (1, '+'), (1, null)
+	// 1 + 1 * 2 -> (1, '+'), (2, '*'), (1, null)
+	using exprPart = std::pair<ExpressionResult, std::optional<Token>>;
+	std::list<exprPart> expression;
+	exprPart* lastElement = &expression.emplace_back(result, std::optional<Token>());
+
+	int32_t highestPriority = INT32_MIN;
 
 	while (!currentLine.empty())
 	{
@@ -21,7 +32,76 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 
 		Token operatorToken = currentLine.peek();
 
-		if (operatorToken == "[")
+		auto exprOperator = stringToOperator(operatorToken.string);
+
+		if (exprOperator == Operator::unknown)
+		{
+			break;
+		}
+
+		highestPriority = std::max(highestPriority, getOperatorPriority(exprOperator));
+
+		lastElement->second = operatorToken;
+
+		currentLine.get();
+
+		auto secondValue = getExpressionValue(currentLine, errors, setExpression);
+		lastElement = &expression.emplace_back(secondValue, std::optional<Token>());
+	}
+
+	if (expression.empty())
+	{
+		return result;
+	}
+
+	while (expression.size() > 1)
+	{
+		int32_t currentPriority = highestPriority;
+		highestPriority = INT32_MIN;
+		for (auto i = expression.begin(); i != expression.end();)
+		{
+			if (!i->second)
+			{
+				break;
+			}
+
+			auto op = stringToOperator(i->second->string);
+			auto opPriority = getOperatorPriority(op);
+			if (opPriority == currentPriority)
+			{
+				std::list<exprPart>::iterator a = i;
+				std::list<exprPart>::iterator b = ++i;
+				b->first = compileOperatorBetween(a->first, b->first, op, a->second.value(), errors, true);
+				expression.erase(a);
+			}
+			else
+			{
+				highestPriority = std::max(highestPriority, opPriority);
+				i++;
+			}
+		}
+	}
+
+	return expression.begin()->first;
+}
+
+ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
+	bool setExpression)
+{
+	ExpressionResult result = pushValue(currentLine, errors, setExpression);
+
+	while (!currentLine.empty())
+	{
+		if (!result.valid)
+		{
+			return ExpressionResult();
+		}
+		if (!result.type)
+		{
+			return result;
+		}
+		Token nextToken = currentLine.peek();
+		if (nextToken == "[")
 		{
 			currentLine.get();
 			auto index = pushExpression(currentLine, errors, false);
@@ -32,7 +112,7 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 
 			if (!result.valid)
 			{
-				errors->error(ErrorCode::parseInvalidType, operatorToken,
+				errors->error(ErrorCode::parseInvalidType, nextToken,
 					"Cannot use operator [] with the type " + Type::toString(oldType));
 			}
 
@@ -45,86 +125,80 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 
 			continue;
 		}
-
-		auto exprOperator = stringToOperator(operatorToken.string);
-		if (exprOperator == Operator::unknown)
+		if (nextToken == ".")
 		{
-			break;
-		}
-
-		currentLine.get();
-
-		if (exprOperator == Operator::member)
-		{
+			currentLine.get();
 			auto memberName = currentLine.peek();
 			auto oldType = result.type;
-			result = result.type->compileMember(result, currentLine, errors, setExpression, this);
+			result = result.type->compileMember(result,
+				currentLine, errors, setExpression, this);
 
 			if (!result.valid)
 			{
 				errors->error(ErrorCode::parseUnknowmMember, memberName,
-					"The type " + Type::toString(oldType) + " does not contain a member called '" + memberName.string + "'");
+					"The type " + Type::toString(oldType) + " does not contain a member called '" +
+						memberName.string + "'");
 			}
 			continue;
 		}
-
-		auto secondValue = pushValue(currentLine, errors, setExpression);
-
-		// if (!nextOperatorToken.empty())
-		//{
-		//	auto nextOperator = stringToOperator(nextOperatorToken.string);
-
-		//	if (operatorHasPriority(nextOperator, exprOperator))
-		//	{
-		//		currentLine.get();
-
-		//		auto firstValue = result;
-
-		//		auto thirdValue = pushValue(currentLine, errors, willDiscard);
-		//		result = result.type->compileOperator(nextOperator, secondValue, thirdValue);
-		//		result = result.type->compileOperator(exprOperator, result, firstValue);
-		//		continue;
-		//	}
-		//}
-
-		auto oldType = result.type;
-
-		if (exprOperator == Operator::equals || exprOperator == Operator::notEquals)
-		{
-			result = result.type->compileEqualsTo(result, secondValue);
-			if (exprOperator == Operator::notEquals)
-			{
-				result.code.addOperation(BytecodeOp::boolNot);
-			}
-		}
-		// a <= b is the same as !(b < a) and a >= b is the same thing as !(b > a)
-		else if (exprOperator == Operator::greaterEquals || exprOperator == Operator::lessEquals)
-		{
-			exprOperator = exprOperator == Operator::greaterEquals ? Operator::greater : Operator::less;
-			result = result.type->compileOperator(exprOperator, secondValue, result, this);
-			result.code.addOperation(BytecodeOp::boolNot);
-		}
-		else
-		{
-			result = result.type->compileOperator(exprOperator, result, secondValue, this);
-		}
-		if (!result.valid)
-		{
-			errors->error(ErrorCode::parseInvalidType, operatorToken,
-				std::format("The operator '{}' does not accept types '{}' and '{}'",
-					operatorToken.string, oldType->name, secondValue.type->name));
-			break;
-		}
+		break;
 	}
-
 	result.valid = true;
 	return result;
+}
+
+ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op,
+	Token opToken, ErrorContext* errors, bool setExpression)
+{
+	auto oldType = a.type;
+
+	if (op == Operator::equals || op == Operator::notEquals)
+	{
+		a = a.type->compileEqualsTo(a, b, opToken, errors, this);
+		if (op == Operator::notEquals)
+		{
+			a.code.addOperation(BytecodeOp::boolNot);
+		}
+	}
+	// a <= b is the same as !(b < a) and a >= b is the same thing as !(b > a)
+	else if (op == Operator::greaterEquals || op == Operator::lessEquals)
+	{
+		op = op == Operator::greaterEquals ? Operator::greater : Operator::less;
+		a = a.type->compileOperator(op, b, a, this);
+		a.code.addOperation(BytecodeOp::boolNot);
+	}
+	else
+	{
+		a = a.type->compileOperator(op, a, b, this);
+	}
+	if (!a.valid)
+	{
+		errors->error(ErrorCode::parseInvalidType, opToken,
+			std::format("The operator '{}' does not accept types '{}' and '{}'",
+				opToken.string, oldType->name, b.type->name));
+	}
+	return a;
 }
 
 ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression)
 {
 	Token value = currentLine.peek();
+
+	if (value == "*")
+	{
+		currentLine.get();
+		auto result = pushValue(currentLine, errors, setExpression);
+		ExpressionResult r;
+		return result.type->compileOperator(Operator::dereference, result, r, this);
+	}
+	if (value == "not")
+	{
+		currentLine.get();
+		auto result = pushValue(currentLine, errors, setExpression);
+		ExpressionResult r;
+		return result.type->compileOperator(Operator::logicalNot, result, r, this);
+	}
 
 	auto initialPosition = currentLine.savePosition();
 
@@ -212,7 +286,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = parseFunctionArguments(function->getFullName(), functionArgs, argsLine, errors);
+			ExpressionResult callCode = parseFunctionArguments(function->getFullName(), functionArgs,
+				argsLine, errors);
 
 			auto fn = function->compileCall();
 
@@ -576,7 +651,6 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		{
 			errors->error(ErrorCode::parseVarMustHaveInitializer, equals,
 				"Expected a '=', got: '" + equals.string + "'");
-
 		}
 		else if (isVar || isConst)
 		{
@@ -589,7 +663,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		}
 		pushVariableValue(type, true);
 
-		addVariable(variableName, type);
+		addVariable(variableName, type).readOnly = isConst;
 		line.expectEndOfLine(errors);
 		return;
 	}
@@ -636,12 +710,12 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		// Pop the return value from the stack because we're not using it.
 		if (expr.type)
 		{
-			//auto unrefCode = expr.type->compileUnref();
-			//if (unrefCode.instructions.size())
+			// auto unrefCode = expr.type->compileUnref();
+			// if (unrefCode.instructions.size())
 			//{
 			//	this->code->addBuffer(unrefCode);
-			//}
-			//else
+			// }
+			// else
 			{
 				BinaryBuffer args;
 				args.addValue<uint32_t>(expr.type->size);

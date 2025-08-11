@@ -62,6 +62,7 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 		{ BytecodeOp::concatString, "CONCAT_STRING" },
 		{ BytecodeOp::indexString, "INDEX_STRING" },
 		{ BytecodeOp::setStringIndexCopy, "SET_STR_AT" },
+		{ BytecodeOp::nullCheck, "CHECK_NOT_NULL" },
 	};
 
 	const char* op = operations[this->operation];
@@ -233,7 +234,7 @@ void lang::BytecodeCompiler::printAssembly()
 
 		for (auto& instr : fn.second.instructions)
 		{
-			std::println("{}", instr->toString());
+			std::println("{} {}", instr->offset, instr->toString());
 		}
 	}
 }
@@ -246,6 +247,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 
 	for (auto& i : this->functions)
 	{
+		i.second.name = i.first;
 		if (i.second.isEntryPoint)
 		{
 			orderedFunctions.insert(orderedFunctions.begin(), &i.second);
@@ -276,17 +278,23 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 	{
 		if (i)
 		{
-			stream.virtualTable.push_back(functions[i->getFullName()].offset);
+			stream.virtualTable.push_back(VTableEntry{
+				.codeOffset = functions[i->getFullName()].offset });
 		}
 		else
 		{
-			stream.virtualTable.push_back(0);
+			stream.virtualTable.push_back(VTableEntry());
 		}
 	}
 
 	BinaryBuffer argsBuffer;
 	for (auto& code : orderedFunctions)
 	{
+		stream.debug.sections.push_back(DebugSection{
+			.offset = code->offset,
+			.name = code->name,
+			});
+
 		for (BytecodeInstruction* instr : code->instructions)
 		{
 			if (instr->baseSize != 0)
@@ -305,7 +313,8 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 		{
 			errors->error(ErrorCode::internalError, Token(),
 				"Internal compiler error. The variable stack position did not return to 0 after a function call. "
-				"This is a compiler bug and should never happen.");
+				"This is a compiler bug and should never happen. Function: " + code->name);
+			this->variableStackPosition = 0;
 		}
 	}
 

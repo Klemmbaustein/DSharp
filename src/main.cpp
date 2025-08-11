@@ -1,5 +1,7 @@
 #include <language.hpp>
 #include <modules/standardLibrary.hpp>
+#include <cassert>
+#include <print>
 
 using namespace lang;
 
@@ -10,6 +12,7 @@ int main()
 
 	ParseContext* compiler = language.createCompiler();
 	compiler->addFile("test.lang");
+	compiler->addFile("commands.lang");
 	BytecodeStream compiled = compiler->compile();
 	delete compiler;
 
@@ -17,4 +20,7 @@ int main()
 	interpreter->loadBytecode(&compiled);
 	interpreter->run();
 	delete interpreter;
+
+	std::println("classes leaked: {}", RuntimeClass::classRefCount);
+	assert(RuntimeClass::classRefCount == 0);
 }

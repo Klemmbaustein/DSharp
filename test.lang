@@ -1,20 +1,53 @@
 using system
+using system::io
+using commands
 
 module test
 
 [EntryPoint]
 fn main() -> int
 {
-	int[] array = [1, 2, 3]
+	Command[] commandList = []
+	commandList.push(new ListCommand())
+	commandList.push(new CurrentDirCommand())
+	
+	bool exit = false
 
-	array.push(5)
-
-	int i = 0
-	while i < (array.length)
+	while not exit
 	{
-		io::writeInt(array[i])
+		write("> ")
+		const givenCommand = readln()
+
+		if givenCommand == "exit"
+		{
+			exit = true
+		}
+		else
+		{
+			execute(commandList, givenCommand)
+		}
+	}
+
+	return 0
+}
+
+fn execute(Command[] commandList, string givenCommand)
+{
+	int i = 0
+	bool found = false
+	while not found and i < commandList.length
+	{
+		const current = commandList[i]
+		if current.name == givenCommand
+		{
+			current.execute()
+			found = true
+		}
 		i += 1
 	}
 
-	return i
+	if not found
+	{
+		writeln($"unknown command: {givenCommand}")
+	}
 }

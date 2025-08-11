@@ -23,6 +23,9 @@ namespace lang
 		ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 
+		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+			ErrorContext* errors, ParsedScope* with) override;
+
 		static StringType* getInstance()
 		{
 			if (!instance)

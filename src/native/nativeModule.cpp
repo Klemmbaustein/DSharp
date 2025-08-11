@@ -6,7 +6,7 @@ ExpressionResult NativeFunction::compileCall()
 {
 	ExpressionResult result;
 	result.code.add(new BytecodeCallNative(this));
-	result.type = nullptr;
+	result.type = this->returnType;
 	result.valid = true;
 	return result;
 }
@@ -18,7 +18,7 @@ std::vector<FunctionArgument> NativeFunction::getArguments()
 
 Type* lang::NativeFunction::getReturnType()
 {
-	return nullptr;
+	return this->returnType;
 }
 
 std::string lang::NativeFunction::getShortName() const
@@ -35,6 +35,26 @@ bool lang::NativeFunction::discardable() const
 	return true;
 }
 
+NativeFunction* lang::NativeModule::addFunction(NativeFunction function)
+{
+	return this->functions.emplace_back(new NativeFunction(function));
+}
+
+void lang::NativeModule::addClassConstructor(ClassType* type, NativeFunction constructor)
+{
+	type->constructors.push_back(addFunction(constructor));
+}
+
+void lang::NativeModule::addClassMethod(ClassType* type, NativeFunction function)
+{
+	auto fn = addFunction(function);
+	type->methods.insert({
+			fn->name,
+			fn
+		});
+	fn->name = type->name + fn->name;
+}
+
 Module lang::NativeModule::create() const
 {
 	Module outModule;
@@ -42,13 +62,16 @@ Module lang::NativeModule::create() const
 
 	for (auto& i : this->functions)
 	{
-		auto function = new NativeFunction(i);
-		function->moduleName = this->name;
-		outModule.moduleFunctions.insert({ i.name, function });
+		i->moduleName = this->name;
+		outModule.moduleFunctions.insert({ i->name, i });
 	}
 	for (auto& i : this->attributes)
 	{
 		outModule.moduleAttributes.insert({ i->name, i });
+	}
+	for (auto& i : this->types)
+	{
+		outModule.moduleTypes.insert({ i->name, i });
 	}
 
 	return outModule;

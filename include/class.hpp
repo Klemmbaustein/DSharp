@@ -6,23 +6,25 @@
 
 namespace lang
 {
+	class InterpretContext;
 	struct RuntimeClass
 	{
-		bytecodeOffset* vtable;
+		VTableEntry* vtable;
 		size_t references;
+		static inline size_t classRefCount = 0;
 
-		static RuntimeClass* allocateClass(size_t bodySize, bytecodeOffset* vTable);
+		static RuntimeClass* allocateClass(size_t bodySize, VTableEntry* vTable);
 
 		void addRef()
 		{
 			references++;
 		}
 
-		static bytecodeOffset unref(RuntimeClass* header)
+		static VTableEntry unref(RuntimeClass* header)
 		{
 			if (!header)
 			{
-				return 0;
+				return VTableEntry();
 			}
 
 #ifdef _DEBUG
@@ -35,22 +37,24 @@ namespace lang
 
 			if (header->references == 0)
 			{
+				classRefCount--;
 				free(header);
-				return 0;
+				return VTableEntry();
 			}
 
 			header->references--;
 
 			if (header->references == 0)
 			{
-				if (!header->vtable || !header->vtable[0])
+				if (!header->vtable || !bool(header->vtable[0]))
 				{
+					classRefCount--;
 					free(header);
 				}
 				else
 					return header->vtable[0];
 			}
-			return 0;
+			return VTableEntry();
 		}
 
 		inline uint8_t* getBody()
@@ -65,16 +69,6 @@ namespace lang
 		ClassPtr(RuntimeClass* classPtr)
 		{
 			this->classPtr = classPtr;
-		}
-		ClassPtr(const char* stringPtr, size_t stringLength)
-		{
-			uint32_t contentSize = stringLength + 1;
-
-			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
-
-			(*(uint32_t*)this->classPtr->getBody()) = stringLength;
-			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(uint32_t));
-			memcpy(strBegin, stringPtr, stringLength);
 		}
 
 		RuntimeClass* classPtr = nullptr;
@@ -111,6 +105,43 @@ namespace lang
 		{
 			RuntimeClass::unref(classPtr);
 		}
+	};
+
+	template <typename T>
+	struct ClassRef
+	{
+		ClassRef(RuntimeClass* classPtr)
+		{
+			this->classPtr = classPtr;
+		}
+
+		RuntimeClass* classPtr = nullptr;
+
+		T* get() const
+		{
+			return reinterpret_cast<T*>(this->classPtr->getBody());
+		}
+
+		T* operator->()
+		{
+			return get();
+		}
+		const T* operator->() const
+		{
+			return get();
+		}
+		T& operator*()
+		{
+			return *get();
+		}
+		const T& operator*() const
+		{
+			return *get();
+		}
+
+		ClassRef(const ClassRef& other) = default;
+
+		~ClassRef() = default;
 	};
 
 } // namespace lang

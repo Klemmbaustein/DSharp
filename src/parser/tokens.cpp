@@ -42,7 +42,8 @@ namespace lang
 		'}',
 		',',
 		'%',
-		';'
+		';',
+		'?'
 	};
 
 	static std::set<char> whitespace = {

@@ -14,6 +14,7 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 {
 	this->bytecodeBuffer = &code->code;
 	this->vTable = &code->virtualTable;
+	this->debug = &code->debug;
 
 	this->externals.reserve(code->externalFunctions.size());
 	for (auto& i : code->externalFunctions)
@@ -26,17 +27,20 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 		bool found = false;
 		for (auto& i : this->language->languageModules[first]->functions)
 		{
-			if (i.name == second)
+			if (i->name == second)
 			{
-				this->externals.push_back(i.function);
+				this->externals.push_back(i->function);
 			}
 		}
 	}
 }
 
-void lang::InterpretContext::run()
+void lang::InterpretContext::run(bytecodeOffset position)
 {
 	std::array<uint8_t, 255> argumentBuffer{};
+	
+	bytecodeOffset baseCallStackPos = this->callStackPos;
+	bytecodeBuffer->streamPos = position;
 
 	while (!bytecodeBuffer->empty())
 	{
@@ -136,20 +140,30 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::boolNot:
 			pushValue(!popValue<bool>());
 			break;
+		case lang::BytecodeOp::boolAnd: {
+			bool first = popValue<bool>();
+			bool second = popValue<bool>();
+			pushValue(first && second);
+			break;
+		}
 		case lang::BytecodeOp::call:
-			functionStack[functionStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+			callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
 			bytecodeBuffer->streamPos = size_t(*(bytecodeOffset*)&argumentBuffer[0]);
 			break;
 		case lang::BytecodeOp::callExternal:
 			externals[*(uint32_t*)&argumentBuffer[0]](this);
 			break;
 		case lang::BytecodeOp::ret:
-			if (functionStackPos == 0)
+			if (callStackPos == 0)
 			{
 				std::print("program returned: '{}'\n", popValue<int32_t>());
 				return;
 			}
-			bytecodeBuffer->streamPos = functionStack[--functionStackPos];
+			else if (callStackPos == baseCallStackPos)
+			{
+				return;
+			}
+			bytecodeBuffer->streamPos = callStack[--callStackPos];
 			break;
 		case lang::BytecodeOp::pushVariable: {
 			uint32_t size = *(uint32_t*)&argumentBuffer[0];
@@ -213,13 +227,21 @@ void lang::InterpretContext::run()
 		}
 		case lang::BytecodeOp::unrefClass: {
 			auto ptr = popValue<RuntimeClass*>();
-			bytecodeOffset destructor = RuntimeClass::unref(ptr);
 
-			if (destructor != 0 && destructor != UINT32_MAX)
+			VTableEntry destructor = RuntimeClass::unref(ptr);
+
+			if (destructor)
 			{
 				pushValue(ptr);
-				functionStack[functionStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
-				bytecodeBuffer->streamPos = destructor;
+				if (destructor.nativeFn)
+				{
+					destructor.nativeFn(this);
+				}
+				else
+				{
+					callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+					bytecodeBuffer->streamPos = destructor.codeOffset;
+				}
 			}
 
 			break;
@@ -270,10 +292,42 @@ void lang::InterpretContext::run()
 		case lang::BytecodeOp::virtualCall: {
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
 			bytecodeOffset called = *(bytecodeOffset*)&argumentBuffer[0];
-			functionStack[functionStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
-			bytecodeBuffer->streamPos = ptr->vtable[called];
+			auto& entry = ptr->vtable[called];
 			pushValue(ptr);
+			if (entry.nativeFn)
+			{
+				entry.nativeFn(this);
+			}
+			else
+			{
+				callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+				bytecodeBuffer->streamPos = entry.codeOffset;
+			}
 
+			break;
+		}
+		case lang::BytecodeOp::nullCheck: {
+			size_t ptr = popValue<size_t>();
+			if (!ptr)
+			{
+				auto stack = getStackTrace();
+				std::println("Attempted to use null reference");
+
+				for (DebugSection* i : stack)
+				{
+					if (i)
+					{
+						std::println("\t{}()", i->name);
+					}
+					else
+					{
+						std::println("\t<unknown stack frame>");
+					}
+				}
+
+				abort();
+			}
+			pushValue(ptr);
 			break;
 		}
 		default:
@@ -302,6 +356,32 @@ void lang::InterpretContext::pushRuntimeString(RuntimeStr str)
 lang::RuntimeStr lang::InterpretContext::popRuntimeString()
 {
 	return RuntimeStr(popValue<RuntimeClass*>());
+}
+
+std::vector<lang::DebugSection*> lang::InterpretContext::getStackTrace() const
+{
+	std::vector<DebugSection*> result;
+	result.push_back(this->debug->getSectionAt(bytecodeBuffer->streamPos));
+	for (int i = callStackPos - 1; i >= 0; i--)
+	{
+		result.push_back(this->debug->getSectionAt(callStack[i]));
+	}
+
+	return result;
+}
+
+void lang::InterpretContext::virtualCall(VTableEntry target)
+{
+	if (target.nativeFn)
+	{
+		target.nativeFn(this);
+	}
+	else
+	{
+		callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+		run(target.codeOffset);
+		bytecodeBuffer->streamPos = callStack[--callStackPos];
+	}
 }
 
 lang::RuntimeStrRef lang::InterpretContext::popRuntimeStringRef()

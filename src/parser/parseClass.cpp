@@ -169,6 +169,7 @@ void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	thisType = new ClassType();
 	thisType->from = name;
 	thisType->name = name.string;
+	thisType->nullable->name = name.string + "?";
 	thisType->languageClass = this;
 	file->fileModule->moduleTypes.insert({ name.string, thisType });
 }
@@ -190,7 +191,7 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		TokenLine line;
 		line.lineTokens = &i;
 
-		Type* type = file->fileModule->getType(line);
+		Type* type = file->getType(line);
 
 		if (!type)
 		{
@@ -211,8 +212,12 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		if (classType->languageClass)
 		{
 			classType->languageClass->scanClass(context, file);
+			for (auto& m : classType->languageClass->members)
+			{
+				auto [value, success] = this->members.insert(m);
+				value->second.isDerived = true;
+			}
 		}
-
 		for (auto& i : classType->members)
 		{
 			members.push_back(i);
@@ -232,6 +237,10 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 
 	for (auto& m : this->members)
 	{
+		if (m.second.isDerived)
+		{
+			continue;
+		}
 		members.push_back(ClassMember{
 			.name = m.second.name,
 			.offset = position,

@@ -18,6 +18,7 @@ namespace lang
 		Token name;
 		std::vector<Token> value;
 		uint32_t offset = 0;
+		bool isDerived = false;
 
 		BytecodeBuffer readValue() const;
 		BytecodeBuffer writeValue() const;
