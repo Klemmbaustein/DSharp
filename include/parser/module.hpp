@@ -17,8 +17,8 @@ namespace lang
 		std::map<std::string, Module*> submodules;
 
 		Function* getMethod(std::string name);
-		Type* getType(TokenLine& from);
-		Attribute* getAttribute(TokenLine& from);
+		Type* getType(std::string name, TokenLine& from);
+		Attribute* getAttribute(std::string name, TokenLine& from);
 
 		Module* checkForSubmodule(std::string& name);
 	};

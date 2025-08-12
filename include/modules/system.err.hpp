@@ -6,24 +6,17 @@ namespace lang::modules::system
 	/**
 	 * @ingroup stdlib
 	 * @brief
-	 * Module containing filesystem functions.
+	 * Module containing error handling functions.
 	 */
-	namespace fs
+	namespace err
 	{
 		/**
 		 * @brief
-		 * Creates the system::fs module.
+		 * Creates the system::err module.
 		 *
 		 * @see lang::modules::createStandardLibrary
 		 */
 		NativeModule createModule();
 
-		class FilePath
-		{
-		public:
-			RuntimeStr pathString;
-		};
-
-		RuntimeClass* createPath();
-	} // namespace fs
+	} // namespace err
 } // namespace lang::modules::system

@@ -44,13 +44,14 @@ namespace lang
 	class BytecodePopVariable : public BytecodeInstruction
 	{
 	public:
-		BytecodePopVariable(uint32_t size);
+		BytecodePopVariable(uint32_t size, bool isScopeExit);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		uint32_t popSize = 0;
+		bool isScopeExit = false;
 	};
 
 } // namespace lang

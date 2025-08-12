@@ -309,13 +309,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 			}
 		}
 
-		if (this->variableStackPosition != 0)
-		{
-			errors->error(ErrorCode::internalError, Token(),
-				"Internal compiler error. The variable stack position did not return to 0 after a function call. "
-				"This is a compiler bug and should never happen. Function: " + code->name);
-			this->variableStackPosition = 0;
-		}
+		this->variableStackPosition = 0;
 	}
 
 	stream.externalFunctions = this->externals;

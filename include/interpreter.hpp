@@ -69,6 +69,8 @@ namespace lang
 
 		void virtualCall(VTableEntry target);
 
+		void runtimePanic(RuntimeStr message) const;
+
 	private:
 		constexpr static size_t STACK_SIZE = 8000;
 		constexpr static size_t CALL_STACK_SIZE = 512;

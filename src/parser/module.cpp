@@ -21,21 +21,17 @@ Function* lang::Module::getMethod(std::string name)
 	return nullptr;
 }
 
-Type* lang::Module::getType(TokenLine& from)
+Type* lang::Module::getType(std::string name, TokenLine& from)
 {
-	auto name = from.get();
-
-	auto foundType = this->moduleTypes.find(name.string);
+	auto foundType = this->moduleTypes.find(name);
 
 	if (foundType == this->moduleTypes.end())
 	{
-		Module* foundModule = checkForSubmodule(name.string);
+		Module* foundModule = checkForSubmodule(name);
 
 		if (foundModule)
 		{
-			from.position -= 1;
-			from.lineTokens->at(from.position) = name;
-			return foundModule->getType(from);
+			return foundModule->getType(name, from);
 		}
 		return nullptr;
 	}
@@ -59,23 +55,19 @@ Type* lang::Module::getType(TokenLine& from)
 	return foundType->second;
 }
 
-Attribute* lang::Module::getAttribute(TokenLine& from)
+Attribute* lang::Module::getAttribute(std::string name, TokenLine& from)
 {
-	Token name = from.get();
-
-	auto foundFunction = this->moduleAttributes.find(name.string);
+	auto foundFunction = this->moduleAttributes.find(name);
 
 	if (foundFunction != this->moduleAttributes.end())
 	{
 		return foundFunction->second;
 	}
-	Module* foundModule = checkForSubmodule(name.string);
+	Module* foundModule = checkForSubmodule(name);
 
 	if (foundModule)
 	{
-		from.position -= 1;
-		from.lineTokens->at(from.position) = name;
-		return foundModule->getAttribute(from);
+		return foundModule->getAttribute(name, from);
 	}
 
 	return nullptr;

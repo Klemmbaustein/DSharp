@@ -344,7 +344,8 @@ ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine,
 	return result;
 }
 
-void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors)
+void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
+	BytecodeJumpLabel* breakTarget, BytecodeJumpLabel* continueTarget, size_t breakContinueDepth)
 {
 	ParsedScope conditionScope;
 	TokenStream conditionTokens;
@@ -352,6 +353,10 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors)
 	conditionScope.tokenStream = &conditionTokens;
 	conditionScope.code = this->code;
 	conditionScope.tempCounter = this->tempCounter;
+	conditionScope.breakTarget = breakTarget;
+	conditionScope.continueTarget = continueTarget;
+	conditionScope.breakContinueDepth = breakContinueDepth;
+	conditionScope.depth = this->depth + 1;
 
 	for (auto& i : this->variables)
 	{
@@ -427,6 +432,7 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 		.name = tempName,
 		.variableInstruction = instruction,
 		.ownedBy = this,
+		.depth = this->depth,
 		.type = type,
 	} }).first->second;
 	// clang-format on
@@ -460,6 +466,7 @@ ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* typ
 			.name = name,
 			.variableInstruction = instruction,
 			.ownedBy = this,
+			.depth = this->depth,
 			.type = type,
 		} });
 
@@ -468,12 +475,12 @@ ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* typ
 	return result.first->second;
 }
 
-void lang::ParsedScope::compileScopeExit(bool full)
+void lang::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 {
 	uint32_t size = 0;
 	for (auto& i : variables)
 	{
-		if ((i.second.ownedBy && i.second.ownedBy != this) && !full)
+		if (i.second.depth < toDepth)
 		{
 			continue;
 		}
@@ -506,7 +513,7 @@ void lang::ParsedScope::compileScopeExit(bool full)
 
 	if (size)
 	{
-		code->add(new BytecodePopVariable(size));
+		code->add(new BytecodePopVariable(size, !isEnd));
 
 		this->variableStackPosition -= size;
 	}
@@ -544,14 +551,18 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 		return;
 	}
 
-	compileScopeExit(false);
+	compileScopeExit(this->depth, true);
 	if (compileReturn)
 	{
 		if (returnThis)
 		{
 			code->addBuffer(thisVariable->readValue(this));
 		}
-
+		else if (this->scopeFunction && this->scopeFunction->returnType)
+		{
+			code->add(new BytecodeCallNative("system::err::abort"));
+		}
+		
 		code->addOperation(BytecodeOp::ret);
 	}
 }
@@ -560,7 +571,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 {
 	auto first = line.get();
 
-	if (first.string == "return" && scopeFunction)
+	if (first == "return" && scopeFunction)
 	{
 		if (scopeFunction->returnType)
 		{
@@ -575,18 +586,38 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			this->code->addBuffer(expr.code);
 			this->code->addBuffer(expr.type->compileMove(this));
 		}
-		compileScopeExit(true);
+		compileScopeExit(0, false);
 		this->code->addOperation(BytecodeOp::ret);
 		line.expectEndOfLine(errors);
 		return;
 	}
-	if (first.string == "if")
+	if (first == "if")
 	{
 		compileIf(line, file, errors);
 		return;
 	}
 
-	if (first.string == "while")
+	if (first == "break")
+	{
+		if (this->breakTarget)
+		{
+			this->compileScopeExit(breakContinueDepth, false);
+			this->code->add(new BytecodeJump(BytecodeOp::jump, this->breakTarget));
+		}
+		return;
+	}
+
+	if (first == "continue")
+	{
+		if (this->continueTarget)
+		{
+			this->compileScopeExit(breakContinueDepth, false);
+			this->code->add(new BytecodeJump(BytecodeOp::jump, this->continueTarget));
+		}
+		return;
+	}
+
+	if (first == "while")
 	{
 		auto conditionLine = line.getUntil("{", errors);
 
@@ -604,7 +635,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 		this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
 
-		parseSubScope(file, errors);
+		parseSubScope(file, errors, endLabel, beginLabel, this->depth + 1);
 		this->code->add(new BytecodeJump(BytecodeOp::jump, beginLabel));
 
 		this->code->add(endLabel);
@@ -743,7 +774,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 
 	this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
 
-	parseSubScope(file, errors);
+	parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 
 	auto nextLine = this->tokenStream->peek(errors);
 
@@ -766,7 +797,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 		else
 		{
 			this->code->add(endLabel);
-			parseSubScope(file, errors);
+			parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 			this->code->add(endElseLabel);
 		}
 	}

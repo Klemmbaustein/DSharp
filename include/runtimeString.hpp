@@ -1,5 +1,6 @@
 #pragma once
 #include "class.hpp"
+#include <cstring>
 
 namespace lang
 {
@@ -18,6 +19,12 @@ namespace lang
 			(*(uint32_t*)this->classPtr->getBody()) = stringLength;
 			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(uint32_t));
 			memcpy(strBegin, stringPtr, stringLength);
+		}
+		
+		explicit RuntimeStr(const char* stringPtr)
+			: RuntimeStr(stringPtr, std::strlen(stringPtr))
+		{
+
 		}
 
 		RuntimeClass* classPtr = nullptr;

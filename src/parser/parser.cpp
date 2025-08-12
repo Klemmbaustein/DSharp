@@ -477,33 +477,38 @@ Function* ParsedFile::getMethod(std::string name)
 
 Type* ParsedFile::getType(TokenLine& from)
 {
+	auto initialPos = from.savePosition();
+	auto name = from.get();
 	auto pos = from.savePosition();
-	Type* found = this->fileModule->getType(from);
+	Type* found = this->fileModule->getType(name.string, from);
 	if (found)
 		return found;
 	for (auto& i : this->usings)
 	{
 		from.loadPosition(pos);
-		found = i.second->getType(from);
+		found = i.second->getType(name.string, from);
 		if (found)
 			return found;
 	}
-	from.loadPosition(pos);
+	from.loadPosition(initialPos);
 	return nullptr;
 }
 
 Attribute* ParsedFile::getAttribute(TokenLine& from)
 {
+	auto initialPos = from.savePosition();
+	auto name = from.get();
 	auto pos = from.savePosition();
-	Attribute* found = this->fileModule->getAttribute(from);
+	Attribute* found = this->fileModule->getAttribute(name.string, from);
 	if (found)
 		return found;
 	for (auto& i : this->usings)
 	{
 		from.loadPosition(pos);
-		found = i.second->getAttribute(from);
+		found = i.second->getAttribute(name.string, from);
 		if (found)
 			return found;
 	}
+	from.loadPosition(initialPos);
 	return nullptr;
 }

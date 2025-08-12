@@ -1,5 +1,5 @@
 using system::io
-using system
+using system::fs
 
 module commands
 
@@ -22,8 +22,8 @@ class ListCommand : Command
 
 	override fn execute()
 	{
-		const path = new fs::Path(".")
-		fs::Path[] paths = path.getFiles()
+		const path = new FilePath(".")
+		FilePath[] paths = path.getFiles()
 
 		int i = 0
 
@@ -44,6 +44,6 @@ class CurrentDirCommand : Command
 
 	override fn execute()
 	{
-		writeln(fs::getCurrentPath().full())
+		writeln(getCurrentPath().full())
 	}
 }

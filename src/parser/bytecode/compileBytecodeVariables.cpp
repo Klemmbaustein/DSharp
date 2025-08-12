@@ -69,9 +69,10 @@ bytecodeOffset BytecodeStoreVariable::getArgsSize()
 	return sizeof(uint32_t) * 2;
 }
 
-lang::BytecodePopVariable::BytecodePopVariable(uint32_t size)
+lang::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit)
 {
 	this->operation = BytecodeOp::popVariable;
+	this->isScopeExit = isScopeExit;
 	popSize = size;
 }
 
@@ -81,7 +82,10 @@ std::string BytecodePopVariable::toString()
 }
 void BytecodePopVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
-	compiler->variableStackPosition -= this->popSize;
+	if (!this->isScopeExit)
+	{
+		compiler->variableStackPosition -= this->popSize;
+	}
 	stream.addValue<uint32_t>(this->popSize);
 }
 

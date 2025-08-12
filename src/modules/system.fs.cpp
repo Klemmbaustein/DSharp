@@ -13,7 +13,7 @@ using std::filesystem::current_path;
 
 static void fs_path_delete(InterpretContext* context)
 {
-	ClassPtr<fs::Path> path = context->popValue<RuntimeClass*>();
+	ClassPtr<fs::FilePath> path = context->popValue<RuntimeClass*>();
 	RuntimeClass::unref(path->pathString.classPtr);
 }
 
@@ -23,7 +23,7 @@ static VTableEntry pathVTable = VTableEntry{
 
 static void fs_path_construct(InterpretContext* context)
 {
-	ClassRef<fs::Path> path = context->popValue<RuntimeClass*>();
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
 	path.classPtr->vtable = &pathVTable;
 	auto str = context->popValue<RuntimeClass*>();
 	str->addRef();
@@ -33,7 +33,7 @@ static void fs_path_construct(InterpretContext* context)
 
 static void fs_path_getFiles(InterpretContext* context)
 {
-	ClassRef<fs::Path> path = context->popValue<RuntimeClass*>();
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
 
 	std::vector<RuntimeClass*> paths;
 
@@ -41,7 +41,7 @@ static void fs_path_getFiles(InterpretContext* context)
 	{
 		auto str = i.path().string();
 
-		ClassRef<fs::Path> newPath = fs::createPath();
+		ClassRef<fs::FilePath> newPath = fs::createPath();
 		auto newString = RuntimeStrRef(str.data(), str.size());
 		newString.classPtr->addRef();
 		newPath->pathString = newString.classPtr;
@@ -54,7 +54,7 @@ static void fs_path_getFiles(InterpretContext* context)
 
 static void fs_path_getFull(InterpretContext* context)
 {
-	ClassRef<fs::Path> path = context->popValue<RuntimeClass*>();
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
 
 	auto fullPath = canonical(path->pathString.ptr()).string();
 
@@ -63,7 +63,7 @@ static void fs_path_getFull(InterpretContext* context)
 
 static void fs_path_getExtension(InterpretContext* context)
 {
-	ClassRef<fs::Path> path = context->popValue<RuntimeClass*>();
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
 
 	auto str = std::string(path->pathString.ptr(), path->pathString.length());
 
@@ -84,7 +84,7 @@ static void fs_getCurrentPath(InterpretContext* context)
 {
 	std::string str = current_path().string();
 
-	ClassRef<fs::Path> newPath = fs::createPath();
+	ClassRef<fs::FilePath> newPath = fs::createPath();
 	auto newString = RuntimeStrRef(str.data(), str.size());
 	newString.classPtr->addRef();
 	newPath->pathString = newString.classPtr;
@@ -98,7 +98,7 @@ lang::NativeModule fs::createModule()
 
 	StringType* strType = StringType::getInstance();
 
-	ClassType* pathType = out.createClass<fs::Path>("Path");
+	ClassType* pathType = out.createClass<fs::FilePath>("FilePath");
 
 	out.addClassConstructor(pathType,
 		NativeFunction(
@@ -122,7 +122,7 @@ lang::NativeModule fs::createModule()
 
 	pathType->members.push_back(ClassMember{
 		.name = "pathString",
-		.offset = offsetof(fs::Path, pathString),
+		.offset = offsetof(fs::FilePath, pathString),
 		.type = strType,
 		});
 
@@ -135,5 +135,5 @@ lang::NativeModule fs::createModule()
 
 RuntimeClass* lang::modules::system::fs::createPath()
 {
-	return RuntimeClass::allocateClass(sizeof(Path), &pathVTable);
+	return RuntimeClass::allocateClass(sizeof(FilePath), &pathVTable);
 }

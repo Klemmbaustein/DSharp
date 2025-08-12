@@ -19,12 +19,15 @@ namespace lang
 			Token name;
 			BytecodePushVariable* variableInstruction = nullptr;
 			ParsedScope* ownedBy = nullptr;
-			Type* type = 0;
+			size_t depth = 0;
+			Type* type = nullptr;
 			bool readOnly = false;
 
 			BytecodeBuffer readValue(ParsedScope* scope) const;
 			BytecodeBuffer writeValue(ParsedScope* scope) const;
 		};
+
+		size_t depth = 0;
 
 		std::map<Token, ScopeVariable> variables;
 
@@ -34,11 +37,15 @@ namespace lang
 
 		void pushVariableValue(Type* type, bool copy);
 		ScopeVariable& addVariable(Token name, Type* type);
-		void compileScopeExit(bool full);
+		void compileScopeExit(size_t toDepth, bool isEnd);
 
 		uint32_t variableStackPosition = 0;
 		bool compileReturn = false;
 		bool returnThis = false;
+
+		BytecodeJumpLabel* breakTarget = nullptr;
+		BytecodeJumpLabel* continueTarget = nullptr;
+		size_t breakContinueDepth = 0;
 
 		void setClass(ParsedClass* inClass, bool copy);
 
@@ -52,7 +59,8 @@ namespace lang
 		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 
-		void parseSubScope(ParsedFile* file, ErrorContext* errors);
+		void parseSubScope(ParsedFile* file, ErrorContext* errors,
+			BytecodeJumpLabel* breakTarget, BytecodeJumpLabel* continueTarget, size_t breakContinueDepth);
 
 		ExpressionResult parseFunctionArguments(std::string functionName, std::vector<FunctionArgument> arguments,
 			TokenLine& currentLine, ErrorContext* errors);

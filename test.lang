@@ -10,44 +10,35 @@ fn main() -> int
 	Command[] commandList = []
 	commandList.push(new ListCommand())
 	commandList.push(new CurrentDirCommand())
-	
-	bool exit = false
 
-	while not exit
+	while true
 	{
 		write("> ")
 		const givenCommand = readln()
 
 		if givenCommand == "exit"
 		{
-			exit = true
+			break
 		}
-		else
-		{
-			execute(commandList, givenCommand)
-		}
+		execute(commandList, givenCommand)
 	}
-
 	return 0
 }
+
 
 fn execute(Command[] commandList, string givenCommand)
 {
 	int i = 0
-	bool found = false
-	while not found and i < commandList.length
+	while i < commandList.length
 	{
 		const current = commandList[i]
 		if current.name == givenCommand
 		{
 			current.execute()
-			found = true
+			return
 		}
 		i += 1
 	}
 
-	if not found
-	{
-		writeln($"unknown command: {givenCommand}")
-	}
+	writeln($"unknown command: {givenCommand}")
 }

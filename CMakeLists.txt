@@ -28,7 +28,6 @@ file(
 
 add_executable(
    ProgrammingLanguage
-   ${SRCS} ${HEADERS}
-)
+   ${SRCS} ${HEADERS})
 
 target_include_directories(ProgrammingLanguage PUBLIC "include")

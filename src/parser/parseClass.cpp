@@ -114,7 +114,7 @@ void lang::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* e
 	{
 		baseDestructor.code.addBuffer(cleanupCode);
 
-		destructorScope.compileScopeExit(true);
+		destructorScope.compileScopeExit(0, false);
 		baseDestructor.code.addOperation(BytecodeOp::ret);
 
 		auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
@@ -333,7 +333,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	// Return a reference to this.
 	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
-	constructorScope.compileScopeExit(true);
+	constructorScope.compileScopeExit(0, false);
 	code->addOperation(BytecodeOp::ret);
 
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];

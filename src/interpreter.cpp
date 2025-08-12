@@ -310,20 +310,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			size_t ptr = popValue<size_t>();
 			if (!ptr)
 			{
-				auto stack = getStackTrace();
-				std::println("Attempted to use null reference");
-
-				for (DebugSection* i : stack)
-				{
-					if (i)
-					{
-						std::println("\t{}()", i->name);
-					}
-					else
-					{
-						std::println("\t<unknown stack frame>");
-					}
-				}
+				runtimePanic(RuntimeStr("Attempted to use null reference"));
 
 				abort();
 			}
@@ -381,6 +368,24 @@ void lang::InterpretContext::virtualCall(VTableEntry target)
 		callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
 		run(target.codeOffset);
 		bytecodeBuffer->streamPos = callStack[--callStackPos];
+	}
+}
+
+void lang::InterpretContext::runtimePanic(RuntimeStr message) const
+{
+	auto stack = getStackTrace();
+	std::println("{}", std::string(message.ptr(), message.length()));
+
+	for (DebugSection* i : stack)
+	{
+		if (i)
+		{
+			std::println("\t{}()", i->name);
+		}
+		else
+		{
+			std::println("\t<unknown stack frame>");
+		}
 	}
 }
 
