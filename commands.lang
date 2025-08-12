@@ -22,8 +22,7 @@ class ListCommand : Command
 
 	override fn execute()
 	{
-		const path = new FilePath(".")
-		FilePath[] paths = path.getFiles()
+		FilePath[] paths = new FilePath(".").getFiles()
 
 		int i = 0
 

@@ -11,10 +11,11 @@ fn main() -> int
 	commandList.push(new ListCommand())
 	commandList.push(new CurrentDirCommand())
 
-	while true
+	const f = new File("test.txt")
+
+	while not f.isEmpty()
 	{
-		write("> ")
-		const givenCommand = readln()
+		const givenCommand = f.readln()
 
 		if givenCommand == "exit"
 		{
@@ -24,7 +25,6 @@ fn main() -> int
 	}
 	return 0
 }
-
 
 fn execute(Command[] commandList, string givenCommand)
 {

@@ -17,5 +17,11 @@ namespace lang::modules::system
 		 * @see lang::modules::createStandardLibrary
 		 */
 		NativeModule createModule();
+
+		class File
+		{
+		public:
+			FILE* handle;
+		};
 	}
 }

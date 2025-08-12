@@ -188,14 +188,14 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	if (value == "*")
 	{
 		currentLine.get();
-		auto result = pushValue(currentLine, errors, setExpression);
+		auto result = getExpressionValue(currentLine, errors, setExpression);
 		ExpressionResult r;
 		return result.type->compileOperator(Operator::dereference, result, r, this);
 	}
 	if (value == "not")
 	{
 		currentLine.get();
-		auto result = pushValue(currentLine, errors, setExpression);
+		auto result = getExpressionValue(currentLine, errors, setExpression);
 		ExpressionResult r;
 		return result.type->compileOperator(Operator::logicalNot, result, r, this);
 	}

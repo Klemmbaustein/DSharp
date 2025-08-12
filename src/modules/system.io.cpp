@@ -1,32 +1,92 @@
 #include <modules/system.io.hpp>
 #include <parser/types/stringType.hpp>
 
+using namespace lang::modules::system;
 using namespace lang;
 
-static void writeLine(InterpretContext* context)
+static void io_writeLine(InterpretContext* context)
 {
 	auto rtString = context->popRuntimeString();
 	std::fwrite(rtString.ptr(), rtString.length(), 1, stdout);
 	std::fputc('\n', stdout);
 }
 
-static void write(InterpretContext* context)
+static void io_write(InterpretContext* context)
 {
 	auto rtString = context->popRuntimeString();
 	std::fwrite(rtString.ptr(), rtString.length(), 1, stdout);
 }
 
-static void writeInt(InterpretContext* context)
+static void io_writeInt(InterpretContext* context)
 {
 	std::puts(std::to_string(context->popValue<int32_t>()).c_str());
 }
 
-static void readLine(InterpretContext* context)
+static void io_readLine(InterpretContext* context)
 {
 	char lineBuffer[2048];
 	std::cin.getline(lineBuffer, sizeof(lineBuffer) - 1);
 
 	context->pushRuntimeString(RuntimeStr(lineBuffer, strnlen(lineBuffer, sizeof(lineBuffer - 1))));
+}
+
+static void io_file_destruct(InterpretContext* context)
+{
+	ClassPtr<io::File> thisPtr = context->popValue<RuntimeClass*>();
+	std::fclose(thisPtr->handle);
+}
+
+static VTableEntry io_file_vTable = VTableEntry{
+	.nativeFn = &io_file_destruct,
+};
+
+static void io_file_construct(InterpretContext* context)
+{
+	ClassRef<io::File> thisPtr = context->popValue<RuntimeClass*>();
+	thisPtr.classPtr->vtable = &io_file_vTable;
+	RuntimeStr filePath = context->popRuntimeString();
+
+	thisPtr->handle = std::fopen(filePath.ptr(), "r");
+
+	if (!thisPtr->handle)
+	{
+		context->runtimePanic(RuntimeStr(std::strerror(errno)));
+	}
+
+	context->pushValue(thisPtr);
+}
+
+static void io_file_readLine(InterpretContext* context)
+{
+	ClassRef<io::File> thisPtr = context->popValue<RuntimeClass*>();
+
+	std::string result;
+
+	char c = 0;
+	while (true)
+	{
+		c = std::fgetc(thisPtr->handle);
+
+		if (c == '\n' || c == EOF)
+		{
+			break;
+		}
+		if (c == '\r')
+		{
+			continue;
+		}
+		result.push_back(c);
+
+	}
+
+	context->pushRuntimeString(RuntimeStr(result.data(), result.size()));
+}
+
+static void io_file_isEmpty(InterpretContext* context)
+{
+	ClassRef<io::File> thisPtr = context->popValue<RuntimeClass*>();
+
+	context->pushValue(bool(std::feof(thisPtr->handle)));
 }
 
 lang::NativeModule lang::modules::system::io::createModule()
@@ -36,19 +96,37 @@ lang::NativeModule lang::modules::system::io::createModule()
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(StringType::getInstance(), Token("toWrite")) }, nullptr,
-		"writeln", &writeLine));
+		"writeln", &io_writeLine));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(StringType::getInstance(), Token("toWrite")) }, nullptr,
-		"write", &write));
+		"write", &io_write));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(IntType::getInstance(), Token("toWrite")) }, nullptr,
-		"writeInt",	&writeInt));
+		"writeInt", &io_writeInt));
 
 	out.addFunction(NativeFunction(
 		{}, StringType::getInstance(),
-		"readln", &readLine));
+		"readln", &io_readLine));
+
+	auto fileClass = out.createClass<io::File>("File");
+
+	out.addClassConstructor(fileClass,
+		NativeFunction(
+			{ FunctionArgument(StringType::getInstance()) }, nullptr,
+			"File.new", &io_file_construct));
+
+	out.addClassMethod(fileClass,
+		NativeFunction(
+			{}, StringType::getInstance(),
+			"readln", &io_file_readLine));
+
+	out.addClassMethod(fileClass,
+		NativeFunction(
+			{}, BoolType::getInstance(),
+			"isEmpty", &io_file_isEmpty));
+
 
 	return out;
 }
