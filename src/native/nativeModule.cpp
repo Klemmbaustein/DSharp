@@ -5,7 +5,7 @@ using namespace lang;
 ExpressionResult NativeFunction::compileCall()
 {
 	ExpressionResult result;
-	result.code.add(new BytecodeCallNative(this));
+	result.code.addNew<BytecodeCallNative>(this);
 	result.type = this->returnType;
 	result.valid = true;
 	return result;

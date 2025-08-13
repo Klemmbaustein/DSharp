@@ -345,7 +345,8 @@ ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine,
 }
 
 void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
-	BytecodeJumpLabel* breakTarget, BytecodeJumpLabel* continueTarget, size_t breakContinueDepth)
+	std::shared_ptr<BytecodeJumpLabel> breakTarget, std::shared_ptr<BytecodeJumpLabel> continueTarget,
+	size_t breakContinueDepth)
 {
 	ParsedScope conditionScope;
 	TokenStream conditionTokens;
@@ -422,7 +423,7 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 
 	std::string tempName = ".temp_" + std::to_string(tempCounter++);
 
-	auto instruction = new BytecodePushVariable(tempName, type);
+	auto instruction = std::make_shared<BytecodePushVariable>(tempName, type);
 
 	buffer.add(instruction);
 
@@ -458,7 +459,7 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 
 ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type)
 {
-	auto instruction = new BytecodePushVariable(name.string, type);
+	auto instruction = std::make_shared<BytecodePushVariable>(name.string, type);
 	code->add(instruction);
 
 	auto result = this->variables.insert({ name,
@@ -513,7 +514,7 @@ void lang::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 
 	if (size)
 	{
-		code->add(new BytecodePopVariable(size, !isEnd));
+		code->addNew<BytecodePopVariable>(size, !isEnd);
 
 		this->variableStackPosition -= size;
 	}
@@ -560,7 +561,7 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 		}
 		else if (this->scopeFunction && this->scopeFunction->returnType)
 		{
-			code->add(new BytecodeCallNative("system::err::abort"));
+			code->addNew<BytecodeCallNative>("system::err::abort");
 		}
 		
 		code->addOperation(BytecodeOp::ret);
@@ -602,7 +603,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		if (this->breakTarget)
 		{
 			this->compileScopeExit(breakContinueDepth, false);
-			this->code->add(new BytecodeJump(BytecodeOp::jump, this->breakTarget));
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget);
 		}
 		return;
 	}
@@ -612,7 +613,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		if (this->continueTarget)
 		{
 			this->compileScopeExit(breakContinueDepth, false);
-			this->code->add(new BytecodeJump(BytecodeOp::jump, this->continueTarget));
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget);
 		}
 		return;
 	}
@@ -627,16 +628,16 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		auto condition = pushExpression(conditionTokens, errors, false);
 		conditionTokens.expectEndOfLine(errors);
 
-		auto beginLabel = new BytecodeJumpLabel("while_begin");
+		auto beginLabel = std::make_shared<BytecodeJumpLabel>("while_begin");
 		this->code->add(beginLabel);
 		this->code->addBuffer(condition.code);
 
-		auto endLabel = new BytecodeJumpLabel("while_end");
+		auto endLabel = std::make_shared<BytecodeJumpLabel>("while_end");
 
-		this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
+		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel);
 
 		parseSubScope(file, errors, endLabel, beginLabel, this->depth + 1);
-		this->code->add(new BytecodeJump(BytecodeOp::jump, beginLabel));
+		this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel);
 
 		this->code->add(endLabel);
 
@@ -770,9 +771,9 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 	conditionTokens.expectEndOfLine(errors);
 	this->code->addBuffer(condition.code);
 
-	auto endLabel = new BytecodeJumpLabel("endif");
+	auto endLabel = std::make_shared<BytecodeJumpLabel>("endif");
 
-	this->code->add(new BytecodeJump(BytecodeOp::jumpIfNot, endLabel));
+	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel);
 
 	parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 
@@ -784,8 +785,8 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 
 		nextLine.get();
 
-		auto endElseLabel = new BytecodeJumpLabel("endElseLabel");
-		this->code->add(new BytecodeJump(BytecodeOp::jump, endElseLabel));
+		auto endElseLabel = std::make_shared<BytecodeJumpLabel>("endElseLabel");
+		this->code->addNew<BytecodeJump>(BytecodeOp::jump, endElseLabel);
 
 		if (nextLine.peek() == "if")
 		{
@@ -810,13 +811,13 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 BytecodeBuffer lang::ParsedScope::ScopeVariable::readValue(ParsedScope* scope) const
 {
 	BytecodeBuffer result;
-	result.add(new BytecodeReadVariable(this->variableInstruction));
+	result.addNew<BytecodeReadVariable>(this->variableInstruction);
 	return result;
 }
 
 BytecodeBuffer lang::ParsedScope::ScopeVariable::writeValue(ParsedScope* scope) const
 {
 	BytecodeBuffer result;
-	result.add(new BytecodeStoreVariable(this->variableInstruction));
+	result.addNew<BytecodeStoreVariable>(this->variableInstruction);
 	return result;
 }

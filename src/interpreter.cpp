@@ -387,6 +387,7 @@ void lang::InterpretContext::runtimePanic(RuntimeStr message) const
 			std::println("\t<unknown stack frame>");
 		}
 	}
+	abort();
 }
 
 lang::RuntimeStrRef lang::InterpretContext::popRuntimeStringRef()

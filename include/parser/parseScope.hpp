@@ -17,7 +17,7 @@ namespace lang
 		struct ScopeVariable
 		{
 			Token name;
-			BytecodePushVariable* variableInstruction = nullptr;
+			std::shared_ptr<BytecodePushVariable> variableInstruction = nullptr;
 			ParsedScope* ownedBy = nullptr;
 			size_t depth = 0;
 			Type* type = nullptr;
@@ -43,8 +43,8 @@ namespace lang
 		bool compileReturn = false;
 		bool returnThis = false;
 
-		BytecodeJumpLabel* breakTarget = nullptr;
-		BytecodeJumpLabel* continueTarget = nullptr;
+		std::shared_ptr<BytecodeJumpLabel> breakTarget = nullptr;
+		std::shared_ptr<BytecodeJumpLabel> continueTarget = nullptr;
 		size_t breakContinueDepth = 0;
 
 		void setClass(ParsedClass* inClass, bool copy);
@@ -60,7 +60,8 @@ namespace lang
 		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 
 		void parseSubScope(ParsedFile* file, ErrorContext* errors,
-			BytecodeJumpLabel* breakTarget, BytecodeJumpLabel* continueTarget, size_t breakContinueDepth);
+			std::shared_ptr<BytecodeJumpLabel> breakTarget, std::shared_ptr<BytecodeJumpLabel> continueTarget,
+			size_t breakContinueDepth);
 
 		ExpressionResult parseFunctionArguments(std::string functionName, std::vector<FunctionArgument> arguments,
 			TokenLine& currentLine, ErrorContext* errors);

@@ -80,6 +80,17 @@ static void fs_path_getExtension(InterpretContext* context)
 	context->pushRuntimeString(RuntimeStr(extension.data(), extension.size()));
 }
 
+static void fs_path_getName(InterpretContext* context)
+{
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
+
+	auto str = std::string(path->pathString.ptr(), path->pathString.length());
+
+	str = str.substr(str.find_last_of("\\/") + 1);
+
+	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
+}
+
 static void fs_getCurrentPath(InterpretContext* context)
 {
 	std::string str = current_path().string();
@@ -119,6 +130,11 @@ lang::NativeModule fs::createModule()
 		NativeFunction(
 			{}, strType->nullable,
 			"extension", &fs_path_getExtension));
+
+	out.addClassMethod(pathType,
+		NativeFunction(
+			{}, strType,
+			"name", &fs_path_getName));
 
 	pathType->members.push_back(ClassMember{
 		.name = "pathString",

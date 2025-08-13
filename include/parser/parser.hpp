@@ -21,6 +21,7 @@ namespace lang
 	struct ParseContext
 	{
 		ParseContext(LanguageContext* context);
+		~ParseContext();
 
 		void addFile(std::string filePath);
 

@@ -144,7 +144,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	if (this->constructors.empty())
 	{
 		result.code.pushInt(this->classSize);
-		result.code.add(new BytecodeAllocClass(this));
+		result.code.add(std::make_shared<BytecodeAllocClass>(this));
 		if (baseConstructor)
 		{
 			result.code.addBuffer(baseConstructor->compileCall().code);
@@ -157,7 +157,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 			result.code.addBuffer(with->parseFunctionArguments(i->getFullName(), i->getArguments(), argsLine, errors).code);
 
 			result.code.pushInt(this->classSize);
-			result.code.add(new BytecodeAllocClass(this));
+			result.code.add(std::make_shared<BytecodeAllocClass>(this));
 			result.code.addBuffer(i->compileCall().code);
 			break;
 		}

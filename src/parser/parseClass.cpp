@@ -134,7 +134,7 @@ void lang::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* e
 ExpressionResult lang::ClassLifetimeFunction::compileCall()
 {
 	ExpressionResult result;
-	result.code.add(new BytecodeCallFunction(getFullName()));
+	result.code.addNew<BytecodeCallFunction>(getFullName());
 	result.type = parent->thisType;
 	result.valid = true;
 	return result;
@@ -323,7 +323,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 		{
 			// do not pop the return value of the base constructor, so we still have
 			// a pointer to this
-			i->functionCode.add(new BytecodeCallFunction(this->constructor.getFullName()));
+			i->functionCode.addNew<BytecodeCallFunction>(this->constructor.getFullName());
 		}
 		i->compile(context, file, errors);
 

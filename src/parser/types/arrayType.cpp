@@ -54,7 +54,7 @@ ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLin
 		ExpressionResult result = with->parseFunctionArguments(this->name + ".push", functionArgs, argsLine, errors);
 		result.code.pushInt(this->baseType->size);
 		result.code.addBuffer(value.code);
-		result.code.add(new BytecodeCallNative("system::array.push"));
+		result.code.addNew<BytecodeCallNative>("system::array.push");
 		result.valid = true;
 		result.type = nullptr;
 
@@ -81,7 +81,7 @@ ExpressionResult lang::ArrayType::compileIndex(ExpressionResult thisValue, Expre
 	result.code.addBuffer(indexValue.code);
 
 	result.code.pushInt(elementSize);
-	result.code.add(new BytecodeCallNative("system::array.at"));
+	result.code.addNew<BytecodeCallNative>("system::array.at");
 	result.type = baseType;
 	result.valid = true;
 	return result;
@@ -102,7 +102,7 @@ ExpressionResult lang::ArrayType::makeArrayValue(std::vector<ExpressionResult> v
 	result.code.pushInt(values.size());
 
 	result.code.pushInt(elementSize);
-	result.code.add(new BytecodeCallNative("system::array.new"));
+	result.code.addNew<BytecodeCallNative>("system::array.new");
 
 	result.valid = true;
 	result.type = this;

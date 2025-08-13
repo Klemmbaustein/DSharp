@@ -85,7 +85,7 @@ ExpressionResult lang::StringType::compileEqualsTo(ExpressionResult first, Expre
 	second.compileToType(opToken, this, with, errors);
 	first.code.addBuffer(second.code);
 	first.code.addOperation(BytecodeOp::refClass);
-	first.code.add(new BytecodeCallNative("system::compareString"));
+	first.code.addNew<BytecodeCallNative>("system::compareString");
 
 	// compare value, if compareString returns 0 they're the same
 	first.code.pushInt(0);
@@ -176,7 +176,7 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 	ExpressionResult result = compileStringValue(resultString, with);
 	result.code.addBuffer(compileMove(with));
 	result.code.addBuffer(varArgs::writeVarArgs(formatArguments));
-	result.code.add(new BytecodeCallNative("system::format"));
+	result.code.addNew<BytecodeCallNative>("system::format");
 	result.code.addBuffer(compileEndMove(with));
 	return result;
 }
@@ -214,7 +214,7 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 
 	result.code.pushInt(fullSize);
 
-	result.code.add(new BytecodeAllocClass(this));
+	result.code.addNew<BytecodeAllocClass>(this);
 
 	// First 4 bytes -> string size
 	result.code.pushInt(0);

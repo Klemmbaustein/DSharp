@@ -28,6 +28,10 @@ lang::ParseContext::ParseContext(LanguageContext* context)
 	}
 }
 
+lang::ParseContext::~ParseContext()
+{
+}
+
 void lang::ParseContext::addFile(std::string filePath)
 {
 	this->errors.currentFile = filePath;
@@ -433,11 +437,11 @@ ExpressionResult lang::ParsedFunction::compileCall()
 	ExpressionResult result;
 	if (this->functionIsVirtual)
 	{
-		result.code.add(new BytecodeCallVirtual(this, this->inClass->thisType));
+		result.code.addNew<BytecodeCallVirtual>(this, this->inClass->thisType);
 	}
 	else
 	{
-		result.code.add(new BytecodeCallFunction(getFullName()));
+		result.code.addNew<BytecodeCallFunction>(getFullName());
 	}
 	result.type = returnType;
 	result.valid = true;

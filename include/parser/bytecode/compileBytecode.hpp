@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <parser/error.hpp>
+#include <memory>
 
 namespace lang
 {
@@ -87,20 +88,29 @@ namespace lang
 	class BytecodeJump : public BytecodeInstruction
 	{
 	public:
-		BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target);
+		BytecodeJump(BytecodeOp operation, std::shared_ptr<BytecodeJumpLabel> target);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
-		BytecodeJumpLabel* target = nullptr;
+		std::shared_ptr<BytecodeJumpLabel> target = nullptr;
 	};
+
+	using InstructionPtr = std::shared_ptr<BytecodeInstruction>;
 
 	struct BytecodeBuffer
 	{
-		std::vector<BytecodeInstruction*> instructions;
+		std::vector<InstructionPtr> instructions;
 
-		void add(BytecodeInstruction* instruction);
+		void add(InstructionPtr instruction);
+
+		template<typename T, typename ...Args>
+		void addNew(Args... args)
+		{
+			add(std::make_shared<T>(args...));
+		}
+
 		void pushInt(uint32_t data);
 		void addOperation(BytecodeOp operation, const BinaryBuffer& arguments);
 		void addOperation(BytecodeOp operation);

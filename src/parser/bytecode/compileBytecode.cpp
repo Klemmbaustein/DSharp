@@ -178,7 +178,7 @@ std::string BytecodeJumpLabel::toString()
 // Jump          //
 // ------------- //
 
-lang::BytecodeJump::BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target)
+lang::BytecodeJump::BytecodeJump(BytecodeOp operation, std::shared_ptr<BytecodeJumpLabel> target)
 {
 	this->operation = operation;
 	this->target = target;
@@ -262,7 +262,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 	for (auto& code : orderedFunctions)
 	{
 		code->offset = bytecodePos;
-		for (BytecodeInstruction* instr : code->instructions)
+		for (auto& instr : code->instructions)
 		{
 			instr->offset = bytecodePos;
 			if (instr->baseSize > 0)
@@ -295,7 +295,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 			.name = code->name,
 			});
 
-		for (BytecodeInstruction* instr : code->instructions)
+		for (auto& instr : code->instructions)
 		{
 			if (instr->baseSize != 0)
 			{
@@ -315,7 +315,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 	stream.externalFunctions = this->externals;
 }
 
-void lang::BytecodeBuffer::add(BytecodeInstruction* instruction)
+void lang::BytecodeBuffer::add(InstructionPtr instruction)
 {
 	this->instructions.push_back(instruction);
 }
@@ -330,12 +330,12 @@ void lang::BytecodeBuffer::pushInt(uint32_t data)
 
 void lang::BytecodeBuffer::addOperation(BytecodeOp operation, const BinaryBuffer& arguments)
 {
-	add(new BytecodeOperation(operation, arguments));
+	add(std::make_shared<BytecodeOperation>(operation, arguments));
 }
 
 void lang::BytecodeBuffer::addOperation(BytecodeOp operation)
 {
-	add(new BytecodeOperation(operation, BinaryBuffer()));
+	add(std::make_shared<BytecodeOperation>(operation, BinaryBuffer()));
 }
 
 void lang::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)

@@ -22,24 +22,24 @@ namespace lang
 	class BytecodeReadVariable : public BytecodeInstruction
 	{
 	public:
-		BytecodeReadVariable(BytecodePushVariable* variablePtr);
+		BytecodeReadVariable(std::shared_ptr<BytecodePushVariable> variablePtr);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
-		BytecodePushVariable* variable = nullptr;
+		std::shared_ptr<BytecodePushVariable> variable = nullptr;
 	};
 	class BytecodeStoreVariable : public BytecodeInstruction
 	{
 	public:
-		BytecodeStoreVariable(BytecodePushVariable* variablePtr);
+		BytecodeStoreVariable(std::shared_ptr<BytecodePushVariable> variablePtr);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
-		BytecodePushVariable* variable = nullptr;
+		std::shared_ptr<BytecodePushVariable> variable = nullptr;
 	};
 	class BytecodePopVariable : public BytecodeInstruction
 	{

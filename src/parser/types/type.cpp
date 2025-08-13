@@ -110,7 +110,7 @@ ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, Erro
 	ParsedScope* with)
 {
 	ExpressionResult result = thisValue;
-	result.code.add(new BytecodeCallNative("system::int.toString"));
+	result.code.addNew<BytecodeCallNative>("system::int.toString");
 	result.valid = true;
 	result.type = StringType::getInstance();
 	return result;
@@ -284,7 +284,7 @@ ExpressionResult lang::FloatType::compileCast(ExpressionResult value, ParsedScop
 ExpressionResult lang::FloatType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
 {
 	ExpressionResult result = thisValue;
-	result.code.add(new BytecodeCallNative("system::float.toString"));
+	result.code.addNew<BytecodeCallNative>("system::float.toString");
 	result.valid = true;
 	result.type = StringType::getInstance();
 	return result;
