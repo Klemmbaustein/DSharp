@@ -44,7 +44,7 @@ void lang::ParseContext::addFile(std::string filePath)
 BytecodeStream lang::ParseContext::compile()
 {
 	this->defaultTypes.push_back(IntType::getInstance());
-	this->defaultTypes.push_back(new FloatType());
+	this->defaultTypes.push_back(FloatType::getInstance());
 	this->defaultTypes.push_back(BoolType::getInstance());
 	this->defaultTypes.push_back(StringType::getInstance());
 	this->defaultTypes.push_back(CharType::getInstance());
@@ -71,7 +71,7 @@ BytecodeStream lang::ParseContext::compile()
 
 	BytecodeStream out;
 	this->compiler.compileTo(out, virtualTable, &errors);
-	//this->compiler.printAssembly();
+	this->compiler.printAssembly();
 	if (!errors.isOk())
 	{
 		return BytecodeStream();
@@ -172,6 +172,9 @@ void lang::ParsedFile::scan(ErrorContext* errors)
 {
 	std::vector<AttribInfo> currentAttributes;
 	while (scanLine(currentAttributes, errors)) {}
+}
+lang::ParsedFile::~ParsedFile()
+{
 }
 
 bool lang::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors)

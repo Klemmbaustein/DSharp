@@ -66,7 +66,6 @@ static void fs_path_getExtension(InterpretContext* context)
 	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
 
 	auto str = std::string(path->pathString.ptr(), path->pathString.length());
-
 	str = str.substr(str.find_last_of("\\/"));
 
 	auto dot = str.find_last_of(".");
@@ -85,9 +84,7 @@ static void fs_path_getName(InterpretContext* context)
 	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
 
 	auto str = std::string(path->pathString.ptr(), path->pathString.length());
-
 	str = str.substr(str.find_last_of("\\/") + 1);
-
 	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
 }
 

@@ -162,6 +162,11 @@ bool lang::ClassLifetimeFunction::discardable() const
 
 lang::ParsedClass::~ParsedClass()
 {
+	delete thisType;
+	for (ParsedFunction* i : this->methods)
+	{
+		delete i;
+	}
 }
 
 void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
@@ -299,7 +304,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	for (auto& [name, member] : this->members)
 	{
-		if (member.value.empty())
+		if (member.value.empty() || member.isDerived)
 			continue;
 
 		TokenLine valueLine = TokenLine(&member.value);

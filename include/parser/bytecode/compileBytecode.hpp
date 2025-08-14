@@ -88,13 +88,13 @@ namespace lang
 	class BytecodeJump : public BytecodeInstruction
 	{
 	public:
-		BytecodeJump(BytecodeOp operation, std::shared_ptr<BytecodeJumpLabel> target);
+		BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
-		std::shared_ptr<BytecodeJumpLabel> target = nullptr;
+		BytecodeJumpLabel* target = nullptr;
 	};
 
 	using InstructionPtr = std::shared_ptr<BytecodeInstruction>;

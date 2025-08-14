@@ -26,11 +26,6 @@ fn main() -> int
 	return 0
 }
 
-fn test(int number) -> int
-{
-	return number + 5
-}
-
 fn execute(Command[] commandList, string givenCommand)
 {
 	int i = 0

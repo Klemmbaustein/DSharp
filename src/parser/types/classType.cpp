@@ -55,6 +55,11 @@ BytecodeBuffer lang::NullableClassType::compileEndMove(ParsedScope* with)
 	return from->compileEndMove(with);
 }
 
+std::string lang::NullableClassType::getName()
+{
+	return from->getName() + "?";
+}
+
 bool lang::ClassType::isSubclassOf(ClassType* parent)
 {
 	for (ClassType* i : parents)
@@ -113,10 +118,22 @@ ExpressionResult lang::NullableClassType::compileCast(ExpressionResult value, Pa
 	return from->compileCast(value, with);
 }
 
-ExpressionResult lang::NullableClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors, bool setMember, ParsedScope* with)
+ExpressionResult lang::NullableClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors,
+	bool setMember, ParsedScope* with)
 {
 	value.code.addBuffer(compileNullCheck());
 	return from->compileMember(value, line, errors, setMember, with);
+}
+
+ExpressionResult lang::NullableClassType::compileEqualsTo(ExpressionResult first, ExpressionResult second,
+	Token opToken, ErrorContext* errors, ParsedScope* with)
+{
+	if (!second.type->sameAs(this))
+	{
+		return ExpressionResult();
+	}
+
+	return this->from->compileEqualsTo(first, second, opToken, errors, with);
 }
 
 BytecodeBuffer lang::NullableClassType::compileNullCheck() const

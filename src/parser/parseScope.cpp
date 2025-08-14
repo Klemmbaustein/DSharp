@@ -175,7 +175,7 @@ ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, E
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
 			std::format("The operator '{}' does not accept types '{}' and '{}'",
-				opToken.string, oldType->name, b.type->name));
+				opToken.string, Type::toString(oldType), Type::toString(b.type)));
 	}
 	return a;
 }
@@ -603,7 +603,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		if (this->breakTarget)
 		{
 			this->compileScopeExit(breakContinueDepth, false);
-			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget);
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget.get());
 		}
 		return;
 	}
@@ -613,7 +613,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		if (this->continueTarget)
 		{
 			this->compileScopeExit(breakContinueDepth, false);
-			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget);
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget.get());
 		}
 		return;
 	}
@@ -634,10 +634,10 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 		auto endLabel = std::make_shared<BytecodeJumpLabel>("while_end");
 
-		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel);
+		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
 
 		parseSubScope(file, errors, endLabel, beginLabel, this->depth + 1);
-		this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel);
+		this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel.get());
 
 		this->code->add(endLabel);
 
@@ -773,7 +773,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("endif");
 
-	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel);
+	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
 
 	parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 
@@ -786,7 +786,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 		nextLine.get();
 
 		auto endElseLabel = std::make_shared<BytecodeJumpLabel>("endElseLabel");
-		this->code->addNew<BytecodeJump>(BytecodeOp::jump, endElseLabel);
+		this->code->addNew<BytecodeJump>(BytecodeOp::jump, endElseLabel.get());
 
 		if (nextLine.peek() == "if")
 		{
@@ -811,13 +811,13 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 BytecodeBuffer lang::ParsedScope::ScopeVariable::readValue(ParsedScope* scope) const
 {
 	BytecodeBuffer result;
-	result.addNew<BytecodeReadVariable>(this->variableInstruction);
+	result.addNew<BytecodeReadVariable>(this->variableInstruction.get());
 	return result;
 }
 
 BytecodeBuffer lang::ParsedScope::ScopeVariable::writeValue(ParsedScope* scope) const
 {
 	BytecodeBuffer result;
-	result.addNew<BytecodeStoreVariable>(this->variableInstruction);
+	result.addNew<BytecodeStoreVariable>(this->variableInstruction.get());
 	return result;
 }

@@ -15,6 +15,11 @@ namespace lang
 		uint32_t size = 0;
 		std::string name;
 
+		virtual std::string getName()
+		{
+			return this->name;
+		}
+
 		virtual ~Type() = default;
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -141,6 +146,18 @@ namespace lang
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
+
+		static FloatType* getInstance()
+		{
+			if (!instance)
+			{
+				instance = new FloatType();
+			}
+			return instance;
+		}
+
+	private:
+		static inline FloatType* instance = nullptr;
 	};
 
 	class BoolType : public PrimitiveType

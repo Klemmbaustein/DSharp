@@ -24,10 +24,7 @@ namespace lang
 		BytecodeBuffer compileMove(ParsedScope* with) override;
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;
 
-		virtual bool sameAs(Type* other)
-		{
-			return this == other;
-		}
+		std::string getName() override;
 
 		bool isSubclassOf(ClassType* parent);
 
@@ -38,6 +35,9 @@ namespace lang
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
+
+		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+			ErrorContext* errors, ParsedScope* with) override;
 
 		BytecodeBuffer compileNullCheck() const;
 	};
@@ -54,6 +54,7 @@ namespace lang
 
 		~ClassType() override
 		{
+			delete this->nullable;
 		}
 
 		size_t classSize = 0;
@@ -69,11 +70,6 @@ namespace lang
 		BytecodeBuffer compileUnref() override;
 		BytecodeBuffer compileMove(ParsedScope* with) override;
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;
-
-		virtual bool sameAs(Type* other)
-		{
-			return this == other;
-		}
 
 		bool isSubclassOf(ClassType* parent);
 

@@ -27,7 +27,7 @@ bytecodeOffset BytecodePushVariable::getArgsSize()
 	return sizeof(uint32_t);
 }
 
-lang::BytecodeReadVariable::BytecodeReadVariable(std::shared_ptr<BytecodePushVariable> variablePtr)
+lang::BytecodeReadVariable::BytecodeReadVariable(BytecodePushVariable* variablePtr)
 {
 	this->variable = variablePtr;
 	this->operation = BytecodeOp::readVariable;
@@ -48,7 +48,7 @@ bytecodeOffset BytecodeReadVariable::getArgsSize()
 	return sizeof(uint32_t) * 2;
 }
 
-lang::BytecodeStoreVariable::BytecodeStoreVariable(std::shared_ptr<BytecodePushVariable> variablePtr)
+lang::BytecodeStoreVariable::BytecodeStoreVariable(BytecodePushVariable* variablePtr)
 {
 	this->variable = variablePtr;
 	this->operation = BytecodeOp::storeVariable;

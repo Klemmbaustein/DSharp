@@ -173,7 +173,7 @@ ExpressionResult lang::Type::compileToString(ExpressionResult thisValue, ErrorCo
 
 std::string lang::Type::toString(Type* target)
 {
-	return target ? target->name : "<void>";
+	return target ? target->getName() : "<void>";
 }
 
 ExpressionResult lang::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,

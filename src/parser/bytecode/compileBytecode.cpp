@@ -178,7 +178,7 @@ std::string BytecodeJumpLabel::toString()
 // Jump          //
 // ------------- //
 
-lang::BytecodeJump::BytecodeJump(BytecodeOp operation, std::shared_ptr<BytecodeJumpLabel> target)
+lang::BytecodeJump::BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target)
 {
 	this->operation = operation;
 	this->target = target;

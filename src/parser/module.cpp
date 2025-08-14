@@ -36,12 +36,16 @@ Type* lang::Module::getType(std::string name, TokenLine& from)
 		return nullptr;
 	}
 
+	Type* found = foundType->second;
+
 	if (from.peek() == "?")
 	{
-		auto nullableType = dynamic_cast<ClassType*>(foundType->second);
+		auto nullableType = dynamic_cast<ClassType*>(found);
 		from.get();
-
-		return nullableType->nullable;
+		if (nullableType)
+		{
+			found = nullableType->nullable;
+		}
 	}
 
 	// array
@@ -49,10 +53,10 @@ Type* lang::Module::getType(std::string name, TokenLine& from)
 	{
 		from.get();
 		from.get();
-		return ArrayType::getInstance(foundType->second);
+		found = ArrayType::getInstance(found);
 	}
 
-	return foundType->second;
+	return found;
 }
 
 Attribute* lang::Module::getAttribute(std::string name, TokenLine& from)

@@ -33,9 +33,9 @@ ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLin
 	{
 		ExpressionResult result;
 		result.code.addBuffer(value.code);
-		// string length offset (0 bytse)
+		// array length offset (0 bytes)
 		result.code.pushInt(0);
-		// string length size (sizeof uint32_t bytes)
+		// array length size (sizeof uint32_t bytes)
 		result.code.pushInt(sizeof(uint32_t));
 		result.code.addOperation(BytecodeOp::classMember);
 		result.type = IntType::getInstance();
@@ -61,14 +61,12 @@ ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLin
 		return result;
 	}
 
-
 	return ExpressionResult();
 }
 
 ExpressionResult lang::ArrayType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
-	uint32_t headerSize = sizeof(uint32_t);
 	uint32_t elementSize = this->baseType->size;
 	ExpressionResult result;
 

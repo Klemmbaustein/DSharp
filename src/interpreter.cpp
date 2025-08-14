@@ -146,6 +146,12 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			pushValue(first && second);
 			break;
 		}
+		case lang::BytecodeOp::boolOr: {
+			bool first = popValue<bool>();
+			bool second = popValue<bool>();
+			pushValue(first || second);
+			break;
+		}
 		case lang::BytecodeOp::call:
 			callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
 			bytecodeBuffer->streamPos = size_t(*(bytecodeOffset*)&argumentBuffer[0]);
@@ -359,6 +365,11 @@ std::vector<lang::DebugSection*> lang::InterpretContext::getStackTrace() const
 
 void lang::InterpretContext::virtualCall(VTableEntry target)
 {
+	if (!target)
+	{
+		return;
+	}
+
 	if (target.nativeFn)
 	{
 		target.nativeFn(this);

@@ -96,9 +96,11 @@ namespace lang
 
 	struct ParsedFile : Attributable
 	{
+		~ParsedFile();
+
 		TokenStream stream;
 		std::vector<ParsedFunction> functions;
-		std::vector<ParsedClass> classes;
+		std::list<ParsedClass> classes;
 		std::map<Token, Module*> usings;
 		Module* fileModule = nullptr;
 
