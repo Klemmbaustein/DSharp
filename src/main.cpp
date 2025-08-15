@@ -12,7 +12,6 @@ int main()
 
 	ParseContext* compiler = language.createCompiler();
 	compiler->addFile("test.lang");
-	compiler->addFile("commands.lang");
 	BytecodeStream compiled = compiler->compile();
 	delete compiler;
 

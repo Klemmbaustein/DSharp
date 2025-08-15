@@ -15,6 +15,8 @@ if(POLICY CMP0141)
 	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+option(BUILD_WINAPI_MODULE "Include Windows API standard module" ON)
+
 file(
 	GLOB_RECURSE
 	SRCS
@@ -27,7 +29,11 @@ file(
 )
 
 add_executable(
-   ProgrammingLanguage
-   ${SRCS} ${HEADERS})
+	ProgrammingLanguage
+	${SRCS} ${HEADERS})
+
+if(BUILD_WINAPI_MODULE AND WIN32)
+	target_compile_definitions(ProgrammingLanguage PUBLIC WITH_WINAPI=1)
+endif()
 
 target_include_directories(ProgrammingLanguage PUBLIC "include")

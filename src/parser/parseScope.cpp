@@ -413,6 +413,14 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionN
 				"Expected a ',', got '" + currentLine.previous().string + "'");
 	}
 
+	if (argIndex < arguments.size())
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
+			"Wrong number of arguments for function '" +
+				functionName + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
+				" argument(s) were expected.");
+	}
+
 	return callCode;
 }
 
@@ -724,13 +732,13 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			return;
 		}
 		valueExpr.compileToType(equals, expr.type, this, errors);
-		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
 
 		if (compoundOperator != CompoundOperator::unknown)
 		{
 			valueExpr = expr.type->compileOperator(
 				Operator(compoundOperator), expr, valueExpr, this);
 		}
+		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
 
 		this->code->addBuffer(valueExpr.code);
 

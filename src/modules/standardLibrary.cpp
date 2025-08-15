@@ -3,6 +3,7 @@
 #include <modules/system.io.hpp>
 #include <modules/system.fs.hpp>
 #include <modules/system.err.hpp>
+#include <modules/system.win32.hpp>
 
 void lang::modules::registerStandardLibrary(LanguageContext* context)
 {
@@ -10,4 +11,7 @@ void lang::modules::registerStandardLibrary(LanguageContext* context)
 	context->addNativeModule(system::io::createModule());
 	context->addNativeModule(system::fs::createModule());
 	context->addNativeModule(system::err::createModule());
+#if WITH_WINAPI
+	context->addNativeModule(system::win32::createModule());
+	#endif
 }

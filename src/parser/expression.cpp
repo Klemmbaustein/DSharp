@@ -29,7 +29,7 @@ void lang::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* 
 	if (!cast.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, at,
-			"Type mismatch. Expected " + target->name + ", got " + type->name + " and no cast is possible.");
+			"Type mismatch. Expected " + Type::toString(target) + ", got " + Type::toString(type) + " and no cast is possible.");
 		return;
 	}
 

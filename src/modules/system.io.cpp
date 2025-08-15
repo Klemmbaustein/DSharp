@@ -27,7 +27,9 @@ static void io_readLine(InterpretContext* context)
 	char lineBuffer[2048];
 	std::cin.getline(lineBuffer, sizeof(lineBuffer) - 1);
 
-	context->pushRuntimeString(RuntimeStr(lineBuffer, strnlen(lineBuffer, sizeof(lineBuffer - 1))));
+	size_t len = strnlen(lineBuffer, sizeof(lineBuffer) - 1);
+
+	context->pushRuntimeString(RuntimeStr(lineBuffer, len));
 }
 
 static void io_file_destruct(InterpretContext* context)
@@ -89,21 +91,41 @@ static void io_file_isEmpty(InterpretContext* context)
 	context->pushValue(bool(std::feof(thisPtr->handle)));
 }
 
+static void io_popen(InterpretContext* context)
+{
+	RuntimeStr command = context->popRuntimeString();
+	ClassRef<io::File> newFile = RuntimeClass::allocateClass(sizeof(io::File), &io_file_vTable);
+
+	#if _WIN32
+	newFile->handle = _popen(command.ptr(), "r");
+	#else
+	newFile->handle = popen(command.ptr(), "r");
+
+	#endif
+
+	if (!newFile->handle)
+	{
+		context->runtimePanic(RuntimeStr(std::strerror(errno)));
+	}
+
+	context->pushValue(newFile);
+}
+
 lang::NativeModule lang::modules::system::io::createModule()
 {
 	NativeModule out;
 	out.name = "system::io";
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), Token("toWrite")) }, nullptr,
+		{ FunctionArgument(StringType::getInstance(), "toWrite") }, nullptr,
 		"writeln", &io_writeLine));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), Token("toWrite")) }, nullptr,
+		{ FunctionArgument(StringType::getInstance(), "toWrite") }, nullptr,
 		"write", &io_write));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("toWrite")) }, nullptr,
+		{ FunctionArgument(IntType::getInstance(), "toWrite") }, nullptr,
 		"writeInt", &io_writeInt));
 
 	out.addFunction(NativeFunction(
@@ -114,7 +136,7 @@ lang::NativeModule lang::modules::system::io::createModule()
 
 	out.addClassConstructor(fileClass,
 		NativeFunction(
-			{ FunctionArgument(StringType::getInstance()) }, nullptr,
+			{ FunctionArgument(StringType::getInstance(), "path") }, nullptr,
 			"File.new", &io_file_construct));
 
 	out.addClassMethod(fileClass,
@@ -126,6 +148,10 @@ lang::NativeModule lang::modules::system::io::createModule()
 		NativeFunction(
 			{}, BoolType::getInstance(),
 			"isEmpty", &io_file_isEmpty));
+
+	out.addFunction(NativeFunction(
+		{ FunctionArgument(StringType::getInstance(), "command") }, fileClass,
+		"popen", &io_popen));
 
 	return out;
 }

@@ -52,7 +52,7 @@ void lang::NativeModule::addClassMethod(ClassType* type, NativeFunction function
 			fn->name,
 			fn
 		});
-	fn->name = type->name + fn->name;
+	fn->name = type->name + "." + fn->name;
 }
 
 Module lang::NativeModule::create() const

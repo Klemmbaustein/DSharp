@@ -7,6 +7,20 @@ namespace lang
 {
 	struct FunctionArgument
 	{
+		FunctionArgument(Type* type, Token name)
+		{
+			this->type = type;
+			this->name = name;
+		}
+
+		FunctionArgument(Type* type, std::string name)
+		{
+			this->type = type;
+			this->name = Token(name);
+		}
+
+		FunctionArgument() = default;
+
 		Type* type = nullptr;
 		Token name;
 

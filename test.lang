@@ -1,45 +1,12 @@
 using system
-using system::io
-using commands
+using system::win32
 
-module test
+module main
 
 [EntryPoint]
 fn main() -> int
 {
-	Command[] commandList = [
-		new ListCommand(),
-		new CurrentDirCommand()
-	]
+	messageBox(getConsoleWindow(), "", "", 0)
 
-	const f = new File("test.txt")
-
-	while not f.isEmpty()
-	{
-		const givenCommand = f.readln()
-
-		if givenCommand == "exit"
-		{
-			break
-		}
-		execute(commandList, givenCommand)
-	}
 	return 0
-}
-
-fn execute(Command[] commandList, string givenCommand)
-{
-	int i = 0
-	while i < commandList.length
-	{
-		const current = commandList[i]
-		if current.name == givenCommand
-		{
-			current.execute()
-			return
-		}
-		i += 1
-	}
-
-	writeln($"unknown command: {givenCommand}")
 }
