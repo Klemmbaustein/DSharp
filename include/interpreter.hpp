@@ -69,6 +69,7 @@ namespace lang
 
 		void virtualCall(VTableEntry target);
 
+		[[noreturn]]
 		void runtimePanic(RuntimeStr message) const;
 
 	private:

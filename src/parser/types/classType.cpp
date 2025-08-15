@@ -89,7 +89,8 @@ ExpressionResult lang::NullableClassType::compileOperator(Operator operatorType,
 	return from->compileOperator(operatorType, first, second, with);
 }
 
-ExpressionResult lang::NullableClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::NullableClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
+	ParsedScope* with, Type* hintType)
 {
 	return ExpressionResult();
 }
@@ -150,7 +151,7 @@ ExpressionResult lang::ClassType::compileOperator(Operator operatorType,
 }
 
 ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	ExpressionResult result;
 
@@ -281,7 +282,7 @@ ExpressionResult lang::NullType::compileOperator(Operator operatorType, Expressi
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with)
+ExpressionResult lang::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first == "null")
 	{

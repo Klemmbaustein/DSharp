@@ -14,6 +14,7 @@ namespace lang
 		Token from;
 		uint32_t size = 0;
 		std::string name;
+		bool hasDefaultValue = true;
 
 		virtual std::string getName()
 		{
@@ -25,7 +26,7 @@ namespace lang
 		virtual ExpressionResult compileOperator(Operator operatorType,
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) = 0;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) = 0;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) = 0;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) = 0;
 
 		virtual bool sameAs(Type* other)
@@ -82,7 +83,7 @@ namespace lang
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) override;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
@@ -113,7 +114,7 @@ namespace lang
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) override;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 
 		static CharType* getInstance()
@@ -142,7 +143,7 @@ namespace lang
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) override;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
@@ -173,7 +174,7 @@ namespace lang
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) override;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 
 		static BoolType* getInstance()

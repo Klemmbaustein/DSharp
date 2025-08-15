@@ -16,7 +16,7 @@ namespace lang
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors,
-			ParsedScope* with) override;
+			ParsedScope* with, Type* hintType) override;
 		ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;

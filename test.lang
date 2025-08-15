@@ -7,9 +7,10 @@ module test
 [EntryPoint]
 fn main() -> int
 {
-	Command[] commandList = []
-	commandList.push(new ListCommand())
-	commandList.push(new CurrentDirCommand())
+	Command[] commandList = [
+		new ListCommand(),
+		new CurrentDirCommand()
+	]
 
 	const f = new File("test.txt")
 

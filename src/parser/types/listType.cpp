@@ -4,7 +4,7 @@
 using namespace lang;
 
 ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first != "[")
 	{
@@ -18,20 +18,31 @@ ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
 
 	Type* itemType = nullptr;
 
+	auto arrayHint = dynamic_cast<ArrayType*>(hintType);
+
+	if (arrayHint)
+	{
+		itemType = arrayHint->baseType;
+	}
+
 	std::vector<ExpressionResult> arrayElements;
 
 	while (!inListLine.empty())
 	{
-		auto nextValue = with->pushExpression(inListLine, errors, false);
+		auto nextValue = with->pushExpression(inListLine, errors, false, itemType);
+
+		if (!nextValue.type && nextValue.valid)
+		{
+			errors->error(ErrorCode::parseInvalidType, inListLine.previous(), "Expected a type");
+		}
+
 		if (itemType == nullptr)
 		{
 			itemType = nextValue.type;
 		}
 		else if (!itemType->sameAs(nextValue.type))
 		{
-			errors->error(ErrorCode::parseInvalidType, inListLine.previous(),
-				"Initializer list type mismatch. Expected " +
-					Type::toString(itemType) + ", got " + Type::toString(nextValue.type));
+			nextValue.compileToType(first, itemType, with, errors);
 		}
 
 		arrayElements.push_back(nextValue);
@@ -53,14 +64,14 @@ ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
 		}
 	}
 
-	if (!itemType)
+	if (arrayElements.empty())
 	{
+
 		ExpressionResult result;
 		result.valid = true;
 		result.type = this;
 		return result;
 	}
-
 	ArrayType* arrayType = ArrayType::getInstance(itemType);
 
 	return arrayType->makeArrayValue(arrayElements, with);

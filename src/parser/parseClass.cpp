@@ -304,11 +304,24 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	for (auto& [name, member] : this->members)
 	{
-		if (member.value.empty() || member.isDerived)
+		if (member.isDerived)
 			continue;
+		if (member.value.empty())
+		{
+			if (member.type->hasDefaultValue)
+			{
+				continue;
+			}
+			else
+			{
+				errors->error(ErrorCode::parseInvalidType, member.name,
+					"The type '" + Type::toString(member.type) + "' requires an initial value.");
+				continue;
+			}
+		}
 
 		TokenLine valueLine = TokenLine(&member.value);
-		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false);
+		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false, member.type);
 		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
 		code->addBuffer(varExpr.code);
 		code->addBuffer(varExpr.type->compileMove(&constructorScope));
@@ -318,6 +331,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 		code->pushInt(member.type->size);
 
 		code->addOperation(BytecodeOp::setClassMember);
+		valueLine.expectEndOfLine(errors);
 	}
 
 	compileDestructor(context, errors, file);

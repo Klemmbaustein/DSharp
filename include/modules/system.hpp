@@ -70,12 +70,13 @@ namespace lang::modules
 		public:
 			uint32_t length = 0;
 			void* data = nullptr;
+			bool isType = false;
 		};
 
 		RuntimeClass* createArrayObject();
 
 		template<typename T>
-		RuntimeClass* createArray(T* items, size_t length)
+		RuntimeClass* createArray(T* items, size_t length, bool isType)
 		{
 			size_t sizeInBytes = length * sizeof(T);
 			void* buffer = malloc(sizeInBytes);
@@ -91,6 +92,7 @@ namespace lang::modules
 			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
 			data->data = buffer;
 			data->length = length;
+			data->isType = isType;
 			return array;
 		}
 

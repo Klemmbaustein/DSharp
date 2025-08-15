@@ -5,7 +5,7 @@ module commands
 
 class Command
 {
-	string name
+	string name = ""
 
 	virtual fn execute()
 	{
@@ -28,7 +28,7 @@ class ListCommand : Command
 
 		while i < paths.length
 		{
-			writeln("  " + paths[i].name())
+			writeln(paths[i].name())
 			i += 1
 		}
 	}

@@ -127,6 +127,5 @@ lang::NativeModule lang::modules::system::io::createModule()
 			{}, BoolType::getInstance(),
 			"isEmpty", &io_file_isEmpty));
 
-
 	return out;
 }

@@ -66,23 +66,31 @@ static void array_delete(InterpretContext* context)
 {
 	ClassPtr<ArrayData> array = context->popValue<RuntimeClass*>();
 
-	for (uint32_t i = 0; i < array->length; i++)
+	if (array->data)
 	{
-		RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
-		context->pushValue(elem[i]);
-		context->virtualCall(RuntimeClass::unref(elem[i]));
+		if (array->isType)
+		{
+			for (uint32_t i = 0; i < array->length; i++)
+			{
+				RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
+				context->pushValue(elem[i]);
+				context->virtualCall(RuntimeClass::unref(elem[i]));
+			}
+		}
+		free(array->data);
 	}
-	free(array->data);
 }
 
 static void array_new(InterpretContext* context)
 {
+	bool isType = context->popValue<bool>();
 	uint32_t elementSize = context->popValue<uint32_t>();
 	uint32_t length = context->popValue<uint32_t>();
 
 	auto newClass = createArrayObject();
 
 	ArrayData* data = (ArrayData*)newClass->getBody();
+	data->isType = isType;
 	data->length = length;
 	if (data->length)
 	{
@@ -97,8 +105,8 @@ static void array_new(InterpretContext* context)
 
 static void array_push(InterpretContext* context)
 {
-	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 	uint32_t elementSize = context->popValue<uint32_t>();
+	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 
 	array->length++;
 
@@ -108,6 +116,31 @@ static void array_push(InterpretContext* context)
 	{
 		array->data = newData;
 		context->popBytes((uint8_t*)array->data + elementSize * (array->length - 1), elementSize);
+	}
+}
+
+static void array_pop(InterpretContext* context)
+{
+	uint32_t elementSize = context->popValue<uint32_t>();
+	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
+	
+	if (array->length == 0)
+	{
+		return;
+	}
+
+	array->length--;
+
+	RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
+	context->pushValue(elem[array->length]);
+	context->virtualCall(RuntimeClass::unref(elem[array->length]));
+
+
+	void* newData = realloc(array->data, array->length * elementSize);
+
+	if (newData || array->length == 0)
+	{
+		array->data = newData;
 	}
 }
 
@@ -148,6 +181,10 @@ lang::NativeModule lang::modules::system::createModule()
 	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.push", &array_push));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"array.pop", &array_pop));
 
 	out.addFunction(NativeFunction(
 		{}, nullptr,

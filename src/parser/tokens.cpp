@@ -50,6 +50,7 @@ namespace lang
 		' ',
 		'\t',
 		'\r',
+		'\n',
 	};
 
 } // namespace lang
@@ -122,6 +123,8 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 
 	currentLine = &this->lineTokens.emplace_back();
 
+	size_t bracketDepth = 0;
+
 	while (true)
 	{
 		char newChar = getNextChar(stream);
@@ -129,7 +132,7 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 		if (stream.eof() || newChar == EOF)
 			break;
 
-		if (newChar == '\n')
+		if (newChar == '\n' && bracketDepth == 0)
 		{
 			addToken(currentWord);
 			this->character = 0;
@@ -192,6 +195,14 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 
 		if (specialChars.contains(newChar) || (newChar == '.' && !isNumber(currentWord.string, false)))
 		{
+			if (std::string("([").contains(newChar))
+			{
+				bracketDepth++;
+			}
+			else if (bracketDepth > 0 && std::string("])").contains(newChar))
+			{
+				bracketDepth--;
+			}
 			addToken(currentWord);
 			auto charToken = newToken();
 			charToken.addChar(newChar);

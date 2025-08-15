@@ -60,7 +60,7 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 }
 
 ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	bool isNegative = false;
 	if (first == "+")
@@ -235,7 +235,7 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 }
 
 ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	bool isNegative = false;
 	if (first == "+")
@@ -324,7 +324,7 @@ ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
 }
 
 ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	bool value = false;
 	if (first == "true")
@@ -373,7 +373,7 @@ ExpressionResult lang::CharType::compileOperator(Operator operatorType,
 }
 
 ExpressionResult lang::CharType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first.string[0] != '\'')
 	{

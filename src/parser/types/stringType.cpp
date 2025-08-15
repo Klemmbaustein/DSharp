@@ -27,7 +27,7 @@ ExpressionResult lang::StringType::compileOperator(Operator operatorType, Expres
 }
 
 ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line,
-	ErrorContext* errors, ParsedScope* with)
+	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first.string.size() > 3 && first.string[0] == '$')
 	{
@@ -138,7 +138,7 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 			expressionStream.fromString(currentExprCode, with->scopeFile->name, errors);
 			auto nextLine = expressionStream.next(errors);
 
-			ExpressionResult formatArg = with->pushExpression(nextLine, errors, false);
+			ExpressionResult formatArg = with->pushExpression(nextLine, errors, false, this);
 
 			auto argType = formatArg.type;
 			if (!argType || !argType->sameAs(this))

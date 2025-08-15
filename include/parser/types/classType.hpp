@@ -31,7 +31,7 @@ namespace lang
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) override;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
@@ -48,6 +48,7 @@ namespace lang
 		ClassType()
 		{
 			this->size = sizeof(size_t);
+			this->hasDefaultValue = false;
 
 			nullable = new NullableClassType(this);
 		}
@@ -78,7 +79,7 @@ namespace lang
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
-			ErrorContext* errors, ParsedScope* with) override;
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
@@ -95,7 +96,7 @@ namespace lang
 
 		// Inherited via Type
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
-		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with) override;
+		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 
 		static NullType* getInstance()

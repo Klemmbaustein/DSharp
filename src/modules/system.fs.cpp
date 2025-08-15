@@ -48,7 +48,7 @@ static void fs_path_getFiles(InterpretContext* context)
 		paths.push_back(newPath.classPtr);
 	}
 
-	auto f = createArray(paths.data(), paths.size());
+	auto f = createArray(paths.data(), paths.size(), true);
 	context->pushValue(f);
 }
 

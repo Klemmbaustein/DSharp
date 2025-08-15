@@ -52,11 +52,14 @@ namespace lang
 		void compile(ParseContext* context, ParsedFile* file, ErrorContext* errors);
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		void compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors);
-		ExpressionResult pushExpression(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
-		ExpressionResult getExpressionValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
+		ExpressionResult pushExpression(TokenLine& currentLine, ErrorContext* errors,
+			bool setExpression, Type* hintType);
+		ExpressionResult getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
+			bool setExpression, Type* hintType);
 		ExpressionResult compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op, Token opToken,
 			ErrorContext* errors, bool setExpression);
-		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
+		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors,
+			bool setExpression, Type* hintType);
 		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 
 		void parseSubScope(ParsedFile* file, ErrorContext* errors,

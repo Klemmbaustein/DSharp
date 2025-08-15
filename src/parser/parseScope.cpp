@@ -7,9 +7,9 @@
 using namespace lang;
 
 ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
-	ErrorContext* errors, bool setExpression)
+	ErrorContext* errors, bool setExpression, Type* hintType)
 {
-	ExpressionResult result = getExpressionValue(currentLine, errors, setExpression);
+	ExpressionResult result = getExpressionValue(currentLine, errors, setExpression, hintType);
 
 	// 1 + 1 -> (1, '+'), (1, null)
 	// 1 + 1 * 2 -> (1, '+'), (2, '*'), (1, null)
@@ -45,7 +45,7 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 
 		currentLine.get();
 
-		auto secondValue = getExpressionValue(currentLine, errors, setExpression);
+		auto secondValue = getExpressionValue(currentLine, errors, setExpression, hintType);
 		lastElement = &expression.emplace_back(secondValue, std::optional<Token>());
 	}
 
@@ -86,9 +86,9 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 }
 
 ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
-	bool setExpression)
+	bool setExpression, Type* hintType)
 {
-	ExpressionResult result = pushValue(currentLine, errors, setExpression);
+	ExpressionResult result = pushValue(currentLine, errors, setExpression, hintType);
 
 	while (!currentLine.empty())
 	{
@@ -104,7 +104,7 @@ ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, E
 		if (nextToken == "[")
 		{
 			currentLine.get();
-			auto index = pushExpression(currentLine, errors, false);
+			auto index = pushExpression(currentLine, errors, false, hintType);
 
 			Type* oldType = result.type;
 
@@ -181,21 +181,21 @@ ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, E
 }
 
 ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
-	ErrorContext* errors, bool setExpression)
+	ErrorContext* errors, bool setExpression, Type* hintType)
 {
 	Token value = currentLine.peek();
 
 	if (value == "*")
 	{
 		currentLine.get();
-		auto result = getExpressionValue(currentLine, errors, setExpression);
+		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
 		ExpressionResult r;
 		return result.type->compileOperator(Operator::dereference, result, r, this);
 	}
 	if (value == "not")
 	{
 		currentLine.get();
-		auto result = getExpressionValue(currentLine, errors, setExpression);
+		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
 		ExpressionResult r;
 		return result.type->compileOperator(Operator::logicalNot, result, r, this);
 	}
@@ -208,7 +208,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 		auto inBraces = currentLine.getInBraces(errors);
 		TokenLine line;
 		line.lineTokens = &inBraces;
-		return pushExpression(line, errors, setExpression);
+		return pushExpression(line, errors, setExpression, hintType);
 	}
 
 	currentLine.get();
@@ -227,7 +227,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 			return ExpressionResult();
 		}
 
-		auto compiled = foundType->compileValue(className, currentLine, errors, this);
+		auto compiled = foundType->compileValue(className, currentLine, errors, this, hintType);
 
 		if (compiled.type == nullptr)
 		{
@@ -309,7 +309,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	for (auto& i : this->context->defaultTypes)
 	{
 		size_t pos = currentLine.savePosition();
-		auto compiled = i->compileValue(value, currentLine, errors, this);
+		auto compiled = i->compileValue(value, currentLine, errors, this, hintType);
 		if (compiled.valid)
 		{
 			return compiled;
@@ -381,7 +381,10 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionN
 	while (!currentLine.empty())
 	{
 		auto exprToken = currentLine.peek();
-		auto expr = this->pushExpression(currentLine, errors, false);
+
+		Type* hintType = arguments.size() > argIndex ? arguments[argIndex].type : nullptr;
+
+		auto expr = this->pushExpression(currentLine, errors, false, hintType);
 
 		if (arguments.size() <= argIndex)
 		{
@@ -576,9 +579,9 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	{
 		if (scopeFunction->returnType)
 		{
-			auto expr = pushExpression(line, errors, false);
+			auto expr = pushExpression(line, errors, false, scopeFunction->returnType);
 
-			if (!expr.type)
+			if (!expr.valid)
 			{
 				return;
 			}
@@ -625,7 +628,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		TokenLine conditionTokens;
 		conditionTokens.lineTokens = &conditionLine;
 
-		auto condition = pushExpression(conditionTokens, errors, false);
+		auto condition = pushExpression(conditionTokens, errors, false, nullptr);
 		conditionTokens.expectEndOfLine(errors);
 
 		auto beginLabel = std::make_shared<BytecodeJumpLabel>("while_begin");
@@ -666,7 +669,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		Token equals = line.get();
 		if (equals == "=")
 		{
-			auto expr = pushExpression(line, errors, false);
+			auto expr = pushExpression(line, errors, false, type);
 
 			if (isVar || isConst)
 			{
@@ -701,7 +704,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	}
 
 	line.position = 0;
-	auto expr = pushExpression(line, errors, true);
+	auto expr = pushExpression(line, errors, true, nullptr);
 
 	auto compoundOperator = stringToCompoundOperator(line.peek().string);
 	if ((line.peek() == "=" || compoundOperator != CompoundOperator::unknown) && expr.valid)
@@ -715,7 +718,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			return;
 		}
 
-		auto valueExpr = pushExpression(line, errors, false);
+		auto valueExpr = pushExpression(line, errors, false, expr.type);
 		if (!valueExpr.type)
 		{
 			return;
@@ -767,7 +770,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 	TokenLine conditionTokens;
 	conditionTokens.lineTokens = &conditionLine;
 
-	auto condition = pushExpression(conditionTokens, errors, false);
+	auto condition = pushExpression(conditionTokens, errors, false, nullptr);
 	conditionTokens.expectEndOfLine(errors);
 	this->code->addBuffer(condition.code);
 
