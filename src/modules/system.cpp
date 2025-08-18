@@ -73,8 +73,14 @@ static void array_delete(InterpretContext* context)
 			for (uint32_t i = 0; i < array->length; i++)
 			{
 				RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
-				context->pushValue(elem[i]);
-				context->virtualCall(RuntimeClass::unref(elem[i]));
+
+				auto ptr = RuntimeClass::unref(elem[i]);
+
+				if (ptr)
+				{
+					context->pushValue(elem[i]);
+					context->virtualCall(ptr);
+				}
 			}
 		}
 		free(array->data);
@@ -158,6 +164,75 @@ static void array_at(InterpretContext* context)
 	context->pushBytes((uint8_t*)array->data + elementSize * index, elementSize);
 }
 
+static void fn_delete(InterpretContext* context)
+{
+	RuntimeClass* cls = context->popValue<RuntimeClass*>();
+	delete[] cls->vtable;
+	RuntimeClass::unref(cls);
+}
+
+static void fn_call(InterpretContext* context)
+{
+	RuntimeClass* cls = context->popValue<RuntimeClass*>();
+	context->virtualCall(cls->vtable[2]);
+}
+
+static void fn_new_bytecode(InterpretContext* context)
+{
+	auto offset = context->popValue<bytecodeOffset>();
+
+	VTableEntry* entries = new VTableEntry[3]();
+	entries[0].nativeFn = &fn_delete;
+	entries[1].nativeFn = &fn_call;
+	entries[2].codeOffset = offset;
+
+	context->pushValue(RuntimeClass::allocateClass(0, entries));
+}
+
+static void fn_delete_lambda(InterpretContext* context)
+{
+	RuntimeClass* cls = context->popValue<RuntimeClass*>();
+	int32_t size = *(int32_t*)cls->getBody();
+	context->pushBytes(cls->getBody() + 4, size);
+	context->virtualCall(cls->vtable[2]);
+	delete[] cls->vtable;
+	RuntimeClass::unref(cls);
+}
+
+static void fn_new_lambda(InterpretContext* context)
+{
+	auto offset = context->popValue<bytecodeOffset>();
+
+	VTableEntry* entries = new VTableEntry[3]();
+	entries[0].nativeFn = &fn_delete_lambda;
+	entries[1].codeOffset = offset;
+
+	int32_t size = context->popValue<bytecodeOffset>();
+
+	auto deref = context->popValue<bytecodeOffset>();
+	entries[2].codeOffset = deref;
+
+	auto cls = RuntimeClass::allocateClass(size + 4, entries);
+
+	*(int32_t*)cls->getBody() = size;
+
+	context->popBytes(cls->getBody() + 4, size);
+
+	context->pushValue(cls);
+}
+
+static void fn_new_native(InterpretContext* context)
+{
+	auto offset = context->popValue<bytecodeOffset>();
+
+	VTableEntry* entries = new VTableEntry[3]();
+	entries[0].nativeFn = &fn_delete;
+	entries[1].nativeFn = &fn_call;
+	entries[2].nativeFn = context->externals[offset];
+
+	context->pushValue(RuntimeClass::allocateClass(0, entries));
+}
+
 lang::NativeModule lang::modules::system::createModule()
 {
 	NativeModule out;
@@ -193,6 +268,18 @@ lang::NativeModule lang::modules::system::createModule()
 	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.at", &array_at));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"fn.new.bytecode", &fn_new_bytecode));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"fn.new.native", &fn_new_native));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"fn.new.lambda", &fn_new_lambda));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(StringType::getInstance(), Token("str")) }, StringType::getInstance(),

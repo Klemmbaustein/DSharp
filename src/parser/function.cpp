@@ -1,5 +1,12 @@
 #include <parser/function.hpp>
 
+using namespace lang;
+
+BytecodeBuffer lang::Function::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
+{
+	return BytecodeBuffer();
+}
+
 std::string lang::Function::getSignatureText()
 {
 	std::string arguments;

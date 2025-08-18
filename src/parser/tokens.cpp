@@ -13,8 +13,6 @@ namespace lang
 		"!=",
 		"->",
 		"::",
-		"&&",
-		"||",
 		"+=",
 		"-=",
 		"*=",
@@ -117,6 +115,21 @@ void lang::TokenStream::fromString(std::string stringData, std::string path, Err
 	fromStream(stream, path, errors);
 }
 
+void lang::TokenStream::fromTokens(const std::vector<Token> from)
+{
+	currentLine = &this->lineTokens.emplace_back();
+	size_t lastLine = SIZE_MAX;
+	for (auto& i : from)
+	{
+		if (lastLine != i.position.line && !currentLine->empty())
+		{
+			currentLine = &this->lineTokens.emplace_back();
+		}
+		lastLine = i.position.line;
+		addToken(i);
+	}
+}
+
 void lang::TokenStream::fromStream(std::istream& stream, std::string name, ErrorContext* errors)
 {
 	Token currentWord = newToken();
@@ -132,25 +145,28 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 		if (stream.eof() || newChar == EOF)
 			break;
 
-		if (newChar == '\n' && bracketDepth == 0)
+		if (newChar == '\n')
 		{
-			addToken(currentWord);
 			this->character = 0;
 			this->line++;
-
-			if (tryReadChar(stream, '{'))
+			if (bracketDepth == 0)
 			{
-				auto charToken = newToken();
-				charToken.addChar('{');
-				addToken(charToken);
-			}
+				addToken(currentWord);
 
-			if (!currentLine->empty())
-			{
-				currentLine = &this->lineTokens.emplace_back();
+				if (tryReadChar(stream, '{'))
+				{
+					auto charToken = newToken();
+					charToken.addChar('{');
+					addToken(charToken);
+				}
+
+				if (!currentLine->empty())
+				{
+					currentLine = &this->lineTokens.emplace_back();
+				}
+				currentWord = newToken();
+				continue;
 			}
-			currentWord = newToken();
-			continue;
 		}
 
 		if (newChar == '"')
@@ -331,7 +347,7 @@ TokenLine& lang::TokenLine::postProcessTokens(ErrorContext* errors)
 	return *this;
 }
 
-void lang::TokenStream::addToken(Token& target)
+void lang::TokenStream::addToken(const Token& target)
 {
 	if (!target.string.empty())
 	{
@@ -353,6 +369,28 @@ Token lang::TokenLine::get()
 
 	return this->lineTokens->at(this->position++);
 }
+
+bool lang::TokenLine::expect(std::string token, ErrorContext* errors)
+{
+	auto next = get();
+
+	if (next.string.empty())
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, next,
+			"Expected '" + token + "'");
+		return true;
+	}
+
+
+	if (next.string != token)
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, next,
+			"Expected '" + token + "', got '" + next.string + "'");
+		return true;
+	}
+	return false;
+}
+
 bool lang::TokenLine::empty() const
 {
 	return !this->lineTokens || this->lineTokens->empty() || this->position >= this->lineTokens->size();
@@ -410,31 +448,43 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 	std::vector<Token> result;
 
 	size_t depth = 0;
+	size_t scopeDepth = 0;
 	Token next;
 
 	do
 	{
 		next = peek();
 
-		if (next.string == "(")
+		if (next == "(")
 		{
-			// Skip first (
-			if (depth == 0)
-			{
-				depth++;
-				continue;
-			}
 			depth++;
 		}
-		else if (next.string == ")")
+		else if (next == ")")
 		{
 			if (depth == 0)
 			{
 				errors->error(ErrorCode::parseUnexpectedToken, next, "Unexpected ')'");
 			}
 			depth--;
+		}
+
+		if (next == "{" && token != "{")
+		{
+			scopeDepth++;
+		}
+		else if (next == "}")
+		{
+			if (scopeDepth == 0 && token != "}")
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, next, "Unexpected '}'");
+				break;
+			}
+			else if (scopeDepth > 0)
+			{
+				scopeDepth--;
+			}
 			// Skip last )
-			if (depth == 0)
+			if (scopeDepth == 0 && token != "}")
 			{
 				continue;
 			}
@@ -444,7 +494,7 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 		{
 			get();
 		}
-		else
+		else if ((depth == 0 && scopeDepth == 0) || next.empty())
 		{
 			break;
 		}

@@ -46,6 +46,7 @@ namespace lang
 	{
 		Token peek();
 		Token get();
+		bool expect(std::string token, ErrorContext* errors);
 		bool empty() const;
 
 		std::vector<Token> getInBraces(ErrorContext* errors);
@@ -73,6 +74,8 @@ namespace lang
 		void fromStream(std::istream& stream, std::string name, ErrorContext* errors);
 		void fromString(std::string stringData, std::string path, ErrorContext* errors);
 
+		void fromTokens(const std::vector<Token> from);
+
 		TokenLine next(ErrorContext* errors);
 		TokenLine peek(ErrorContext* errors);
 		void addLine(TokenLine ln);
@@ -90,7 +93,7 @@ namespace lang
 		void readWhitespace(std::istream& stream);
 		char getNextChar(std::istream& stream);
 
-		void addToken(Token& target);
+		void addToken(const Token& target);
 
 		Token newToken();
 

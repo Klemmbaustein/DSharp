@@ -1,12 +1,20 @@
 using system
-using system::win32
 
-module main
+fn useLambda(fn() callback)
+{
+	callback.call()
+}
 
 [EntryPoint]
 fn main() -> int
 {
-	messageBox(getConsoleWindow(), "", "", 0)
+	string msg = "hi"
+	string msg2 = "world"
+
+	useLambda(fn() {
+		io::writeln(msg)
+		io::writeln(msg2)
+	})
 
 	return 0
 }

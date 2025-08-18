@@ -2,8 +2,8 @@
 #include <parser/bytecode/compileBytecodeVariables.hpp>
 #include <format>
 #include <list>
-#include <optional>
-#include <print>
+#include <parser/types/arrayType.hpp>
+#include <parser/types/lambdaType.hpp>
 using namespace lang;
 
 ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
@@ -143,7 +143,6 @@ ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, E
 		}
 		break;
 	}
-	result.valid = true;
 	return result;
 }
 
@@ -211,6 +210,17 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 		return pushExpression(line, errors, setExpression, hintType);
 	}
 
+	auto [enumValue, enumEntry] = this->scopeFile->getEnum(currentLine);
+
+	if (enumValue)
+	{
+		ExpressionResult result;
+		result.code.pushInt(enumValue->values.at(Token(enumEntry)));
+		result.type = IntType::getInstance();
+		result.valid = true;
+		return result;
+	}
+
 	currentLine.get();
 
 	// Allocate a new class
@@ -218,7 +228,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	{
 		Token className = currentLine.peek();
 
-		auto foundType = this->scopeFile->getType(currentLine);
+		auto foundType = this->scopeFile->getType(currentLine, errors);
 
 		if (!foundType)
 		{
@@ -243,10 +253,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 
 	if (foundVariable != this->variables.end())
 	{
-		ExpressionResult result;
-		result.valid = true;
-		result.type = foundVariable->second.type;
-		result.code = foundVariable->second.readValue(this);
+		ExpressionResult result = foundVariable->second.readExpression(this);
 		if (setExpression && !foundVariable->second.readOnly)
 		{
 			auto unrefCode = result.type->compileUnref();
@@ -261,7 +268,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 				result.setCode = BytecodeBuffer();
 			}
 
-			result.setCode->addBuffer(foundVariable->second.writeValue(this));
+			result.setCode->addBuffer(foundVariable->second.writeValue());
 		}
 		return result;
 	}
@@ -271,13 +278,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	{
 		Function* function = this->scopeFile->getMethod(value.string);
 
-		if (!function && !this->inClass)
-		{
-			errors->error(ErrorCode::parseUnknownSymbol, value,
-				"Unknown function: '" + value.string + "'");
-			return ExpressionResult();
-		}
-		else if (function)
+		if (function)
 		{
 			auto args = currentLine.getInBraces(errors);
 
@@ -317,7 +318,6 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 		currentLine.loadPosition(pos);
 	}
 
-
 	if (this->inClass)
 	{
 		currentLine.loadPosition(initialPosition);
@@ -334,40 +334,39 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression)
 {
-	ExpressionResult result;
-	result.valid = true;
-	result.type = this->inClass->thisType;
-	result.code = thisVariable->readValue(this);
-
-	result = this->inClass->thisType->compileMember(result, currentLine,
+	return this->inClass->thisType->compileMember(thisVariable->readExpression(this), currentLine,
 		errors, setExpression, this);
-	return result;
 }
 
-void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
-	std::shared_ptr<BytecodeJumpLabel> breakTarget, std::shared_ptr<BytecodeJumpLabel> continueTarget,
-	size_t breakContinueDepth)
+void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
+	std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options)
 {
 	ParsedScope conditionScope;
-	TokenStream conditionTokens;
-	conditionScope.scopeFunction = this->scopeFunction;
-	conditionScope.tokenStream = &conditionTokens;
-	conditionScope.code = this->code;
+	conditionScope.scopeFunction = options.scopeFunction ? options.scopeFunction : this->scopeFunction;
+	conditionScope.code = options.targetBuffer ? options.targetBuffer : this->code;
 	conditionScope.tempCounter = this->tempCounter;
 	conditionScope.breakTarget = breakTarget;
 	conditionScope.continueTarget = continueTarget;
 	conditionScope.breakContinueDepth = breakContinueDepth;
 	conditionScope.depth = this->depth + 1;
+	conditionScope.isLambda = options.isLambda;
 
 	for (auto& i : this->variables)
 	{
-		if (i.second.ownedBy)
+		if (i.second.ownedBy && !(i.second.isInternal && options.isLambda))
 			conditionScope.variables.insert(i);
+	}
+
+	TokenStream localStream;
+	if (!options.scopeTokens)
+	{
+		this->tokenStream->getScope(localStream, errors);
+		options.scopeTokens = &localStream;
 	}
 
 	conditionScope.thisVariable = this->thisVariable;
 	conditionScope.variableStackPosition = this->variableStackPosition;
-	this->tokenStream->getScope(conditionTokens, errors);
+	conditionScope.tokenStream = options.scopeTokens;
 
 	conditionScope.compile(this->context, file, errors);
 }
@@ -446,6 +445,7 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 		.ownedBy = this,
 		.depth = this->depth,
 		.type = type,
+		.isInternal = true,
 	} }).first->second;
 	// clang-format on
 
@@ -468,7 +468,7 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
 
-ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type)
+ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type)
 {
 	auto instruction = std::make_shared<BytecodePushVariable>(name.string, type);
 	code->add(instruction);
@@ -490,6 +490,9 @@ ParsedScope::ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* typ
 void lang::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 {
 	uint32_t size = 0;
+
+	std::vector<Token> toErase;
+
 	for (auto& i : variables)
 	{
 		if (i.second.depth < toDepth)
@@ -504,9 +507,19 @@ void lang::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 				code->addBuffer(i.second.readValue(this));
 				code->addBuffer(unrefCode);
 			}
+
+			if (isEnd && &i.second != thisVariable)
+			{
+				toErase.push_back(i.first);
+			}
 		}
 
 		size += i.second.type->size;
+	}
+
+	for (auto& i : toErase)
+	{
+		variables.erase(i);
 	}
 
 	if (inClass && scopeFunction && scopeFunction->name == "delete")
@@ -548,6 +561,13 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 {
 	this->context = context;
 	this->scopeFile = file;
+
+	if (isLambda)
+	{
+		pushVariableValue(LambdaType::getInstance(), true);
+		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance());
+	}
+
 	while (true)
 	{
 		auto nextLine = this->tokenStream->next(&context->errors);
@@ -574,7 +594,7 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 		{
 			code->addNew<BytecodeCallNative>("system::err::abort");
 		}
-		
+
 		code->addOperation(BytecodeOp::ret);
 	}
 }
@@ -596,7 +616,10 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 			expr.compileToType(first, scopeFunction->returnType, this, errors);
 
 			this->code->addBuffer(expr.code);
-			this->code->addBuffer(expr.type->compileMove(this));
+			if (expr.type)
+			{
+				this->code->addBuffer(expr.type->compileMove(this));
+			}
 		}
 		compileScopeExit(0, false);
 		this->code->addOperation(BytecodeOp::ret);
@@ -606,6 +629,11 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	if (first == "if")
 	{
 		compileIf(line, file, errors);
+		return;
+	}
+	if (first == "for")
+	{
+		compileFor(line, file, errors);
 		return;
 	}
 
@@ -656,7 +684,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	}
 
 	line.position = 0;
-	Type* type = file->getType(line);
+	Type* type = file->getType(line, errors);
 	// If there is a type, it's probably a variable declaration.
 	if (type || first == "var" || first == "const")
 	{
@@ -819,16 +847,173 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 	}
 }
 
-BytecodeBuffer lang::ParsedScope::ScopeVariable::readValue(ParsedScope* scope) const
+void lang::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext* errors)
+{
+	this->depth++;
+
+	// for [...type] [name] in [...expr] {
+	//     [block]
+	// }
+	auto type = file->getType(line, errors);
+
+	bool isVar = false;
+	bool isConst = false;
+
+	if (!type)
+	{
+		auto next = line.get();
+		if (next == "var")
+		{
+			isVar = true;
+		}
+		else if (next == "const")
+		{
+			isConst = true;
+		}
+		else
+		{
+			errors->error(ErrorCode::parseInvalidType, next, "Invalid type");
+			return;
+		}
+	}
+
+	auto name = line.get();
+
+	auto in = line.peek();
+	if (line.expect("in", errors))
+	{
+		return;
+	}
+
+	auto iterLine = line.getUntil("{", errors);
+
+	TokenLine iterTokens;
+	iterTokens.lineTokens = &iterLine;
+
+	auto arrayExpression = pushExpression(iterTokens, errors, false, nullptr);
+	iterTokens.expectEndOfLine(errors);
+
+	if (!arrayExpression.valid)
+	{
+		return;
+	}
+
+	if (!arrayExpression.type)
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, in, "Invalid type");
+		return;
+	}
+
+	auto arrayType = dynamic_cast<ArrayType*>(arrayExpression.type);
+
+	if (!arrayType)
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, in,
+			"For loop expression needs to be an array. Got: " + Type::toString(arrayExpression.type));
+		return;
+	}
+
+	if (isVar || isConst)
+	{
+		type = arrayType->baseType;
+	}
+
+	this->code->addBuffer(arrayExpression.code);
+	pushVariableValue(arrayExpression.type, true);
+	auto& iterated = addVariable(Token(".for_iterated"), arrayType);
+
+	auto iterType = IntType::getInstance();
+
+	this->code->addBuffer(iterType->defaultValue().code);
+
+	pushVariableValue(iterType, true);
+	auto& iterator = addVariable(Token(".for_iterator"), iterType);
+
+	auto beginLabel = std::make_shared<BytecodeJumpLabel>("for_begin");
+	auto continueLabel = std::make_shared<BytecodeJumpLabel>("for_continue");
+	this->code->add(beginLabel);
+
+	auto endLabel = std::make_shared<BytecodeJumpLabel>("for_end");
+	this->code->addBuffer(arrayType->getLength(iterated.readValue(this)).code);
+	this->code->addBuffer(iterator.readValue(this));
+	this->code->addOperation(BytecodeOp::greaterInt);
+
+	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
+
+	this->depth++;
+
+	auto index = arrayType->compileIndex(iterated.readExpression(this), iterator.readExpression(this),
+		errors, false, this);
+
+	index.compileToType(in, type, this, errors);
+
+	this->code->addBuffer(index.code);
+
+	pushVariableValue(type, true);
+	addVariable(name, type);
+
+	parseSubScope(file, errors, endLabel, continueLabel, this->depth);
+
+
+	this->code->add(continueLabel);
+	compileScopeExit(this->depth, true);
+	this->code->addBuffer(iterator.readValue(this));
+	this->code->pushInt(1);
+	this->code->addOperation(BytecodeOp::addInt);
+	this->code->addBuffer(iterator.writeValue());
+
+	this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel.get());
+	this->code->add(endLabel);
+
+	this->depth -= 2;
+	compileScopeExit(this->depth + 1, true);
+}
+
+BytecodeBuffer lang::ScopeVariable::readValue(ParsedScope* with) const
 {
 	BytecodeBuffer result;
-	result.addNew<BytecodeReadVariable>(this->variableInstruction.get());
+	if (with->isLambda && ownedBy != with)
+	{
+		bool found = false;
+
+		for (auto& i : with->scopeFunction->capturedVariables)
+		{
+			if (i.string == this->name.string)
+			{
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			with->scopeFunction->capturedVariables.push_back(name);
+			this->lambdaOffset = with->lambdaOffset;
+			with->lambdaOffset += type->size;
+		}
+		result.addBuffer(with->lambdaVariable->readValue(with));
+		result.pushInt(this->lambdaOffset + 4);
+		result.pushInt(type->size);
+		result.addOperation(BytecodeOp::classMember);
+		return result;
+	}
+
+	result.addNew<BytecodeReadVariable>(this->variableInstruction);
 	return result;
 }
 
-BytecodeBuffer lang::ParsedScope::ScopeVariable::writeValue(ParsedScope* scope) const
+BytecodeBuffer lang::ScopeVariable::writeValue() const
 {
 	BytecodeBuffer result;
-	result.addNew<BytecodeStoreVariable>(this->variableInstruction.get());
+	result.addNew<BytecodeStoreVariable>(this->variableInstruction);
+	return result;
+}
+
+ExpressionResult lang::ScopeVariable::readExpression(ParsedScope* with) const
+{
+	ExpressionResult result;
+	result.valid = true;
+	result.type = this->type;
+	result.code = readValue(with);
 	return result;
 }

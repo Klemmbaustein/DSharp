@@ -38,7 +38,7 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 void lang::InterpretContext::run(bytecodeOffset position)
 {
 	std::array<uint8_t, 255> argumentBuffer{};
-	
+
 	bytecodeOffset baseCallStackPos = this->callStackPos;
 	bytecodeBuffer->streamPos = position;
 

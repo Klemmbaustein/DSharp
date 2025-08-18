@@ -35,9 +35,30 @@ bool lang::NativeFunction::discardable() const
 	return true;
 }
 
+BytecodeBuffer lang::NativeFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
+{
+	BytecodeBuffer result;
+	result.addNew<BytecodeFunctionAddress>(this->getFullName(), true);
+	result.addNew<BytecodeCallNative>("system::fn.new.native");
+	return result;
+}
+
 NativeFunction* lang::NativeModule::addFunction(NativeFunction function)
 {
 	return this->functions.emplace_back(new NativeFunction(function));
+}
+
+EnumType* lang::NativeModule::createEnum(std::string name)
+{
+	auto newType = new EnumType();
+	newType->name = name;
+	this->enums.push_back(newType);
+	return newType;
+}
+
+void lang::NativeModule::addEnumIntValue(EnumType* type, std::string name, int value)
+{
+	type->values.insert({ Token(name), value });
 }
 
 void lang::NativeModule::addClassConstructor(ClassType* type, NativeFunction constructor)
@@ -48,10 +69,8 @@ void lang::NativeModule::addClassConstructor(ClassType* type, NativeFunction con
 void lang::NativeModule::addClassMethod(ClassType* type, NativeFunction function)
 {
 	auto fn = addFunction(function);
-	type->methods.insert({
-			fn->name,
-			fn
-		});
+	type->methods.insert({ fn->name,
+		fn });
 	fn->name = type->name + "." + fn->name;
 }
 
@@ -72,6 +91,10 @@ Module lang::NativeModule::create() const
 	for (auto& i : this->types)
 	{
 		outModule.moduleTypes.insert({ i->name, i });
+	}
+	for (auto& i : this->enums)
+	{
+		outModule.moduleEnums.insert({ i->name, i });
 	}
 
 	return outModule;

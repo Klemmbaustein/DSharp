@@ -105,6 +105,54 @@ bytecodeOffset lang::BytecodeCallFunction::getArgsSize()
 	return sizeof(bytecodeOffset);
 }
 
+// --------------- //
+// FunctionAddress //
+// --------------- //
+
+lang::BytecodeFunctionAddress::BytecodeFunctionAddress(std::string callName, bool native)
+{
+	this->operation = BytecodeOp::push;
+	this->callName = callName;
+	this->native = native;
+}
+
+std::string BytecodeFunctionAddress::toString()
+{
+	return std::format("\tPUSH ADDROFF {}", this->callName);
+}
+
+void lang::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+{
+	if (native)
+	{
+		auto foundPosition = compiler->usedExternals.find(this->callName);
+
+		uint32_t position = 0;
+
+		if (foundPosition == compiler->usedExternals.end())
+		{
+			position = uint32_t(compiler->externals.size());
+			compiler->externals.push_back(this->callName);
+			compiler->usedExternals.insert({ this->callName, position });
+		}
+		else
+		{
+			position = foundPosition->second;
+		}
+
+		stream.addValue(position);
+	}
+	else
+	{
+		stream.addValue(compiler->functions[this->callName].offset);
+	}
+}
+
+bytecodeOffset lang::BytecodeFunctionAddress::getArgsSize()
+{
+	return sizeof(bytecodeOffset);
+}
+
 // ------------- //
 // CallNative    //
 // ------------- //

@@ -1,5 +1,6 @@
 #pragma once
 #include "type.hpp"
+#include <parser/function.hpp>
 
 namespace lang
 {

@@ -13,10 +13,12 @@
 #include <vector>
 #include "error.hpp"
 #include <list>
+#include "parseEnum.hpp"
 
 namespace lang
 {
 	struct LanguageContext;
+	struct ScopeVariable;
 
 	struct ParseContext
 	{
@@ -63,9 +65,11 @@ namespace lang
 		ParsedFile* functionFile = nullptr;
 		Type* returnType = nullptr;
 		std::vector<FunctionArgument> arguments;
+		std::vector<Token> capturedVariables;
 
 		bool functionIsVirtual = false;
 		bool isOverride = false;
+		bool isLambda = false;
 		bytecodeOffset vTableOffset = 0;
 
 		std::string getFullName() const override;
@@ -88,10 +92,13 @@ namespace lang
 		{
 			return functionIsVirtual;
 		}
-	};
 
-	struct ParsedClassMethod : public ParsedFunction
-	{
+		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
+
+		virtual bytecodeOffset getVirtualOffset() const
+		{
+			return vTableOffset;
+		}
 	};
 
 	struct ParsedFile : Attributable
@@ -99,8 +106,9 @@ namespace lang
 		~ParsedFile();
 
 		TokenStream stream;
-		std::vector<ParsedFunction> functions;
+		std::list<ParsedFunction> functions;
 		std::list<ParsedClass> classes;
+		std::list<ParsedEnum> enums;
 		std::map<Token, Module*> usings;
 		Module* fileModule = nullptr;
 
@@ -110,13 +118,15 @@ namespace lang
 		void loadAvailableTypes(ParseContext* context);
 
 		Function* getMethod(std::string name);
-		Type* getType(TokenLine& from);
+		Type* getType(TokenLine& from, ErrorContext* errors);
 		Attribute* getAttribute(TokenLine& from);
+		std::pair<EnumType*, std::string> getEnum(TokenLine& from);
 
 		void scan(ErrorContext* errors);
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors);
 		ParsedFunction& scanFunction(TokenLine currentLine, ErrorContext* errors);
 		ParsedClass& scanClass(TokenLine currentLine, ErrorContext* errors);
+		ParsedEnum& scanEnum(TokenLine currentLine, ErrorContext* errors);
 
 		void compile(ParseContext* context);
 	};

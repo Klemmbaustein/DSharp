@@ -30,6 +30,8 @@ namespace lang
 		std::string getShortName() const override;
 		std::string getFullName() const override;
 		bool discardable() const override;
+
+		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
 	};
 
 	struct NativeModule
@@ -42,6 +44,7 @@ namespace lang
 
 		std::vector<Attribute*> attributes;
 		std::vector<Type*> types;
+		std::vector<EnumType*> enums;
 
 		template<typename TNative>
 		ClassType* createClass(std::string name)
@@ -52,6 +55,16 @@ namespace lang
 			cls->vTableOffset = UINT32_MAX;
 			this->types.push_back(cls);
 			return cls;
+		}
+
+		EnumType* createEnum(std::string name);
+
+		void addEnumIntValue(EnumType* type, std::string name, int value);
+
+		template<typename T>
+		void addEnumValue(EnumType* type, std::string name, T value)
+		{
+			addEnumIntValue(type, name, int(value));
 		}
 
 		void addClassConstructor(ClassType* type, NativeFunction constructor);

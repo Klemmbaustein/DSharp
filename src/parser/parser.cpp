@@ -3,6 +3,8 @@
 #include <parser/bytecode/compileBytecodeVirtual.hpp>
 #include <parser/types/stringType.hpp>
 #include <parser/types/listType.hpp>
+#include <parser/types/functionType.hpp>
+#include <parser/types/lambdaType.hpp>
 #include <modules/system.hpp>
 #include <language.hpp>
 using namespace lang;
@@ -50,6 +52,8 @@ BytecodeStream lang::ParseContext::compile()
 	this->defaultTypes.push_back(CharType::getInstance());
 	this->defaultTypes.push_back(ListType::getInstance());
 	this->defaultTypes.push_back(NullType::getInstance());
+	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}));
+	this->defaultTypes.push_back(LambdaType::getInstance());
 
 	scanModules();
 
@@ -129,11 +133,15 @@ void lang::ParseContext::scanModules()
 		file.usings.insert({ Token(""), &globalModule });
 	}
 
-	// Scan class types
+	// Register types
 	for (ParsedFile& file : this->files)
 	{
 		this->errors.currentFile = file.name;
 		for (auto& i : file.classes)
+		{
+			i.registerType(this, &file);
+		}
+		for (auto& i : file.enums)
 		{
 			i.registerType(this, &file);
 		}
@@ -233,6 +241,13 @@ bool lang::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, Erro
 		return true;
 	}
 
+	if (first == "enum")
+	{
+		scanEnum(currentLine, errors).addAttributes(currentAttributes);
+		currentAttributes.clear();
+		return true;
+	}
+
 	errors->error(ErrorCode::parseUnexpectedToken, first, "Unexpected '" + first.string + "'");
 
 	return true;
@@ -267,7 +282,7 @@ ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* er
 			else if (currentLine.empty())
 			{
 				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
-				break;
+				return newClass;
 			}
 			else if (currentLine.previous() != ",")
 			{
@@ -283,12 +298,28 @@ ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* er
 		if (found != "{" && !found.empty())
 		{
 			errors->error(ErrorCode::parseUnexpectedToken, found, "Expected a '{', got: '" + found.string + "'");
+			return newClass;
 		}
 	}
 
 	stream.getScope(newClass.classStream, errors, 1);
 
 	return newClass;
+}
+
+ParsedEnum& lang::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* errors)
+{
+	ParsedEnum& newEnum = this->enums.emplace_back();
+	newEnum.name = currentLine.get();
+
+	if (currentLine.get() != "{")
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
+		return newEnum;
+	}
+
+	stream.getScope(newEnum.scope, errors, 1);
+	return newEnum;
 }
 
 void lang::ParsedFile::compile(ParseContext* context)
@@ -386,7 +417,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 		while (true)
 		{
 			FunctionArgument newArgument;
-			newArgument.type = functionFile->getType(line);
+			newArgument.type = functionFile->getType(line, errors);
 			newArgument.name = line.get();
 
 			if (!newArgument.type)
@@ -410,7 +441,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 	{
 		line = TokenLine(&returnTypeTokens);
 
-		this->returnType = functionFile->getType(line);
+		this->returnType = functionFile->getType(line, errors);
 		line.expectEndOfLine(errors);
 
 		if (!returnType)
@@ -467,6 +498,21 @@ bool lang::ParsedFunction::discardable() const
 	return getAttribute<modules::system::DiscardAttribute>();
 }
 
+BytecodeBuffer lang::ParsedFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
+{
+	BytecodeBuffer result;
+	result.addNew<BytecodeFunctionAddress>(getFullName());
+	if (isLambda)
+	{
+		result.addNew<BytecodeCallNative>("system::fn.new.lambda");
+	}
+	else
+	{
+		result.addNew<BytecodeCallNative>("system::fn.new.bytecode");
+	}
+	return result;
+}
+
 Function* ParsedFile::getMethod(std::string name)
 {
 	Function* found = this->fileModule->getMethod(name);
@@ -482,18 +528,18 @@ Function* ParsedFile::getMethod(std::string name)
 	return nullptr;
 }
 
-Type* ParsedFile::getType(TokenLine& from)
+Type* ParsedFile::getType(TokenLine& from, ErrorContext* errors)
 {
 	auto initialPos = from.savePosition();
 	auto name = from.get();
 	auto pos = from.savePosition();
-	Type* found = this->fileModule->getType(name.string, from);
+	Type* found = this->fileModule->getType(name.string, from, errors, this);
 	if (found)
 		return found;
 	for (auto& i : this->usings)
 	{
 		from.loadPosition(pos);
-		found = i.second->getType(name.string, from);
+		found = i.second->getType(name.string, from, errors, this);
 		if (found)
 			return found;
 	}
@@ -518,4 +564,23 @@ Attribute* ParsedFile::getAttribute(TokenLine& from)
 	}
 	from.loadPosition(initialPos);
 	return nullptr;
+}
+
+std::pair<EnumType*, std::string> lang::ParsedFile::getEnum(TokenLine& from)
+{
+	auto initialPos = from.savePosition();
+	auto name = from.get();
+	auto pos = from.savePosition();
+	auto found = this->fileModule->getEnum(name.string, from);
+	if (found.first)
+		return found;
+	for (auto& i : this->usings)
+	{
+		from.loadPosition(pos);
+		found = i.second->getEnum(name.string, from);
+		if (found.first)
+			return found;
+	}
+	from.loadPosition(initialPos);
+	return { nullptr, "" };
 }

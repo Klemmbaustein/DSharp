@@ -11,6 +11,7 @@ namespace lang
 	struct ParsedFile;
 	struct ParseContext;
 	struct ParsedFunction;
+	struct ParsedClass;
 
 	struct ParsedClassMember
 	{
@@ -23,8 +24,6 @@ namespace lang
 		BytecodeBuffer readValue() const;
 		BytecodeBuffer writeValue() const;
 	};
-
-	struct ParsedClass;
 
 	// Either a constructor or destructor
 	struct ClassLifetimeFunction : public Function

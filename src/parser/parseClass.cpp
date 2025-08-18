@@ -10,7 +10,7 @@ bool lang::ParsedClass::scanLine(ErrorContext* errors, ParsedFile* file)
 	if (currentLine.empty())
 		return false;
 
-	auto type = file->getType(currentLine);
+	auto type = file->getType(currentLine, errors);
 
 	// Class member variable
 	if (type)
@@ -196,7 +196,7 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		TokenLine line;
 		line.lineTokens = &i;
 
-		Type* type = file->getType(line);
+		Type* type = file->getType(line, &context->errors);
 
 		if (!type)
 		{

@@ -49,6 +49,19 @@ namespace lang
 		std::string callName;
 	};
 
+	class BytecodeFunctionAddress : public BytecodeInstruction
+	{
+	public:
+		BytecodeFunctionAddress(std::string callName, bool native = false);
+
+		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
+		bytecodeOffset getArgsSize() override;
+		std::string toString() override;
+
+		bool native = false;
+		std::string callName;
+	};
+
 	class BytecodeCallNative : public BytecodeInstruction
 	{
 	public:

@@ -1,54 +1,9 @@
 #include <parser/types/arrayType.hpp>
 #include <parser/types/listType.hpp>
+#include <parser/types/builtinClassFunction.hpp>
 #include <parser/parseScope.hpp>
 #include <native/nativeModule.hpp>
 using namespace lang;
-
-class ArrayMemberFunction : public Function
-{
-public:
-	ArrayMemberFunction(std::vector<FunctionArgument> arguments, Type* returnType,
-		std::string name)
-	{
-		this->arguments = arguments;
-		this->returnType = returnType;
-		this->name = name;
-	}
-
-	std::vector<FunctionArgument> arguments;
-	Type* returnType;
-	std::string name;
-
-	ExpressionResult compileCall() override
-	{
-		ExpressionResult result;
-		result.code.addNew<BytecodeCallNative>(name);
-		result.valid = true;
-		result.type = returnType;
-		return result;
-	}
-	std::vector<FunctionArgument> getArguments() override
-	{
-		return this->arguments;
-	}
-	Type* getReturnType() override
-	{
-		return returnType;
-	}
-	std::string getFullName() const override
-	{
-		return name;
-	}
-	std::string getShortName() const override
-	{
-		return name;
-	}
-
-	bool discardable() const override
-	{
-		return false;
-	}
-};
 
 lang::ArrayType::ArrayType(Type* baseType)
 {
@@ -58,10 +13,10 @@ lang::ArrayType::ArrayType(Type* baseType)
 	this->baseType = baseType;
 
 	this->methods.insert({ "push",
-		new ArrayMemberFunction({ FunctionArgument(baseType, Token("value")) }, nullptr, "system::array.push") });
+		new BuiltinClassFunction({ FunctionArgument(baseType, Token("value")) }, nullptr, "system::array.push") });
 
 	this->methods.insert({ "pop",
-		new ArrayMemberFunction({ }, nullptr, "system::array.pop") });
+		new BuiltinClassFunction({ }, nullptr, "system::array.pop") });
 }
 
 ExpressionResult lang::ArrayType::compileOperator(Operator operatorType, ExpressionResult& first,
@@ -93,16 +48,7 @@ ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLin
 	if (memberName == "length")
 	{
 		line.get();
-		ExpressionResult result;
-		result.code.addBuffer(value.code);
-		// array length offset (0 bytes)
-		result.code.pushInt(0);
-		// array length size (sizeof uint32_t bytes)
-		result.code.pushInt(sizeof(uint32_t));
-		result.code.addOperation(BytecodeOp::classMember);
-		result.type = IntType::getInstance();
-		result.valid = true;
-		return result;
+		return getLength(value.code);
 	}
 
 	value.code.pushInt(this->baseType->size);
@@ -127,6 +73,20 @@ ExpressionResult lang::ArrayType::compileIndex(ExpressionResult thisValue, Expre
 	result.code.pushInt(elementSize);
 	result.code.addNew<BytecodeCallNative>("system::array.at");
 	result.type = baseType;
+	result.valid = true;
+	return result;
+}
+
+ExpressionResult lang::ArrayType::getLength(BytecodeBuffer thisValue)
+{
+	ExpressionResult result;
+	result.code.addBuffer(thisValue);
+	// array length offset (0 bytes)
+	result.code.pushInt(0);
+	// array length size (sizeof uint32_t bytes)
+	result.code.pushInt(sizeof(uint32_t));
+	result.code.addOperation(BytecodeOp::classMember);
+	result.type = IntType::getInstance();
 	result.valid = true;
 	return result;
 }

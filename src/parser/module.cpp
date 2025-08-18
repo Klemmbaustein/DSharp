@@ -1,4 +1,5 @@
 #include <parser/module.hpp>
+#include <parser/types/functionType.hpp>
 #include <parser/types/arrayType.hpp>
 using namespace lang;
 
@@ -21,22 +22,31 @@ Function* lang::Module::getMethod(std::string name)
 	return nullptr;
 }
 
-Type* lang::Module::getType(std::string name, TokenLine& from)
+Type* lang::Module::getType(std::string name, TokenLine& from, ErrorContext* errors,
+	ParsedFile* file)
 {
-	auto foundType = this->moduleTypes.find(name);
-
-	if (foundType == this->moduleTypes.end())
+	Type* found = nullptr;
+	if (name == "fn")
 	{
-		Module* foundModule = checkForSubmodule(name);
+		found = FunctionType::compileType(Token(name), from, errors, file);
+	}
+	else
+	{
+		auto foundType = this->moduleTypes.find(name);
 
-		if (foundModule)
+		if (foundType == this->moduleTypes.end())
 		{
-			return foundModule->getType(name, from);
+			Module* foundModule = checkForSubmodule(name);
+
+			if (foundModule)
+			{
+				return foundModule->getType(name, from, errors, file);
+			}
+			return nullptr;
 		}
-		return nullptr;
+		found = foundType->second;
 	}
 
-	Type* found = foundType->second;
 
 	if (from.peek() == "?")
 	{
@@ -75,6 +85,27 @@ Attribute* lang::Module::getAttribute(std::string name, TokenLine& from)
 	}
 
 	return nullptr;
+}
+
+std::pair<EnumType*, std::string> lang::Module::getEnum(std::string name, TokenLine& from)
+{
+	size_t lastColon = name.find_last_of(":");
+	auto nameSubstr = name.substr(0, lastColon - 1);
+
+	auto foundEnum = this->moduleEnums.find(nameSubstr);
+
+	if (foundEnum != this->moduleEnums.end())
+	{
+		return { foundEnum->second, name.substr(lastColon + 1) };
+	}
+	Module* foundModule = checkForSubmodule(name);
+
+	if (foundModule)
+	{
+		return foundModule->getEnum(name, from);
+	}
+
+	return { nullptr, "" };
 }
 
 Module* lang::Module::checkForSubmodule(std::string& name)

@@ -71,6 +71,7 @@ namespace lang
 
 		[[noreturn]]
 		void runtimePanic(RuntimeStr message) const;
+		std::vector<ExternalFunctionPointer> externals;
 
 	private:
 		constexpr static size_t STACK_SIZE = 8000;
@@ -79,7 +80,6 @@ namespace lang
 
 		LanguageContext* language = nullptr;
 
-		std::vector<ExternalFunctionPointer> externals;
 
 		std::array<uint8_t, STACK_SIZE> stack = {};
 		std::array<uint8_t, STACK_SIZE> variableStack = {};

@@ -14,7 +14,7 @@ lang::BytecodeCallVirtual::BytecodeCallVirtual(Function* fn, ClassType* language
 
 void lang::BytecodeCallVirtual::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
-	stream.addValue(static_cast<ParsedFunction*>(this->functionToCall)->vTableOffset);
+	stream.addValue(this->functionToCall->getVirtualOffset());
 }
 
 bytecodeOffset lang::BytecodeCallVirtual::getArgsSize()

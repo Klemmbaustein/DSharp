@@ -1,13 +1,16 @@
 #pragma once
 #include "classType.hpp"
-#include <map>
 
 namespace lang
 {
-	class ArrayType : public ClassType
+	struct ParsedFile;
+
+	class FunctionType : public ClassType
 	{
 	public:
-		ArrayType(Type* baseType);
+		FunctionType(Type* returnType, std::vector<Type*> arguments);
+		Type* returnType;
+		std::vector<Type*> arguments;
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
@@ -19,23 +22,24 @@ namespace lang
 		ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 
-		ExpressionResult getLength(BytecodeBuffer thisValue);
+		static FunctionType* compileType(Token first, TokenLine& line, ErrorContext* errors,
+			ParsedFile* file);
 
-		static ArrayType* getInstance(Type* baseType)
+		static FunctionType* getInstance(Type* returnType, std::vector<Type*> arguments)
 		{
-			ArrayType*& instance = arrayTypes[baseType];
+			FunctionType*& instance = functionTypes[getFunctionTypeName(returnType, arguments)];
 			if (!instance)
 			{
-				instance = new ArrayType(baseType);
+				instance = new FunctionType(returnType, arguments);
 			}
 			return instance;
 		}
 
-		ExpressionResult makeArrayValue(std::vector<ExpressionResult> values, ParsedScope* with);
-
 		Type* baseType;
 
+		static std::string getFunctionTypeName(Type* returnType, const std::vector<Type*>& arguments);
+
 	private:
-		static inline std::map<Type*, ArrayType*> arrayTypes;
+		static inline std::map<std::string, FunctionType*> functionTypes;
 	};
-}
+} // namespace lang

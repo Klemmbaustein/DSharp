@@ -7,6 +7,7 @@ using namespace lang;
 static void io_writeLine(InterpretContext* context)
 {
 	auto rtString = context->popRuntimeString();
+
 	std::fwrite(rtString.ptr(), rtString.length(), 1, stdout);
 	std::fputc('\n', stdout);
 }
@@ -38,8 +39,22 @@ static void io_file_destruct(InterpretContext* context)
 	std::fclose(thisPtr->handle);
 }
 
+static void io_procFile_destruct(InterpretContext* context)
+{
+	ClassPtr<io::File> thisPtr = context->popValue<RuntimeClass*>();
+#if WIN32
+	_pclose(thisPtr->handle);
+	#else
+	pclose(thisPtr->handle);
+#endif
+}
+
 static VTableEntry io_file_vTable = VTableEntry{
 	.nativeFn = &io_file_destruct,
+};
+
+static VTableEntry io_procFile_vTable = VTableEntry{
+	.nativeFn = &io_procFile_destruct,
 };
 
 static void io_file_construct(InterpretContext* context)
@@ -78,7 +93,6 @@ static void io_file_readLine(InterpretContext* context)
 			continue;
 		}
 		result.push_back(c);
-
 	}
 
 	context->pushRuntimeString(RuntimeStr(result.data(), result.size()));
@@ -94,14 +108,14 @@ static void io_file_isEmpty(InterpretContext* context)
 static void io_popen(InterpretContext* context)
 {
 	RuntimeStr command = context->popRuntimeString();
-	ClassRef<io::File> newFile = RuntimeClass::allocateClass(sizeof(io::File), &io_file_vTable);
+	ClassRef<io::File> newFile = RuntimeClass::allocateClass(sizeof(io::File), &io_procFile_vTable);
 
-	#if _WIN32
+#if _WIN32
 	newFile->handle = _popen(command.ptr(), "r");
-	#else
+#else
 	newFile->handle = popen(command.ptr(), "r");
 
-	#endif
+#endif
 
 	if (!newFile->handle)
 	{

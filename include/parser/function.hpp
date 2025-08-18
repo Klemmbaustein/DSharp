@@ -59,6 +59,17 @@ namespace lang
 		virtual std::string getFullName() const = 0;
 		virtual std::string getShortName() const = 0;
 		virtual bool discardable() const = 0;
+		virtual bool isVirtual() const
+		{
+			return false;
+		};
+
+		virtual bytecodeOffset getVirtualOffset() const
+		{
+			return 0;
+		}
+
+		virtual BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const;
 
 		static bool signaturesMatch(Function* a, Function* b)
 		{
@@ -77,10 +88,6 @@ namespace lang
 
 			return a->getArguments() == b->getArguments() && (aReturnType->sameAs(bReturnType));
 		}
-		virtual bool isVirtual() const
-		{
-			return false;
-		};
 
 		std::string getSignatureText();
 	};
