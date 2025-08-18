@@ -28,7 +28,7 @@ ExpressionResult lang::LambdaType::compileValue(Token first, TokenLine& line, Er
 	}
 
 	auto& newFunction = with->scopeFile->functions.emplace_back();
-	newFunction.name = Token(with->scopeFunction->name.string + ".<lambda>");
+	newFunction.name = Token(with->scopeFunction->name.string + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
 	

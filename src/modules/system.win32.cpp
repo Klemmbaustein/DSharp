@@ -62,8 +62,8 @@ static void win32_createWindow(InterpretContext* context)
 	ClassPtr<HWND> parent = context->popValue<RuntimeClass*>();
 	int height = context->popValue<int32_t>();
 	int width = context->popValue<int32_t>();
-	int x = context->popValue<int32_t>();
 	int y = context->popValue<int32_t>();
+	int x = context->popValue<int32_t>();
 	DWORD style = context->popValue<int32_t>();
 	RuntimeStr title = context->popRuntimeString();
 	RuntimeStr className = context->popRuntimeString();
@@ -98,7 +98,9 @@ NativeModule win32::createModule()
 	NativeModule out;
 	out.name = "system::win32";
 
-	auto windowType = out.createClass<HWND>("HWND");
+	auto handleType = out.createClass<HANDLE>("HANDLE");
+	auto windowType = out.createClass<HWND>("HWND", handleType);
+	auto instanceType = out.createClass<HINSTANCE>("HINSTANCE", handleType);
 	auto strType = StringType::getInstance();
 	auto intType = IntType::getInstance();
 
@@ -137,6 +139,10 @@ NativeModule win32::createModule()
 	out.addEnumValue(messageBoxEnum, "iconStop", MB_ICONSTOP);
 	out.addEnumValue(messageBoxEnum, "iconError", MB_ICONERROR);
 	out.addEnumValue(messageBoxEnum, "iconHand", MB_ICONHAND);
+
+	auto windowStyleEnum = out.createEnum("WindowStyle");
+	out.addEnumValue(windowStyleEnum, "overlappedWindow", WS_OVERLAPPEDWINDOW);
+	out.addEnumValue(windowStyleEnum, "overlapped", WS_OVERLAPPED);
 
 	out.addFunction(NativeFunction({}, windowType->nullable, "getConsoleWindow", &win32_getConsoleWindow));
 	out.addFunction(NativeFunction(

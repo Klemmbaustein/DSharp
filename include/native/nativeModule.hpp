@@ -47,12 +47,13 @@ namespace lang
 		std::vector<EnumType*> enums;
 
 		template<typename TNative>
-		ClassType* createClass(std::string name)
+		ClassType* createClass(std::string name, ClassType* derived = nullptr)
 		{
 			auto cls = new ClassType();
 			cls->name = name;
 			cls->classSize = sizeof(TNative);
 			cls->vTableOffset = UINT32_MAX;
+			cls->parents = { derived };
 			this->types.push_back(cls);
 			return cls;
 		}

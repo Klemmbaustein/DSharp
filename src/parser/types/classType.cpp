@@ -129,7 +129,11 @@ ExpressionResult lang::NullableClassType::compileMember(ExpressionResult value, 
 ExpressionResult lang::NullableClassType::compileEqualsTo(ExpressionResult first, ExpressionResult second,
 	Token opToken, ErrorContext* errors, ParsedScope* with)
 {
-	if (!second.type->sameAs(this))
+	if (second.type->sameAs(NullType::getInstance()))
+	{
+		second.type = this;
+	}
+	else if (!second.type->sameAs(this))
 	{
 		return ExpressionResult();
 	}
