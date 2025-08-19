@@ -521,7 +521,7 @@ bool lang::TokenLine::contains(std::string token) const
 
 Token lang::TokenLine::previous()
 {
-	return this->lineTokens ? this->lineTokens->at(this->position - 1) : Token();
+	return this->lineTokens && this->lineTokens->size() ? this->lineTokens->at(this->position - 1) : Token();
 }
 
 size_t lang::TokenLine::savePosition() const

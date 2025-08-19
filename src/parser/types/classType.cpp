@@ -176,7 +176,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	{
 		for (auto& i : this->constructors)
 		{
-			result.code.addBuffer(with->parseFunctionArguments(i->getFullName(), i->getArguments(), argsLine, errors).code);
+			result.code.addBuffer(with->parseFunctionArguments(Token(first), i->getArguments(), argsLine, errors).code);
 
 			result.code.pushInt(this->classSize);
 			result.code.add(std::make_shared<BytecodeAllocClass>(this));
@@ -226,7 +226,7 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = with->parseFunctionArguments(function->getFullName(), functionArgs, argsLine, errors);
+			ExpressionResult callCode = with->parseFunctionArguments(memberName, functionArgs, argsLine, errors);
 			callCode.code.addBuffer(value.code);
 			auto compiled = function->compileCall();
 			if (compiled.type)

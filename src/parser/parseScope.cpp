@@ -287,7 +287,7 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = parseFunctionArguments(function->getFullName(), functionArgs,
+			ExpressionResult callCode = parseFunctionArguments(value, functionArgs,
 				argsLine, errors);
 
 			auto fn = function->compileCall();
@@ -371,7 +371,7 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, st
 	conditionScope.compile(this->context, file, errors);
 }
 
-ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionName, std::vector<FunctionArgument> arguments,
+ExpressionResult lang::ParsedScope::parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
 	TokenLine& currentLine, ErrorContext* errors)
 {
 	ExpressionResult callCode;
@@ -389,7 +389,7 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionN
 		{
 			errors->error(ErrorCode::parseUnexpectedToken, exprToken,
 				"Unexpected argument of type " + expr.type->name + " for function '" +
-					functionName + "'. Only " + std::to_string(arguments.size()) +
+					functionName.string + "'. Only " + std::to_string(arguments.size()) +
 					" argument(s) expected.");
 			break;
 		}
@@ -414,9 +414,10 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(std::string functionN
 
 	if (argIndex < arguments.size())
 	{
-		errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
+		errors->error(ErrorCode::parseUnexpectedToken,
+			currentLine.lineTokens->size() ? currentLine.previous() : functionName,
 			"Wrong number of arguments for function '" +
-				functionName + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
+				functionName.string + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
 				" argument(s) were expected.");
 	}
 
