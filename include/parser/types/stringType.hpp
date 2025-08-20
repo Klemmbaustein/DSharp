@@ -9,7 +9,7 @@ namespace lang
 		StringType()
 		{
 			this->name = "string";
-			this->size = sizeof(size_t);
+			this->size = sizeof(Pointer);
 			this->vTableOffset = UINT32_MAX;
 		}
 

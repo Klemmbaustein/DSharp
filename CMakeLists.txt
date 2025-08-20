@@ -16,6 +16,10 @@ if(POLICY CMP0141)
 endif()
 
 option(BUILD_WINAPI_MODULE "Include Windows API standard module" ON)
+option(HAS_CPP_FORMAT "Has C++23 <format> library. Used for better compiler messages." ON)
+option(MODULE_FS "Include system::fs module." ON)
+option(HAS_POPEN "Has popen or _popen function." ON)
+option(HAS_FS_CURRENT_PATH "Has std::filesystem::current_path()." ON)
 
 file(
 	GLOB_RECURSE
@@ -34,6 +38,22 @@ add_executable(
 
 if(BUILD_WINAPI_MODULE AND WIN32)
 	target_compile_definitions(ProgrammingLanguage PUBLIC WITH_WINAPI=1)
+endif()
+
+if(HAS_CPP_FORMAT)
+	target_compile_definitions(ProgrammingLanguage PUBLIC HAS_CPP_FORMAT=1)
+endif()
+
+if(MODULE_FS)
+	target_compile_definitions(ProgrammingLanguage PUBLIC MODULE_FS=1)
+endif()
+
+if(HAS_POPEN)
+	target_compile_definitions(ProgrammingLanguage PUBLIC HAS_POPEN=1)
+endif()
+
+if(HAS_FS_CURRENT_PATH)
+	target_compile_definitions(ProgrammingLanguage PUBLIC HAS_FS_CURRENT_PATH=1)
 endif()
 
 target_include_directories(ProgrammingLanguage PUBLIC "include")

@@ -2,6 +2,7 @@
 #include <parser/types/classType.hpp>
 #include <native/nativeModule.hpp>
 #include <print>
+#include <stdlib.h>
 using namespace lang;
 
 // ------------- //
@@ -72,7 +73,7 @@ std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& argum
 	else
 		opString = op;
 
-	return std::format("\t{} {}", opString, arguments.toString());
+	return "\t" + opString + " " + arguments.toString();
 }
 
 std::string BytecodeOperation::toString()
@@ -92,7 +93,7 @@ lang::BytecodeCallFunction::BytecodeCallFunction(std::string callName)
 
 std::string BytecodeCallFunction::toString()
 {
-	return std::format("\tCALL {}", this->callName);
+	return "\tCALL " + this->callName;
 }
 
 void lang::BytecodeCallFunction::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
@@ -118,7 +119,7 @@ lang::BytecodeFunctionAddress::BytecodeFunctionAddress(std::string callName, boo
 
 std::string BytecodeFunctionAddress::toString()
 {
-	return std::format("\tPUSH ADDROFF {}", this->callName);
+	return "\tPUSH ADDROFF {}" + this->callName;
 }
 
 void lang::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
@@ -171,7 +172,7 @@ lang::BytecodeCallNative::BytecodeCallNative(std::string functionName)
 
 std::string BytecodeCallNative::toString()
 {
-	return std::format("\tNATIVE_CALL {}", functionName);
+	return "\tNATIVE_CALL " + functionName;
 }
 
 void lang::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
@@ -219,7 +220,7 @@ bytecodeOffset lang::BytecodeJumpLabel::getArgsSize()
 }
 std::string BytecodeJumpLabel::toString()
 {
-	return std::format("{}:", this->name);
+	return this->name + ":";
 }
 
 // ------------- //
@@ -271,18 +272,26 @@ bytecodeOffset lang::BytecodeAllocClass::getArgsSize()
 
 std::string BytecodeAllocClass::toString()
 {
-	return std::format("\tALLOC {}", this->languageClass->name);
+	return "\tALLOC " + this->languageClass->name;
 }
 
 void lang::BytecodeCompiler::printAssembly()
 {
 	for (auto& fn : this->functions)
 	{
+#if HAS_CPP_FORMAT
 		std::println("FUNCTION: {} (offset 0x{:x})", fn.first, fn.second.offset);
+#else
+		std::printf("FUNCTION: %s (offset 0x%lx)", fn.first.c_str(), fn.second.offset);
+#endif
 
 		for (auto& instr : fn.second.instructions)
 		{
+#if HAS_CPP_FORMAT
 			std::println("{} {}", instr->offset, instr->toString());
+#else
+			std::printf("%ul %s", instr->offset, instr->toString().c_str());
+#endif
 		}
 	}
 }
@@ -341,7 +350,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 		stream.debug.sections.push_back(DebugSection{
 			.offset = code->offset,
 			.name = code->name,
-			});
+		});
 
 		for (auto& instr : code->instructions)
 		{
@@ -391,7 +400,7 @@ void lang::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)
 	this->instructions.reserve(this->instructions.size() + other.instructions.size());
 
 #ifdef _WIN32
-	// GCC doesnt have thise function yet, cool
+	// GCC doesn't have this function yet, cool
 	this->instructions.insert_range(instructions.begin(), other.instructions);
 #else
 //	this->instructions.insert(instructions.begin(), other.instructions);

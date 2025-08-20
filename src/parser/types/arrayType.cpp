@@ -8,7 +8,7 @@ using namespace lang;
 lang::ArrayType::ArrayType(Type* baseType)
 {
 	this->name = baseType->name + "[]";
-	this->size = sizeof(size_t);
+	this->size = sizeof(Pointer);
 	this->vTableOffset = UINT32_MAX;
 	this->baseType = baseType;
 
@@ -106,7 +106,7 @@ ExpressionResult lang::ArrayType::makeArrayValue(std::vector<ExpressionResult> v
 	result.code.pushInt(values.size());
 	result.code.pushInt(elementSize);
 
-	
+
 	bool isType = dynamic_cast<ClassType*>(this->baseType) || dynamic_cast<NullableClassType*>(this->baseType);
 
 	BinaryBuffer b;

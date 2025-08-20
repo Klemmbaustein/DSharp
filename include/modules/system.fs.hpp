@@ -1,3 +1,4 @@
+#if MODULE_FS
 #pragma once
 #include <native/nativeModule.hpp>
 
@@ -27,3 +28,4 @@ namespace lang::modules::system
 		RuntimeClass* createPath();
 	} // namespace fs
 } // namespace lang::modules::system
+#endif

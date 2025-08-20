@@ -24,5 +24,5 @@ bytecodeOffset lang::BytecodeCallVirtual::getArgsSize()
 
 std::string lang::BytecodeCallVirtual::toString()
 {
-	return std::format("\tVIRTUAL_CALL {}", this->functionToCall->getFullName());
+	return "\tVIRTUAL_CALL " + this->functionToCall->getFullName();
 }

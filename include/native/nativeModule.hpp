@@ -17,6 +17,14 @@ namespace lang
 			this->function = function;
 			this->returnType = returnType;
 		}
+		NativeFunction(std::vector<FunctionArgument> arguments, Type* returnType,
+			const char* name, ExternalFunctionPointer function)
+		{
+			this->arguments = arguments;
+			this->name = name;
+			this->function = function;
+			this->returnType = returnType;
+		}
 
 		std::vector<FunctionArgument> arguments;
 		std::string name;

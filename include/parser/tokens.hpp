@@ -11,11 +11,32 @@ namespace lang
 	{
 		uint32_t startPos = 0;
 		uint32_t endPos = 0;
-		uint64_t line = 0;
+		uint32_t line = 0;
 	};
 
 	struct Token
 	{
+		Token(std::string str)
+		{
+			this->string = str;
+		}
+
+		Token(const char* str)
+		{
+			this->string = str;
+		}
+
+		Token()
+		{
+
+		}
+
+		Token(std::string str, TokenPos pos)
+		{
+			this->string = str;
+			this->position = pos;
+		}
+
 		std::string string;
 		TokenPos position;
 
@@ -27,6 +48,11 @@ namespace lang
 		bool operator==(const char* str) const
 		{
 			return string == str;
+		}
+
+		bool operator!=(const char* str) const
+		{
+			return string != str;
 		}
 
 		void addChar(char c);

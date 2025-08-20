@@ -320,7 +320,8 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 			}
 		}
 
-		TokenLine valueLine = TokenLine(&member.value);
+		TokenLine valueLine;
+		valueLine.lineTokens = &member.value;
 		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false, member.type);
 		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
 		code->addBuffer(varExpr.code);

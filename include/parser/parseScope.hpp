@@ -79,7 +79,12 @@ namespace lang
 		};
 
 		void parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
-			std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options = ScopeOptions());
+			std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options = ScopeOptions{
+				.targetBuffer = nullptr,
+				.scopeTokens = nullptr,
+				.scopeFunction = nullptr,
+				.isLambda = false,
+			});
 
 		ExpressionResult parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
 			TokenLine& currentLine, ErrorContext* errors);

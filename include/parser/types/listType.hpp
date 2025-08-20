@@ -9,7 +9,7 @@ namespace lang
 		ListType()
 		{
 			this->name = "<initializer list>";
-			this->size = sizeof(size_t);
+			this->size = sizeof(Pointer);
 		}
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,

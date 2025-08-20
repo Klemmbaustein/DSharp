@@ -89,7 +89,7 @@ void lang::Token::checkIsName(ErrorContext* errors) const
 
 	for (auto c : this->string)
 	{
-		if (c != ':' && specialChars.contains(c))
+		if (c != ':' && specialChars.find(c) != specialChars.end())
 		{
 			isValid = false;
 		}
@@ -209,13 +209,13 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 			continue;
 
 
-		if (specialChars.contains(newChar) || (newChar == '.' && !isNumber(currentWord.string, false)))
+		if (specialChars.find(newChar) != specialChars.end() || (newChar == '.' && !isNumber(currentWord.string, false)))
 		{
-			if (std::string("([").contains(newChar))
+			if (newChar == '[' || newChar == '(')
 			{
 				bracketDepth++;
 			}
-			else if (bracketDepth > 0 && std::string("])").contains(newChar))
+			else if (bracketDepth > 0 && (newChar == ']' || newChar == ')'))
 			{
 				bracketDepth--;
 			}
@@ -227,7 +227,7 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 			continue;
 		}
 
-		if (whitespace.contains(newChar))
+		if (whitespace.find(newChar) != whitespace.end())
 		{
 			addToken(currentWord);
 			currentWord = newToken();
@@ -269,7 +269,7 @@ bool lang::TokenStream::tryReadChar(std::istream& stream, char c)
 		if (newChar == EOF)
 			break;
 
-		if (whitespace.contains(newChar) || newChar == '\n')
+		if (whitespace.find(newChar) != whitespace.end() || newChar == '\n')
 		{
 			character++;
 			continue;
@@ -293,7 +293,7 @@ void lang::TokenStream::readWhitespace(std::istream& stream)
 		if (newChar == EOF)
 			break;
 
-		if (whitespace.contains(newChar))
+		if (whitespace.find(newChar) != whitespace.end())
 		{
 			character++;
 			continue;
@@ -490,7 +490,7 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 			}
 		}
 
-		if (next.string.size() && !token.contains(next.string[0]))
+		if (next.string.size() && token.find(next.string[0]) == std::string::npos)
 		{
 			get();
 		}
@@ -549,9 +549,8 @@ TokenLine lang::TokenStream::next(ErrorContext* errors)
 		return TokenLine();
 	}
 	return TokenLine{
-		.lineTokens = &this->lineTokens[currentStreamLine++]
-	}
-		.postProcessTokens(errors);
+		.lineTokens = &this->lineTokens.at(currentStreamLine++)
+	}.postProcessTokens(errors);
 }
 
 TokenLine lang::TokenStream::peek(ErrorContext* errors)
@@ -562,8 +561,7 @@ TokenLine lang::TokenStream::peek(ErrorContext* errors)
 	}
 	return TokenLine{
 		.lineTokens = &this->lineTokens[currentStreamLine]
-	}
-		.postProcessTokens(errors);
+	}.postProcessTokens(errors);
 }
 
 void lang::TokenStream::addLine(TokenLine ln)
@@ -605,10 +603,13 @@ void lang::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_
 
 Token lang::TokenStream::newToken()
 {
-	return Token{
-		.string = "",
-		.position = TokenPos(this->character, this->character, this->line),
-	};
+	TokenPos p;
+
+	p.startPos = this->character;
+	p.endPos = this->character;
+	p.line = this->line;
+
+	return Token("", p);
 }
 
 TokenStream::StreamPosition::StreamPosition(TokenStream* from, std::istream& stream)

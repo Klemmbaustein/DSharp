@@ -7,7 +7,9 @@ std::string lang::BinaryBuffer::toString() const
 
 	for (auto i = this->buffer.rbegin(); i < this->buffer.rend(); i++)
 	{
+#ifdef HAS_CPP_FORMAT
 		out.append(std::format("{:02x}", *i));
+#endif
 	}
 	return out;
 }

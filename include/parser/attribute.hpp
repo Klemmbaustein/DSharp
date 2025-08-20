@@ -31,6 +31,10 @@ namespace lang
 
 		struct AttribInfo
 		{
+			AttribInfo(std::vector<Token> attributeTokens)
+			{
+				this->attributeTokens = attributeTokens;
+			}
 			std::vector<Token> attributeTokens;
 			Attribute* attribute = nullptr;
 		};

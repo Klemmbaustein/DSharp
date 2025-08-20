@@ -2,6 +2,7 @@
 #include <parser/operator.hpp>
 #include <parser/expression.hpp>
 #include <parser/error.hpp>
+#include <languageTypes.hpp>
 
 namespace lang
 {
@@ -76,7 +77,7 @@ namespace lang
 		IntType()
 		{
 			this->name = "int";
-			this->size = sizeof(int32_t);
+			this->size = sizeof(Int);
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -107,7 +108,7 @@ namespace lang
 		CharType()
 		{
 			this->name = "char";
-			this->size = sizeof(uint8_t);
+			this->size = sizeof(Char);
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -136,7 +137,7 @@ namespace lang
 		FloatType()
 		{
 			this->name = "float";
-			this->size = sizeof(float);
+			this->size = sizeof(Float);
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -167,7 +168,7 @@ namespace lang
 		BoolType()
 		{
 			this->name = "bool";
-			this->size = sizeof(bool);
+			this->size = sizeof(Bool);
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,

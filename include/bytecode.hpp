@@ -101,7 +101,7 @@ namespace lang
 		nullCheck,
 
 	};
-	
+
 	struct VTableEntry
 	{
 		bytecodeOffset codeOffset = UINT32_MAX;

@@ -43,6 +43,15 @@ void lang::ParseContext::addFile(std::string filePath)
 	newFile.scan(&errors);
 }
 
+void lang::ParseContext::addString(std::string str, std::string fileName)
+{
+	this->errors.currentFile = fileName;
+	auto& newFile = this->files.emplace_back();
+	newFile.stream.fromString(str, fileName, &errors);
+	newFile.name = fileName;
+	newFile.scan(&errors);
+}
+
 BytecodeStream lang::ParseContext::compile()
 {
 	this->defaultTypes.push_back(IntType::getInstance());
@@ -187,9 +196,7 @@ lang::ParsedFile::~ParsedFile()
 
 bool lang::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors)
 {
-	TokenLine currentLine;
-
-	currentLine = stream.next(errors);
+	TokenLine currentLine = stream.next(errors);
 
 	if (currentLine.empty())
 		return false;
@@ -439,7 +446,8 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 
 	if (!returnTypeTokens.empty())
 	{
-		line = TokenLine(&returnTypeTokens);
+		line = TokenLine();
+		line.lineTokens = &returnTypeTokens;
 
 		this->returnType = functionFile->getType(line, errors);
 		line.expectEndOfLine(errors);
@@ -456,7 +464,8 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 	{
 		i.attributeTokens[0].checkIsName(errors);
 
-		line = TokenLine(&i.attributeTokens);
+		line = TokenLine();
+		line.lineTokens = &i.attributeTokens;
 		i.attribute = this->functionFile->getAttribute(line);
 		if (!i.attribute)
 		{

@@ -1,3 +1,4 @@
+#if MODULE_FS
 #include <modules/system.fs.hpp>
 #include <modules/system.hpp>
 #include <parser/types/stringType.hpp>
@@ -88,6 +89,7 @@ static void fs_path_getName(InterpretContext* context)
 	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
 }
 
+#if HAS_FS_CURRENT_PATH
 static void fs_getCurrentPath(InterpretContext* context)
 {
 	std::string str = current_path().string();
@@ -98,6 +100,7 @@ static void fs_getCurrentPath(InterpretContext* context)
 	newPath->pathString = newString.classPtr;
 	context->pushValue(newPath);
 }
+#endif
 
 lang::NativeModule fs::createModule()
 {
@@ -137,11 +140,13 @@ lang::NativeModule fs::createModule()
 		.name = "pathString",
 		.offset = offsetof(fs::FilePath, pathString),
 		.type = strType,
-		});
+	});
 
+#if HAS_FS_CURRENT_PATH
 	out.addFunction(NativeFunction(
 		{}, pathType,
 		"getCurrentPath", fs_getCurrentPath));
+#endif
 
 	return out;
 }
@@ -150,3 +155,4 @@ RuntimeClass* lang::modules::system::fs::createPath()
 {
 	return RuntimeClass::allocateClass(sizeof(FilePath), &pathVTable);
 }
+#endif

@@ -48,7 +48,7 @@ namespace lang
 	public:
 		ClassType()
 		{
-			this->size = sizeof(size_t);
+			this->size = sizeof(Pointer);
 			this->hasDefaultValue = false;
 
 			nullable = new NullableClassType(this);
@@ -92,7 +92,7 @@ namespace lang
 		NullType()
 		{
 			this->name = "<null>";
-			this->size = sizeof(size_t);
+			this->size = sizeof(Pointer);
 		}
 
 		// Inherited via Type

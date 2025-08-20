@@ -173,8 +173,8 @@ ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, E
 	if (!a.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
-			std::format("The operator '{}' does not accept types '{}' and '{}'",
-				opToken.string, Type::toString(oldType), Type::toString(b.type)));
+			"The operator '" + opToken.string + "' does not accept types '"
+			+ Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
 	}
 	return a;
 }

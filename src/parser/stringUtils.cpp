@@ -30,7 +30,7 @@ bool lang::isNumber(std::string text, bool isFloatingPoint)
 		return false;
 	}
 
-	if (dot_counter > 0 != isFloatingPoint)
+	if ((dot_counter > 0) != isFloatingPoint)
 	{
 		return false;
 	}

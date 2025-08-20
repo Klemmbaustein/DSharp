@@ -13,7 +13,12 @@ lang::BytecodePushVariable::BytecodePushVariable(std::string name, Type* variabl
 
 std::string BytecodePushVariable::toString()
 {
-	return std::format("\tPUSH_VAR {} {} {}", this->variableType->name, this->name, this->variableType->size);
+#if HAS_CPP_FORMAT
+	return std::format("\tPUSH_VAR {} {} {}", this->variableType->name, this->name,
+		this->variableType->size);
+#else
+	return "\tPUSH_VAR";
+#endif
 }
 void BytecodePushVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
@@ -35,7 +40,13 @@ lang::BytecodeReadVariable::BytecodeReadVariable(std::shared_ptr<BytecodePushVar
 
 std::string BytecodeReadVariable::toString()
 {
-	return std::format("\tREAD_VAR {} {} <pos {}>", this->variable->variableType->name, this->variable->name, this->variable->variablePos);
+
+#if HAS_CPP_FORMAT
+	return std::format("\tREAD_VAR {} {} <pos {}>", this->variable->variableType->name,
+		this->variable->name, this->variable->variablePos);
+#else
+	return "\tREAD_VAR";
+#endif
 }
 void BytecodeReadVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
@@ -56,7 +67,12 @@ lang::BytecodeStoreVariable::BytecodeStoreVariable(std::shared_ptr<BytecodePushV
 
 std::string BytecodeStoreVariable::toString()
 {
-	return std::format("\tSTORE_VAR {} {}", this->variable->variableType->name, this->variable->name);
+#if HAS_CPP_FORMAT
+	return std::format("\tSTORE_VAR {} {}", this->variable->variableType->name,
+		this->variable->name);
+#else
+	return "\tSTORE_VAR";
+#endif
 }
 void BytecodeStoreVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
@@ -78,7 +94,11 @@ lang::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit)
 
 std::string BytecodePopVariable::toString()
 {
+#if HAS_CPP_FORMAT
 	return std::format("\tPOP_VAR {}", this->popSize);
+#else
+	return "\tPOP_VAR";
+#endif
 }
 void BytecodePopVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {

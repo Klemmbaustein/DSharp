@@ -39,6 +39,7 @@ static void io_file_destruct(InterpretContext* context)
 	std::fclose(thisPtr->handle);
 }
 
+#if HAS_POPEN
 static void io_procFile_destruct(InterpretContext* context)
 {
 	ClassPtr<io::File> thisPtr = context->popValue<RuntimeClass*>();
@@ -49,12 +50,14 @@ static void io_procFile_destruct(InterpretContext* context)
 #endif
 }
 
-static VTableEntry io_file_vTable = VTableEntry{
-	.nativeFn = &io_file_destruct,
-};
-
 static VTableEntry io_procFile_vTable = VTableEntry{
 	.nativeFn = &io_procFile_destruct,
+};
+
+#endif
+
+static VTableEntry io_file_vTable = VTableEntry{
+	.nativeFn = &io_file_destruct,
 };
 
 static void io_file_construct(InterpretContext* context)
@@ -104,6 +107,7 @@ static void io_file_isEmpty(InterpretContext* context)
 
 	context->pushValue(bool(std::feof(thisPtr->handle)));
 }
+#if HAS_POPEN
 
 static void io_popen(InterpretContext* context)
 {
@@ -124,6 +128,7 @@ static void io_popen(InterpretContext* context)
 
 	context->pushValue(newFile);
 }
+#endif
 
 lang::NativeModule lang::modules::system::io::createModule()
 {
@@ -163,9 +168,11 @@ lang::NativeModule lang::modules::system::io::createModule()
 			{}, BoolType::getInstance(),
 			"isEmpty", &io_file_isEmpty));
 
+#if HAS_POPEN
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(StringType::getInstance(), "command") }, fileClass,
 		"popen", &io_popen));
+#endif
 
 	return out;
 }

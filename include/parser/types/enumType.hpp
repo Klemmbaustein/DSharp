@@ -8,7 +8,7 @@ namespace lang
 	public:
 		EnumType()
 		{
-			this->size = sizeof(size_t);
+			this->size = sizeof(Int);
 			this->hasDefaultValue = false;
 		}
 		std::map<Token, int32_t> values;

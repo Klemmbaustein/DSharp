@@ -10,7 +10,7 @@ namespace lang
 		LambdaType()
 		{
 			this->name = "<lambda>";
-			this->size = sizeof(size_t);
+			this->size = sizeof(Pointer);
 		}
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,

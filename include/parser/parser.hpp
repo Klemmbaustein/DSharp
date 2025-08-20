@@ -26,6 +26,7 @@ namespace lang
 		~ParseContext();
 
 		void addFile(std::string filePath);
+		void addString(std::string str, std::string fileName);
 
 		BytecodeStream compile();
 

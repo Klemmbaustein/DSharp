@@ -4,6 +4,7 @@
 #include <class.hpp>
 #include <print>
 #include <vector>
+#include <cstring>
 
 lang::InterpretContext::InterpretContext(LanguageContext* from)
 {
@@ -30,7 +31,14 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 			if (i->name == second)
 			{
 				this->externals.push_back(i->function);
+				found = true;
+				break;
 			}
+		}
+
+		if (!found)
+		{
+			std::printf("Could not find function: %s\n", i.c_str());
 		}
 	}
 }
@@ -59,96 +67,96 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			pushBytes(argumentBuffer.data(), size_t(argsSize));
 			break;
 		case lang::BytecodeOp::pop: {
-			stackPos -= *(uint32_t*)&argumentBuffer[0];
+			stackPos -= *(Size*)&argumentBuffer[0];
 			break;
 		}
 		case lang::BytecodeOp::copy: {
-			uint32_t size = *(uint32_t*)&argumentBuffer[0];
+			Size size = *(Size*)&argumentBuffer[0];
 			copyBytes(size);
 			break;
 		}
 		case lang::BytecodeOp::jump: {
-			bytecodeBuffer->streamPos = size_t(*(uint32_t*)&argumentBuffer[0]);
+			bytecodeBuffer->streamPos = Pointer(*(Size*)&argumentBuffer[0]);
 			break;
 		}
 		case lang::BytecodeOp::jumpIfNot: {
-			bool cond = popValue<bool>();
+			Bool cond = popValue<Bool>();
 			if (!cond)
 			{
-				bytecodeBuffer->streamPos = size_t(*(uint32_t*)&argumentBuffer[0]);
+				bytecodeBuffer->streamPos = Pointer(*(Size*)&argumentBuffer[0]);
 			}
 			break;
 		}
 
 		case lang::BytecodeOp::addInt:
-			pushValue(popValue<int32_t>() + popValue<int32_t>());
+			pushValue(popValue<Int>() + popValue<Int>());
 			break;
 		case lang::BytecodeOp::subInt: {
-			int32_t first = popValue<int32_t>();
-			pushValue(popValue<int32_t>() - first);
+			Int first = popValue<Int>();
+			pushValue(popValue<Int>() - first);
 			break;
 		}
 		case lang::BytecodeOp::mulInt:
-			pushValue(popValue<int32_t>() * popValue<int32_t>());
+			pushValue(popValue<Int>() * popValue<Int>());
 			break;
 		case lang::BytecodeOp::divInt: {
-			int32_t first = popValue<int32_t>();
-			pushValue(popValue<int32_t>() / first);
+			Int first = popValue<Int>();
+			pushValue(popValue<Int>() / first);
 			break;
 		}
 		case lang::BytecodeOp::greaterInt: {
-			int32_t first = popValue<int32_t>();
-			pushValue(popValue<int32_t>() > first);
+			Int first = popValue<Int>();
+			pushValue(popValue<Int>() > first);
 			break;
 		}
 		case lang::BytecodeOp::equals: {
-			uint32_t size = popValue<uint32_t>();
-			bool same = memcmp(
+			Size size = popValue<Size>();
+			Bool same = memcmp(
 							&this->stack[stackPos - size],
 							&this->stack[stackPos - size * 2], size) == 0;
 			stackPos -= size * 2;
-			pushValue<bool>(same);
+			pushValue<Bool>(same);
 			break;
 		}
 		case lang::BytecodeOp::addFloat:
-			pushValue(popValue<float>() + popValue<float>());
+			pushValue(popValue<Float>() + popValue<Float>());
 			break;
 		case lang::BytecodeOp::subFloat: {
-			float first = popValue<float>();
-			pushValue(popValue<float>() - first);
+			Float first = popValue<Float>();
+			pushValue(popValue<Float>() - first);
 			break;
 		}
 		case lang::BytecodeOp::mulFloat:
-			pushValue(popValue<float>() * popValue<float>());
+			pushValue(popValue<Float>() * popValue<Float>());
 			break;
 		case lang::BytecodeOp::divFloat: {
-			float first = popValue<float>();
-			pushValue(popValue<float>() / first);
+			Float first = popValue<Float>();
+			pushValue(popValue<Float>() / first);
 			break;
 		}
 		case lang::BytecodeOp::greaterFloat: {
-			float first = popValue<float>();
-			pushValue(popValue<float>() > first);
+			Float first = popValue<Float>();
+			pushValue(popValue<Float>() > first);
 			break;
 		}
 		case lang::BytecodeOp::intToFloat:
-			pushValue(float(popValue<int32_t>()));
+			pushValue(Float(popValue<Int>()));
 			break;
 		case lang::BytecodeOp::floatToInt:
-			pushValue(int32_t(popValue<float>()));
+			pushValue(int32_t(popValue<Float>()));
 			break;
 		case lang::BytecodeOp::boolNot:
-			pushValue(!popValue<bool>());
+			pushValue(!popValue<Bool>());
 			break;
 		case lang::BytecodeOp::boolAnd: {
-			bool first = popValue<bool>();
-			bool second = popValue<bool>();
+			Bool first = popValue<Bool>();
+			Bool second = popValue<Bool>();
 			pushValue(first && second);
 			break;
 		}
 		case lang::BytecodeOp::boolOr: {
-			bool first = popValue<bool>();
-			bool second = popValue<bool>();
+			Bool first = popValue<Bool>();
+			Bool second = popValue<Bool>();
 			pushValue(first || second);
 			break;
 		}
@@ -157,12 +165,12 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			bytecodeBuffer->streamPos = size_t(*(bytecodeOffset*)&argumentBuffer[0]);
 			break;
 		case lang::BytecodeOp::callExternal:
-			externals[*(uint32_t*)&argumentBuffer[0]](this);
+			externals[*(Size*)&argumentBuffer[0]](this);
 			break;
 		case lang::BytecodeOp::ret:
 			if (callStackPos == 0)
 			{
-				std::print("program returned: '{}'\n", popValue<int32_t>());
+				std::printf("program returned: '%lu'\n", popValue<int32_t>());
 				return;
 			}
 			else if (callStackPos == baseCallStackPos)
@@ -172,51 +180,51 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			bytecodeBuffer->streamPos = callStack[--callStackPos];
 			break;
 		case lang::BytecodeOp::pushVariable: {
-			uint32_t size = *(uint32_t*)&argumentBuffer[0];
+			Size size = *(Size*)&argumentBuffer[0];
 			variableStackPos += size;
 			break;
 		}
 		case lang::BytecodeOp::storeVariable: {
-			uint32_t size = *(uint32_t*)&argumentBuffer[0];
-			uint32_t offset = *(uint32_t*)&argumentBuffer[sizeof(size)];
+			Size size = *(Size*)&argumentBuffer[0];
+			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
 			popBytes(&variableStack[variableStackPos - offset], size);
 			break;
 		}
 		case lang::BytecodeOp::readVariable: {
-			uint32_t size = *(uint32_t*)&argumentBuffer[0];
-			uint32_t offset = *(uint32_t*)&argumentBuffer[sizeof(size)];
+			Size size = *(Size*)&argumentBuffer[0];
+			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
 			pushBytes(&variableStack[variableStackPos - offset], size);
 			break;
 		}
 		case lang::BytecodeOp::popVariable: {
-			uint32_t size = *(uint32_t*)&argumentBuffer[0];
+			Size size = *(Size*)&argumentBuffer[0];
 			variableStackPos -= size;
 			break;
 		}
 		case lang::BytecodeOp::allocClass: {
-			uint32_t size = popValue<uint32_t>();
-			uint32_t typeId = *(uint32_t*)&argumentBuffer[0];
+			Size size = popValue<Size>();
+			Size typeId = *(Size*)&argumentBuffer[0];
 			bytecodeOffset vTableOffset = *(bytecodeOffset*)&argumentBuffer[sizeof(typeId)];
 			pushValue(RuntimeClass::allocateClass(size, vTableOffset != UINT32_MAX ? vTable->data() + vTableOffset : nullptr));
 			break;
 		}
 		case lang::BytecodeOp::classMember: {
-			uint32_t size = popValue<uint32_t>();
-			uint32_t offset = popValue<uint32_t>();
+			Size size = popValue<Size>();
+			Size offset = popValue<Size>();
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
 			pushBytes(ptr->getBody() + offset, size);
 			break;
 		}
 		case lang::BytecodeOp::setClassMember: {
-			uint32_t size = popValue<uint32_t>();
-			uint32_t offset = popValue<uint32_t>();
+			Size size = popValue<Size>();
+			Size offset = popValue<Size>();
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
 			popBytes(ptr->getBody() + offset, size);
 			break;
 		}
 		case lang::BytecodeOp::setClassMemberPushAgain: {
-			uint32_t size = popValue<uint32_t>();
-			uint32_t offset = popValue<uint32_t>();
+			Size size = popValue<Size>();
+			Size offset = popValue<Size>();
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
 			popBytes(ptr->getBody() + offset, size);
 			pushValue(ptr);
@@ -256,43 +264,43 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			auto second = popRuntimeStringRef();
 			auto first = popRuntimeStringRef();
 
-			uint32_t newSize = first.length() + second.length();
+			Size newSize = first.length() + second.length();
 			// Space for null terminator
-			uint32_t contentSize = newSize + 1;
+			Size contentSize = newSize + 1;
 
 			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
 
-			(*(uint32_t*)newClass->getBody()) = newSize;
+			(*(Size*)newClass->getBody()) = newSize;
 			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
 			memcpy(strBegin, first.ptr(), first.length());
 			memcpy(strBegin + first.length(), second.ptr(), second.length());
 			strBegin[first.length() + second.length()] = 0;
-			pushValue<size_t>(size_t(newClass));
+			pushValue<Pointer>(Pointer(newClass));
 
 			break;
 		}
 		case lang::BytecodeOp::indexString: {
 			auto index = popValue<int32_t>();
 			auto first = popRuntimeString();
-			pushValue<char>(char(first.ptr()[index]));
+			pushValue<Char>(Char(first.ptr()[index]));
 			break;
 		}
 		case lang::BytecodeOp::setStringIndexCopy: {
 			auto index = popValue<int32_t>();
 			auto str = popRuntimeString();
-			char newChar = popValue<char>();
+			Char newChar = popValue<Char>();
 
 			// Space for null terminator
-			uint32_t strLength = str.length();
-			uint32_t contentSize = str.length() + 1;
+			Size strLength = str.length();
+			Size contentSize = str.length() + 1;
 
-			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
+			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(Size), 0);
 
-			(*(uint32_t*)newClass->getBody()) = strLength;
-			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
+			(*(Size*)newClass->getBody()) = strLength;
+			char* strBegin = (char*)(newClass->getBody() + sizeof(Size));
 			memcpy(strBegin, str.ptr(), strLength);
 			strBegin[index] = newChar;
-			pushValue<size_t>(size_t(newClass));
+			pushValue<Pointer>(Pointer(newClass));
 			break;
 		}
 		case lang::BytecodeOp::virtualCall: {
@@ -313,7 +321,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			break;
 		}
 		case lang::BytecodeOp::nullCheck: {
-			size_t ptr = popValue<size_t>();
+			Pointer ptr = popValue<Pointer>();
 			if (!ptr)
 			{
 				runtimePanic(RuntimeStr("Attempted to use null reference"));
@@ -334,8 +342,8 @@ std::string lang::InterpretContext::popString()
 {
 	RuntimeClass* ptr = popValue<RuntimeClass*>();
 
-	std::string out = { (const char*)(ptr->getBody() + sizeof(uint32_t)),
-		*(uint32_t*)ptr->getBody() };
+	std::string out = { (const char*)(ptr->getBody() + sizeof(Size)),
+		*(Size*)ptr->getBody() };
 	RuntimeClass::unref(ptr);
 	return out;
 }
@@ -385,17 +393,17 @@ void lang::InterpretContext::virtualCall(VTableEntry target)
 void lang::InterpretContext::runtimePanic(RuntimeStr message) const
 {
 	auto stack = getStackTrace();
-	std::println("{}", std::string(message.ptr(), message.length()));
+	std::printf("%s\n", message.ptr());
 
 	for (DebugSection* i : stack)
 	{
 		if (i)
 		{
-			std::println("\t{}()", i->name);
+			std::printf("\t%s()\n", i->name.c_str());
 		}
 		else
 		{
-			std::println("\t<unknown stack frame>");
+			std::printf("\t<unknown stack frame>\n");
 		}
 	}
 	abort();

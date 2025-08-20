@@ -198,6 +198,16 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 	// Include the null terminator as well
 	size_t strLength = str.size();
 	size_t dataSize = strLength + 1;
+
+#if LANG_ALIGN_TYPES_32BIT
+	size_t misAlign = dataSize % 4;
+
+	if (misAlign)
+	{
+		dataSize += 4 - misAlign;
+	}
+#endif
+
 	size_t sizeOffset = sizeof(uint32_t);
 	size_t fullSize = dataSize + sizeOffset;
 

@@ -19,6 +19,12 @@ namespace lang
 			this->name = Token(name);
 		}
 
+		FunctionArgument(Type* type, const char* name)
+		{
+			this->type = type;
+			this->name = Token(name);
+		}
+
 		FunctionArgument() = default;
 
 		Type* type = nullptr;
@@ -42,6 +48,7 @@ namespace lang
 		 * Compiles a call for the function, assuming that all arguments are already on the stack.
 		 */
 		virtual ExpressionResult compileCall() = 0;
+		virtual ~Function() = default;
 
 		/**
 		 * @brief
@@ -81,7 +88,7 @@ namespace lang
 				return a->getArguments() == b->getArguments();
 			}
 
-			if (aReturnType && !bReturnType || !aReturnType && bReturnType)
+			if ((aReturnType && !bReturnType) || !(aReturnType && bReturnType))
 			{
 				return false;
 			}
