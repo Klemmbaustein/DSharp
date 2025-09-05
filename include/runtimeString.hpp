@@ -1,5 +1,6 @@
 #pragma once
 #include "class.hpp"
+#include "languageTypes.hpp"
 #include <cstring>
 
 namespace lang
@@ -12,15 +13,15 @@ namespace lang
 		}
 		RuntimeStr(const char* stringPtr, size_t stringLength)
 		{
-			uint32_t contentSize = stringLength + 1;
+			Size contentSize = Size(stringLength + 1);
 
-			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
+			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(Size), 0);
 
-			(*(uint32_t*)this->classPtr->getBody()) = stringLength;
-			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(uint32_t));
+			(*(Size*)this->classPtr->getBody()) = Size(stringLength);
+			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(Size));
 			memcpy(strBegin, stringPtr, stringLength);
 		}
-		
+
 		explicit RuntimeStr(const char* stringPtr)
 			: RuntimeStr(stringPtr, std::strlen(stringPtr))
 		{
@@ -31,12 +32,12 @@ namespace lang
 
 		const char* ptr()
 		{
-			return (const char*)(classPtr->getBody() + sizeof(uint32_t));
+			return (const char*)(classPtr->getBody() + sizeof(Size));
 		}
 
-		uint32_t length() const
+		Size length() const
 		{
-			return *(uint32_t*)classPtr->getBody();
+			return *(Size*)classPtr->getBody();
 		}
 
 		RuntimeStr(const RuntimeStr& other)
@@ -59,12 +60,12 @@ namespace lang
 		}
 		RuntimeStrRef(const char* stringPtr, size_t stringLength)
 		{
-			uint32_t contentSize = stringLength + 1;
+			Size contentSize = Size(stringLength + 1);
 
-			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
+			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(Size), 0);
 
-			(*(uint32_t*)this->classPtr->getBody()) = stringLength;
-			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(uint32_t));
+			(*(Size*)this->classPtr->getBody()) = Size(stringLength);
+			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(Size));
 			memcpy(strBegin, stringPtr, stringLength);
 		}
 
@@ -76,9 +77,9 @@ namespace lang
 			return (const char*)(classPtr->getBody() + sizeof(uint32_t));
 		}
 
-		uint32_t length() const
+		Size length() const
 		{
-			return *(uint32_t*)classPtr->getBody();
+			return *(Size*)classPtr->getBody();
 		}
 
 		RuntimeStrRef(const RuntimeStrRef& other)

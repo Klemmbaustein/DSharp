@@ -31,6 +31,9 @@ namespace lang
 		ExternalFunctionPointer function = nullptr;
 		Type* returnType = nullptr;
 		std::string moduleName;
+		std::string className;
+		ClassType* virtualType = nullptr;
+		bytecodeOffset virtualId = 0;
 
 		ExpressionResult compileCall() override;
 		std::vector<FunctionArgument> getArguments() override;
@@ -38,6 +41,16 @@ namespace lang
 		std::string getShortName() const override;
 		std::string getFullName() const override;
 		bool discardable() const override;
+
+		bool isVirtual() const override
+		{
+			return virtualId != 0;
+		}
+
+		virtual bytecodeOffset getVirtualOffset() const
+		{
+			return virtualId;
+		}
 
 		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
 	};
@@ -78,6 +91,7 @@ namespace lang
 
 		void addClassConstructor(ClassType* type, NativeFunction constructor);
 		void addClassMethod(ClassType* type, NativeFunction function);
+		void addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId);
 
 		Module create() const;
 	};

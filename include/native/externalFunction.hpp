@@ -2,6 +2,6 @@
 
 namespace lang
 {
-	struct InterpretContext;
+	class InterpretContext;
 	using ExternalFunctionPointer = void (*)(InterpretContext* context);
 }

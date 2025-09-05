@@ -58,6 +58,25 @@ namespace lang::modules
 		};
 
 		/**
+		 * @ingroup stdlib
+		 *
+		 * @brief
+		 * Reflect member.
+		 *
+		 * Marks a class member as reflected, making it visible to the reflection system.
+		 *
+		 * @see Attribute
+		 */
+		class ReflectAttribute : public Attribute
+		{
+		public:
+			ReflectAttribute()
+			{
+				this->name = "Reflect";
+			}
+		};
+
+		/**
 		 * @brief
 		 * Creates the system module.
 		 *
@@ -76,7 +95,7 @@ namespace lang::modules
 		RuntimeClass* createArrayObject();
 
 		template<typename T>
-		RuntimeClass* createArray(T* items, size_t length, bool isType)
+		RuntimeClass* createArray(T* items, Size length, bool isType)
 		{
 			size_t sizeInBytes = length * sizeof(T);
 			void* buffer = malloc(sizeInBytes);

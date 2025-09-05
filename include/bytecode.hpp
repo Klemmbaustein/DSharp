@@ -2,11 +2,10 @@
 #include <cstdint>
 #include "binaryBuffer.hpp"
 #include "debug.hpp"
+#include "reflection.hpp"
 
 namespace lang
 {
-	using bytecodeOffset = uint32_t;
-
 	class InterpretContext;
 
 	/**
@@ -102,17 +101,6 @@ namespace lang
 
 	};
 
-	struct VTableEntry
-	{
-		bytecodeOffset codeOffset = UINT32_MAX;
-		void (*nativeFn)(InterpretContext*) = nullptr;
-
-		operator bool()
-		{
-			return codeOffset != UINT32_MAX || bool(nativeFn);
-		}
-	};
-
 	/**
 	 * @brief
 	 * Contains executable bytecode.
@@ -124,6 +112,7 @@ namespace lang
 		BinaryBuffer code;
 
 		DebugInfo debug;
+		ReflectInfo reflect;
 
 		std::vector<std::string> externalFunctions;
 		std::vector<VTableEntry> virtualTable;

@@ -2,11 +2,14 @@
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
-#include <bytecode.hpp>
+#include <languageTypes.hpp>
 
 namespace lang
 {
 	class InterpretContext;
+
+	using TypeId = Size;
+
 	struct RuntimeClass
 	{
 		VTableEntry* vtable;
@@ -63,7 +66,7 @@ namespace lang
 		}
 	};
 
-	template<typename T>
+	template <typename T>
 	struct ClassPtr
 	{
 		ClassPtr(RuntimeClass* classPtr)
@@ -122,6 +125,11 @@ namespace lang
 			return reinterpret_cast<T*>(this->classPtr->getBody());
 		}
 
+		T& getValue() const
+		{
+			return *reinterpret_cast<T*>(this->classPtr->getBody());
+		}
+
 		T* operator->()
 		{
 			return get();
@@ -143,5 +151,6 @@ namespace lang
 
 		~ClassRef() = default;
 	};
+
 
 } // namespace lang

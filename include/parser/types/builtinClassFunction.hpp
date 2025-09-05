@@ -34,7 +34,7 @@ namespace lang
 			ExpressionResult result;
 			if (isVirtual())
 			{
-				result.code.addNew<BytecodeCallVirtual>(this, thisClass);
+				result.code.addNew<BytecodeCallVirtual>(this);
 			}
 			else
 			{

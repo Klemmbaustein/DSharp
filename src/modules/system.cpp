@@ -73,14 +73,7 @@ static void array_delete(InterpretContext* context)
 			for (uint32_t i = 0; i < array->length; i++)
 			{
 				RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
-
-				auto ptr = RuntimeClass::unref(elem[i]);
-
-				if (ptr)
-				{
-					context->pushValue(elem[i]);
-					context->virtualCall(ptr);
-				}
+				context->destruct(elem[i]);
 			}
 		}
 		free(array->data);
@@ -129,7 +122,7 @@ static void array_pop(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
 	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
-	
+
 	if (array->length == 0)
 	{
 		return;
@@ -138,9 +131,8 @@ static void array_pop(InterpretContext* context)
 	array->length--;
 
 	RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
-	context->pushValue(elem[array->length]);
-	context->virtualCall(RuntimeClass::unref(elem[array->length]));
 
+	context->destruct(elem[array->length]);
 
 	void* newData = realloc(array->data, array->length * elementSize);
 
@@ -295,6 +287,7 @@ lang::NativeModule lang::modules::system::createModule()
 
 	out.attributes.push_back(new EntryPointAttribute());
 	out.attributes.push_back(new DiscardAttribute());
+	out.attributes.push_back(new ReflectAttribute());
 
 	return out;
 }

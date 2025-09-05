@@ -333,7 +333,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 
 	for (auto& i : virtualTable)
 	{
-		if (i)
+		if (i && functions.contains(i->getFullName()))
 		{
 			stream.virtualTable.push_back(VTableEntry{
 				.codeOffset = functions[i->getFullName()].offset });

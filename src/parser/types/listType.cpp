@@ -36,6 +36,11 @@ ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
 			errors->error(ErrorCode::parseInvalidType, inListLine.previous(), "Expected a type");
 		}
 
+		if (!nextValue.valid)
+		{
+			break;
+		}
+
 		if (itemType == nullptr)
 		{
 			itemType = nextValue.type;
@@ -64,14 +69,14 @@ ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
 		}
 	}
 
-	if (arrayElements.empty())
+	if (arrayElements.empty() || !itemType)
 	{
-
 		ExpressionResult result;
 		result.valid = true;
 		result.type = this;
 		return result;
 	}
+
 	ArrayType* arrayType = ArrayType::getInstance(itemType);
 
 	return arrayType->makeArrayValue(arrayElements, with);

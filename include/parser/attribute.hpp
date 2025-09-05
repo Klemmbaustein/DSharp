@@ -4,6 +4,8 @@
 
 namespace lang
 {
+	struct ParsedFile;
+
 	/**
 	* @brief
 	* A language attribute
@@ -39,6 +41,8 @@ namespace lang
 			Attribute* attribute = nullptr;
 		};
 		void addAttributes(const std::vector<AttribInfo>& newAttributes);
+
+		void resolveAttributes(ParsedFile* file, ErrorContext* errors);
 
 		template<typename T>
 		Attribute* getAttribute() const

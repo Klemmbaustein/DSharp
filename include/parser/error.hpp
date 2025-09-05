@@ -1,5 +1,6 @@
 #pragma once
 #include "tokens.hpp"
+#include <functional>
 
 namespace lang
 {
@@ -45,7 +46,16 @@ namespace lang
 
 	struct ErrorContext
 	{
+		void reset()
+		{
+			hasError = false;
+		}
 		void error(ErrorCode code, const Token& at, std::string description);
+
+		std::function<void(ErrorCode code, std::string file,
+			const Token& at, std::string description)> errorCallback;
+
+		std::function<void(std::string)> writeError;
 
 		std::string currentFile;
 

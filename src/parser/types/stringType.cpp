@@ -109,6 +109,9 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 
 	std::vector<ExpressionResult> formatArguments;
 
+	uint32_t it = 2;
+	uint32_t formatArgStart = 0;
+
 	for (char c : content)
 	{
 		if (c == '{')
@@ -120,6 +123,8 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 			}
 			resultString.push_back(c);
 			inExpr = true;
+			it++;
+			formatArgStart = it;
 			continue;
 		}
 		if (c == '}')
@@ -134,7 +139,7 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 
 			TokenStream expressionStream;
 			expressionStream.line = first.position.line;
-			expressionStream.character = first.position.startPos + 1;
+			expressionStream.character = first.position.startPos + formatArgStart;
 			expressionStream.fromString(currentExprCode, with->scopeFile->name, errors);
 			auto nextLine = expressionStream.next(errors);
 
@@ -160,6 +165,7 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 			formatArguments.push_back(formatArg);
 			currentExprCode.clear();
 
+			it++;
 			continue;
 		}
 
@@ -171,6 +177,7 @@ ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& l
 		{
 			resultString.push_back(c);
 		}
+		it++;
 	}
 
 	ExpressionResult result = compileStringValue(resultString, with);
@@ -196,11 +203,11 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 	ExpressionResult result;
 
 	// Include the null terminator as well
-	size_t strLength = str.size();
-	size_t dataSize = strLength + 1;
+	Size strLength = Size(str.size());
+	Size dataSize = strLength + 1;
 
 #if LANG_ALIGN_TYPES_32BIT
-	size_t misAlign = dataSize % 4;
+	Size misAlign = dataSize % 4;
 
 	if (misAlign)
 	{
@@ -208,17 +215,17 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 	}
 #endif
 
-	size_t sizeOffset = sizeof(uint32_t);
-	size_t fullSize = dataSize + sizeOffset;
+	Size sizeOffset = sizeof(uint32_t);
+	Size fullSize = dataSize + sizeOffset;
 
-	size_t chunkPos = 0;
-	size_t remainingSize = dataSize;
+	Size chunkPos = 0;
+	Size remainingSize = dataSize;
 
 	// Push can only push 255 bytes at once, because instruction arguments can
 	// at most be 255 bytes long.
 	do
 	{
-		size_t chunkSize = std::min(remainingSize, size_t(UINT8_MAX));
+		Size chunkSize = std::min(remainingSize, Size(UINT8_MAX));
 
 		remainingSize -= chunkSize;
 

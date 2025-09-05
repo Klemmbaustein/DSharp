@@ -222,6 +222,8 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 			addToken(currentWord);
 			auto charToken = newToken();
 			charToken.addChar(newChar);
+			charToken.position.startPos--;
+			charToken.position.endPos--;
 			currentLine->push_back(charToken);
 			currentWord = newToken();
 			continue;
@@ -497,6 +499,10 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 		else if ((depth == 0 && scopeDepth == 0) || next.empty())
 		{
 			break;
+		}
+		else
+		{
+			get();
 		}
 
 		result.push_back(next);

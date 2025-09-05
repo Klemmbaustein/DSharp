@@ -1,6 +1,9 @@
 #include <parser/module.hpp>
+#include <parser/parseScope.hpp>
 #include <parser/types/functionType.hpp>
 #include <parser/types/arrayType.hpp>
+#include <service/languageService.hpp>
+#include <parser/parser.hpp>
 using namespace lang;
 
 Function* lang::Module::getMethod(std::string name)
@@ -22,31 +25,38 @@ Function* lang::Module::getMethod(std::string name)
 	return nullptr;
 }
 
-Type* lang::Module::getType(std::string name, TokenLine& from, ErrorContext* errors,
-	ParsedFile* file)
+Type* lang::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
+	ParsedFile* file, ParseContext* context)
 {
 	Type* found = nullptr;
 	if (name == "fn")
 	{
-		found = FunctionType::compileType(Token(name), from, errors, file);
+		found = FunctionType::compileType(name, from, errors, file);
 	}
 	else
 	{
-		auto foundType = this->moduleTypes.find(name);
+		auto foundType = this->moduleTypes.find(name.string);
 
 		if (foundType == this->moduleTypes.end())
 		{
-			Module* foundModule = checkForSubmodule(name);
+			Module* foundModule = checkForSubmodule(name.string);
 
 			if (foundModule)
 			{
-				return foundModule->getType(name, from, errors, file);
+				return foundModule->getType(name, from, errors, file, context);
 			}
 			return nullptr;
 		}
+
+#ifdef WITH_LANGUAGE_SERVICE
+		if (context->service)
+		{
+			context->service->files[file->name].types.push_back(name);
+		}
+#endif
+
 		found = foundType->second;
 	}
-
 
 	if (from.peek() == "?")
 	{
@@ -69,19 +79,26 @@ Type* lang::Module::getType(std::string name, TokenLine& from, ErrorContext* err
 	return found;
 }
 
-Attribute* lang::Module::getAttribute(std::string name, TokenLine& from)
+Attribute* lang::Module::getAttribute(Token name, TokenLine& from, ParsedFile* file, ParseContext* context)
 {
-	auto foundFunction = this->moduleAttributes.find(name);
+	auto foundAttribute = this->moduleAttributes.find(name.string);
 
-	if (foundFunction != this->moduleAttributes.end())
+	if (foundAttribute != this->moduleAttributes.end())
 	{
-		return foundFunction->second;
+
+#ifdef WITH_LANGUAGE_SERVICE
+		if (context->service)
+		{
+			context->service->files[file->name].types.push_back(name);
+		}
+#endif
+		return foundAttribute->second;
 	}
-	Module* foundModule = checkForSubmodule(name);
+	Module* foundModule = checkForSubmodule(name.string);
 
 	if (foundModule)
 	{
-		return foundModule->getAttribute(name, from);
+		return foundModule->getAttribute(name, from, file, context);
 	}
 
 	return nullptr;

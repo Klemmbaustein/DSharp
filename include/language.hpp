@@ -1,6 +1,7 @@
 #pragma once
 #include "native/nativeModule.hpp"
 #include "parser/parser.hpp"
+#include "service/languageService.hpp"
 #include "interpreter.hpp"
 
 /**
@@ -33,6 +34,8 @@ namespace lang
 		* @see InterpretContext
 		*/
 		ParseContext* createCompiler();
+
+		LanguageService* startService();
 
 		/**
 		* @brief

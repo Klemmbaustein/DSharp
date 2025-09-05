@@ -19,6 +19,7 @@ namespace lang
 {
 	struct LanguageContext;
 	struct ScopeVariable;
+	class LanguageService;
 
 	struct ParseContext
 	{
@@ -26,7 +27,8 @@ namespace lang
 		~ParseContext();
 
 		void addFile(std::string filePath);
-		void addString(std::string str, std::string fileName);
+		void addString(const std::string& str, std::string fileName);
+		void updateFile(const std::string& str, std::string fileName);
 
 		BytecodeStream compile();
 
@@ -44,6 +46,9 @@ namespace lang
 		ErrorContext errors;
 		BytecodeCompiler compiler;
 		std::vector<Function*> virtualTable;
+#ifdef WITH_LANGUAGE_SERVICE
+		LanguageService* service = nullptr;
+#endif
 
 	private:
 		void scanModules();
@@ -112,6 +117,7 @@ namespace lang
 		std::list<ParsedEnum> enums;
 		std::map<Token, Module*> usings;
 		Module* fileModule = nullptr;
+		ParseContext* context = nullptr;
 
 		std::string name;
 		std::string scopeName;

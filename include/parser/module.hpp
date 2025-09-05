@@ -8,6 +8,7 @@
 namespace lang
 {
 	struct ParsedFile;
+	struct ParseContext;
 
 	struct Module
 	{
@@ -21,8 +22,8 @@ namespace lang
 		std::map<std::string, Module*> submodules;
 
 		Function* getMethod(std::string name);
-		Type* getType(std::string name, TokenLine& from, ErrorContext* errors, ParsedFile* file);
-		Attribute* getAttribute(std::string name, TokenLine& from);
+		Type* getType(Token name, TokenLine& from, ErrorContext* errors, ParsedFile* file, ParseContext* context);
+		Attribute* getAttribute(Token name, TokenLine& from, ParsedFile* file, ParseContext* context);
 		std::pair<EnumType*, std::string> getEnum(std::string name, TokenLine& from);
 
 		Module* checkForSubmodule(std::string& name);
