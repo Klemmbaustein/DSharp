@@ -290,7 +290,7 @@ void lang::BytecodeCompiler::printAssembly()
 #if HAS_CPP_FORMAT
 			std::println("{} {}", instr->offset, instr->toString());
 #else
-			std::printf("%ul %s", instr->offset, instr->toString().c_str());
+			std::printf("%lu %s", instr->offset, instr->toString().c_str());
 #endif
 		}
 	}
@@ -333,7 +333,7 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 
 	for (auto& i : virtualTable)
 	{
-		if (i && functions.contains(i->getFullName()))
+		if (i && functions.find(i->getFullName()) != functions.end())
 		{
 			stream.virtualTable.push_back(VTableEntry{
 				.codeOffset = functions[i->getFullName()].offset });
