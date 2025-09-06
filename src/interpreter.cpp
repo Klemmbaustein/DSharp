@@ -106,7 +106,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 		}
 		case lang::BytecodeOp::greaterInt: {
 			Int first = popValue<Int>();
-			pushValue(popValue<Int>() > first);
+			pushValue<Bool>(popValue<Int>() > first);
 			break;
 		}
 		case lang::BytecodeOp::equals: {
@@ -136,7 +136,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 		}
 		case lang::BytecodeOp::greaterFloat: {
 			Float first = popValue<Float>();
-			pushValue(popValue<Float>() > first);
+			pushValue<Bool>(popValue<Float>() > first);
 			break;
 		}
 		case lang::BytecodeOp::intToFloat:
@@ -146,18 +146,18 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			pushValue(int32_t(popValue<Float>()));
 			break;
 		case lang::BytecodeOp::boolNot:
-			pushValue(!popValue<Bool>());
+			pushValue<Bool>(!bool(popValue<Bool>()));
 			break;
 		case lang::BytecodeOp::boolAnd: {
 			Bool first = popValue<Bool>();
 			Bool second = popValue<Bool>();
-			pushValue(first && second);
+			pushValue<Bool>(bool(first && second));
 			break;
 		}
 		case lang::BytecodeOp::boolOr: {
 			Bool first = popValue<Bool>();
 			Bool second = popValue<Bool>();
-			pushValue(first || second);
+			pushValue<Bool>(bool(first || second));
 			break;
 		}
 		case lang::BytecodeOp::call:

@@ -1,5 +1,7 @@
 #include <modules/system.io.hpp>
 #include <parser/types/stringType.hpp>
+#include <cstring>
+#include <cstdio>
 
 using namespace lang::modules::system;
 using namespace lang;
@@ -105,7 +107,7 @@ static void io_file_isEmpty(InterpretContext* context)
 {
 	ClassRef<io::File> thisPtr = context->popValue<RuntimeClass*>();
 
-	context->pushValue(bool(std::feof(thisPtr->handle)));
+	context->pushValue<Bool>(std::feof(thisPtr->handle));
 }
 #if HAS_POPEN
 

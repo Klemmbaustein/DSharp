@@ -89,7 +89,7 @@ static void array_delete(InterpretContext* context)
 
 static void array_new(InterpretContext* context)
 {
-	bool isType = context->popValue<bool>();
+	Bool isType = context->popValue<Bool>();
 	uint32_t elementSize = context->popValue<uint32_t>();
 	uint32_t length = context->popValue<uint32_t>();
 
@@ -129,7 +129,7 @@ static void array_pop(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
 	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
-	
+
 	if (array->length == 0)
 	{
 		return;

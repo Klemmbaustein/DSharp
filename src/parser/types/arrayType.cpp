@@ -107,7 +107,7 @@ ExpressionResult lang::ArrayType::makeArrayValue(std::vector<ExpressionResult> v
 	result.code.pushInt(elementSize);
 
 
-	bool isType = dynamic_cast<ClassType*>(this->baseType) || dynamic_cast<NullableClassType*>(this->baseType);
+	Bool isType = dynamic_cast<ClassType*>(this->baseType) || dynamic_cast<NullableClassType*>(this->baseType);
 
 	BinaryBuffer b;
 	b.addValue(isType);

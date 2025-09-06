@@ -462,10 +462,10 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 
 	for (auto& i : this->attributes)
 	{
-		i.attributeTokens[0].checkIsName(errors);
-
 		line = TokenLine();
 		line.lineTokens = &i.attributeTokens;
+
+		i.attributeTokens[0].checkIsName(errors);
 		i.attribute = this->functionFile->getAttribute(line);
 		if (!i.attribute)
 		{

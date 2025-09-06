@@ -439,7 +439,7 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 	buffer.add(instruction);
 
 	// clang-format off
-	auto& result = this->variables.insert(
+	this->variables.insert(
 	{Token(tempName), ScopeVariable{
 		.name = tempName,
 		.variableInstruction = instruction,
@@ -667,6 +667,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 		auto condition = pushExpression(conditionTokens, errors, false, nullptr);
 		conditionTokens.expectEndOfLine(errors);
+		condition.compileToType(first, BoolType::getInstance(), this, errors);
 
 		auto beginLabel = std::make_shared<BytecodeJumpLabel>("while_begin");
 		this->code->add(beginLabel);

@@ -1,3 +1,4 @@
+#ifndef NO_MAIN
 #include <language.hpp>
 #include <modules/standardLibrary.hpp>
 #include <cassert>
@@ -23,3 +24,4 @@ int main()
 	std::println("classes leaked: {}", RuntimeClass::classRefCount);
 	assert(RuntimeClass::classRefCount == 0);
 }
+#endif

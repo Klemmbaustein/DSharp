@@ -338,7 +338,7 @@ ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line,
 
 	ExpressionResult result;
 	BinaryBuffer valueBuffer;
-	valueBuffer.addValue<bool>(value);
+	valueBuffer.addValue<Bool>(value);
 	result.code.addOperation(BytecodeOp::push, valueBuffer);
 	result.valid = true;
 	result.type = this;
