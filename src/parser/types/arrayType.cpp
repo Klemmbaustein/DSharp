@@ -103,7 +103,7 @@ ExpressionResult lang::ArrayType::makeArrayValue(std::vector<ExpressionResult> v
 		result.code.addBuffer(i.type->compileMove(with));
 	}
 
-	result.code.pushInt(values.size());
+	result.code.pushInt(Size(values.size()));
 	result.code.pushInt(elementSize);
 
 

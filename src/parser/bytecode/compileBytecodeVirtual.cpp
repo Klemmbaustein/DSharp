@@ -5,10 +5,9 @@
 
 using namespace lang;
 
-lang::BytecodeCallVirtual::BytecodeCallVirtual(Function* fn, ClassType* languageClass)
+lang::BytecodeCallVirtual::BytecodeCallVirtual(Function* fn)
 {
 	this->functionToCall = fn;
-	this->languageClass = languageClass;
 	this->operation = BytecodeOp::virtualCall;
 }
 

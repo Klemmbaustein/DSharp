@@ -78,7 +78,15 @@ FunctionType* lang::FunctionType::compileType(Token first, TokenLine& line, Erro
 
 	while (!argsLine.empty())
 	{
-		types.push_back(file->getType(argsLine, errors));
+		auto found = file->getType(argsLine, errors);
+
+		if (!found)
+		{
+			errors->error(ErrorCode::parseInvalidType, argsLine.get(), "Expected a type.");
+			break;
+		}
+
+		types.push_back(found);
 	}
 
 	argsLine.expectEndOfLine(errors);

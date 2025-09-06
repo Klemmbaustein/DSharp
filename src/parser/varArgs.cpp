@@ -1,4 +1,5 @@
 #include <parser/varArgs.hpp>
+#include <languageTypes.hpp>
 
 using namespace lang;
 
@@ -11,7 +12,7 @@ BytecodeBuffer lang::varArgs::writeVarArgs(std::vector<ExpressionResult> args)
 		result.addBuffer(i->code);
 	}
 
-	result.pushInt(args.size());
+	result.pushInt(Size(args.size()));
 
 	return result;
 }

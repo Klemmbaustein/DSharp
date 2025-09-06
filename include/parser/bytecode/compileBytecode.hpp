@@ -18,7 +18,7 @@ namespace lang
 	public:
 		size_t baseSize = 3;
 		BytecodeOp operation = BytecodeOp::push;
-		size_t offset = 0;
+		bytecodeOffset offset = 0;
 		virtual void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) = 0;
 		virtual bytecodeOffset getArgsSize() = 0;
 		virtual std::string toString() { return ""; }

@@ -7,6 +7,7 @@
 #include <parser/types/lambdaType.hpp>
 #include <modules/system.hpp>
 #include <language.hpp>
+#include <service/languageService.hpp>
 using namespace lang;
 
 lang::ParseContext::ParseContext(LanguageContext* context)
@@ -40,20 +41,39 @@ void lang::ParseContext::addFile(std::string filePath)
 	auto& newFile = this->files.emplace_back();
 	newFile.stream.fromFile(filePath, &errors);
 	newFile.name = filePath;
+	newFile.context = this;
 	newFile.scan(&errors);
 }
 
-void lang::ParseContext::addString(std::string str, std::string fileName)
+void lang::ParseContext::addString(const std::string& str, std::string fileName)
 {
 	this->errors.currentFile = fileName;
 	auto& newFile = this->files.emplace_back();
 	newFile.stream.fromString(str, fileName, &errors);
 	newFile.name = fileName;
+	newFile.context = this;
 	newFile.scan(&errors);
+}
+
+void lang::ParseContext::updateFile(const std::string& str, std::string fileName)
+{
+	for (auto& i : this->files)
+	{
+		if (i.name == fileName)
+		{
+			i.stream = TokenStream();
+			i.stream.fromString(str, fileName, &errors);
+			i.context = this;
+			i.scan(&errors);
+			break;
+		}
+	}
 }
 
 BytecodeStream lang::ParseContext::compile()
 {
+	virtualTable.clear();
+	this->defaultTypes.clear();
 	this->defaultTypes.push_back(IntType::getInstance());
 	this->defaultTypes.push_back(FloatType::getInstance());
 	this->defaultTypes.push_back(BoolType::getInstance());
@@ -63,6 +83,13 @@ BytecodeStream lang::ParseContext::compile()
 	this->defaultTypes.push_back(NullType::getInstance());
 	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}));
 	this->defaultTypes.push_back(LambdaType::getInstance());
+
+#ifdef WITH_LANGUAGE_SERVICE
+	if (this->service)
+	{
+		this->service->files.clear();
+	}
+#endif
 
 	scanModules();
 
@@ -84,7 +111,38 @@ BytecodeStream lang::ParseContext::compile()
 
 	BytecodeStream out;
 	this->compiler.compileTo(out, virtualTable, &errors);
-	//this->compiler.printAssembly();
+
+	for (auto& i : this->files)
+	{
+		for (auto& cls : i.classes)
+		{
+			std::vector<TypeMember> members;
+
+			for (auto& m : cls.members)
+			{
+				auto reflectAttribute = m.second.getAttribute<modules::system::ReflectAttribute>();
+
+				if (reflectAttribute)
+				{
+					members.push_back(TypeMember{
+						.type = 0,
+						.name = m.second.name.string,
+						.offset = m.second.offset,
+						});
+				}
+			}
+
+			out.reflect.types[0] = TypeInfo{
+				.name = cls.classModule->name + "::" + cls.name.string,
+				.vTableOffset = cls.thisType->vTableOffset,
+				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,
+				.bodySize = cls.thisType->classSize,
+				.members = members,
+			};
+		}
+	}
+
+	// this->compiler.printAssembly();
 	if (!errors.isOk())
 	{
 		return BytecodeStream();
@@ -99,6 +157,11 @@ void lang::ParseContext::scanModules()
 	{
 		this->errors.currentFile = file.name;
 		Module& mod = this->programModules[file.scopeName];
+		mod.submodules.clear();
+		mod.moduleAttributes.clear();
+		mod.moduleEnums.clear();
+		mod.moduleFunctions.clear();
+		mod.moduleTypes.clear();
 		mod.name = file.scopeName;
 		file.fileModule = &mod;
 
@@ -187,6 +250,12 @@ void lang::ParsedFile::loadAvailableTypes(ParseContext* context)
 
 void lang::ParsedFile::scan(ErrorContext* errors)
 {
+	this->scopeName = "";
+	this->usings.clear();
+	this->enums.clear();
+	this->attributes.clear();
+	this->functions.clear();
+	this->classes.clear();
 	std::vector<AttribInfo> currentAttributes;
 	while (scanLine(currentAttributes, errors)) {}
 }
@@ -331,14 +400,29 @@ ParsedEnum& lang::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* erro
 
 void lang::ParsedFile::compile(ParseContext* context)
 {
-	for (auto& fn : this->functions)
+#ifdef WITH_LANGUAGE_SERVICE
+	ScannedFile* scanInfo = nullptr;
+
+	if (context->service)
 	{
-		fn.compile(context, this, &context->errors);
+		scanInfo = &context->service->files[this->name];
 	}
+#endif
 
 	for (auto& c : this->classes)
 	{
 		c.compile(context, &context->errors, this);
+	}
+
+	for (auto& fn : this->functions)
+	{
+#ifdef WITH_LANGUAGE_SERVICE
+		if (scanInfo)
+		{
+			scanInfo->functions.push_back(fn.name);
+		}
+#endif
+		fn.compile(context, this, &context->errors);
 	}
 }
 
@@ -435,6 +519,12 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 			}
 
 			this->arguments.push_back(newArgument);
+#ifdef WITH_LANGUAGE_SERVICE
+			if (context->service)
+			{
+				context->service->files[functionFile->name].variables.push_back(newArgument.name);
+			}
+#endif
 
 			if (line.empty())
 				break;
@@ -460,19 +550,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 		}
 	}
 
-	for (auto& i : this->attributes)
-	{
-		line = TokenLine();
-		line.lineTokens = &i.attributeTokens;
-
-		i.attributeTokens[0].checkIsName(errors);
-		i.attribute = this->functionFile->getAttribute(line);
-		if (!i.attribute)
-		{
-			errors->error(ErrorCode::parseUnknownSymbol, line.lineTokens->at(0),
-				"Unknown attribute '" + line.lineTokens->at(0).string + "'");
-		}
-	}
+	resolveAttributes(functionFile, errors);
 }
 
 ExpressionResult lang::ParsedFunction::compileCall()
@@ -480,7 +558,7 @@ ExpressionResult lang::ParsedFunction::compileCall()
 	ExpressionResult result;
 	if (this->functionIsVirtual)
 	{
-		result.code.addNew<BytecodeCallVirtual>(this, this->inClass->thisType);
+		result.code.addNew<BytecodeCallVirtual>(this);
 	}
 	else
 	{
@@ -530,6 +608,8 @@ Function* ParsedFile::getMethod(std::string name)
 
 	for (auto& i : this->usings)
 	{
+		if (!i.second)
+			continue;
 		found = i.second->getMethod(name);
 		if (found)
 			return found;
@@ -542,13 +622,15 @@ Type* ParsedFile::getType(TokenLine& from, ErrorContext* errors)
 	auto initialPos = from.savePosition();
 	auto name = from.get();
 	auto pos = from.savePosition();
-	Type* found = this->fileModule->getType(name.string, from, errors, this);
+	Type* found = this->fileModule->getType(name, from, errors, this, this->context);
 	if (found)
 		return found;
 	for (auto& i : this->usings)
 	{
+		if (!i.second)
+			continue;
 		from.loadPosition(pos);
-		found = i.second->getType(name.string, from, errors, this);
+		found = i.second->getType(name, from, errors, this, this->context);
 		if (found)
 			return found;
 	}
@@ -561,13 +643,15 @@ Attribute* ParsedFile::getAttribute(TokenLine& from)
 	auto initialPos = from.savePosition();
 	auto name = from.get();
 	auto pos = from.savePosition();
-	Attribute* found = this->fileModule->getAttribute(name.string, from);
+	Attribute* found = this->fileModule->getAttribute(name, from, this, this->context);
 	if (found)
 		return found;
 	for (auto& i : this->usings)
 	{
+		if (!i.second)
+			continue;
 		from.loadPosition(pos);
-		found = i.second->getAttribute(name.string, from);
+		found = i.second->getAttribute(name, from, this, this->context);
 		if (found)
 			return found;
 	}
@@ -585,6 +669,8 @@ std::pair<EnumType*, std::string> lang::ParsedFile::getEnum(TokenLine& from)
 		return found;
 	for (auto& i : this->usings)
 	{
+		if (!i.second)
+			continue;
 		from.loadPosition(pos);
 		found = i.second->getEnum(name.string, from);
 		if (found.first)

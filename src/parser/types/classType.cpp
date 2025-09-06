@@ -1,5 +1,6 @@
 #include <parser/types/classType.hpp>
 #include <parser/function.hpp>
+#include <service/languageService.hpp>
 #include <parser/parseScope.hpp>
 
 using namespace lang;
@@ -165,7 +166,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 
 	if (this->constructors.empty())
 	{
-		result.code.pushInt(this->classSize);
+		result.code.pushInt(Size(this->classSize));
 		result.code.add(std::make_shared<BytecodeAllocClass>(this));
 		if (baseConstructor)
 		{
@@ -178,7 +179,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 		{
 			result.code.addBuffer(with->parseFunctionArguments(Token(first), i->getArguments(), argsLine, errors).code);
 
-			result.code.pushInt(this->classSize);
+			result.code.pushInt(Size(this->classSize));
 			result.code.add(std::make_shared<BytecodeAllocClass>(this));
 			result.code.addBuffer(i->compileCall().code);
 			break;
@@ -234,6 +235,13 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 				compiled.code.addBuffer(compiled.type->compileEndMove(with));
 			}
 
+#ifdef WITH_LANGUAGE_SERVICE
+			if (with->context->service)
+			{
+				with->context->service->files[with->scopeFile->name].functions.push_back(memberName);
+			}
+#endif
+
 			callCode.type = compiled.type;
 			callCode.code.addBuffer(compiled.code);
 			callCode.valid = true;
@@ -250,6 +258,14 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 		{
 			continue;
 		}
+
+#ifdef WITH_LANGUAGE_SERVICE
+		if (with->context->service)
+		{
+			with->context->service->files[with->scopeFile->name].variables.push_back(memberName);
+		}
+#endif
+
 		ExpressionResult result;
 		result.valid = true;
 		result.type = i.type;

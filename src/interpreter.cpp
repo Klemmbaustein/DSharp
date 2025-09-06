@@ -26,11 +26,11 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 		std::string second = i.substr(lastColon + 1);
 
 		bool found = false;
-		for (auto& i : this->language->languageModules[first]->functions)
+		for (auto& fn : this->language->languageModules[first]->functions)
 		{
-			if (i->name == second)
+			if (fn->getFullName() == i)
 			{
-				this->externals.push_back(i->function);
+				this->externals.push_back(fn->function);
 				found = true;
 				break;
 			}
@@ -64,7 +64,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 		switch (op)
 		{
 		case lang::BytecodeOp::push:
-			pushBytes(argumentBuffer.data(), size_t(argsSize));
+			pushBytes(argumentBuffer.data(), Size(argsSize));
 			break;
 		case lang::BytecodeOp::pop: {
 			stackPos -= *(Size*)&argumentBuffer[0];
@@ -168,12 +168,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			externals[*(Size*)&argumentBuffer[0]](this);
 			break;
 		case lang::BytecodeOp::ret:
-			if (callStackPos == 0)
-			{
-				std::printf("program returned: '%lu'\n", popValue<int32_t>());
-				return;
-			}
-			else if (callStackPos == baseCallStackPos)
+			if (callStackPos == baseCallStackPos)
 			{
 				return;
 			}
@@ -289,6 +284,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			auto index = popValue<int32_t>();
 			auto str = popRuntimeString();
 			Char newChar = popValue<Char>();
+			str.classPtr->addRef();
 
 			// Space for null terminator
 			Size strLength = str.length();
@@ -300,6 +296,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			char* strBegin = (char*)(newClass->getBody() + sizeof(Size));
 			memcpy(strBegin, str.ptr(), strLength);
 			strBegin[index] = newChar;
+			std::puts(strBegin);
 			pushValue<Pointer>(Pointer(newClass));
 			break;
 		}
@@ -338,6 +335,17 @@ void lang::InterpretContext::run(bytecodeOffset position)
 	}
 }
 
+void lang::InterpretContext::destruct(RuntimeClass* classObject)
+{
+	auto ptr = RuntimeClass::unref(classObject);
+
+	if (ptr)
+	{
+		pushValue(classObject);
+		virtualCall(ptr);
+	}
+}
+
 std::string lang::InterpretContext::popString()
 {
 	RuntimeClass* ptr = popValue<RuntimeClass*>();
@@ -362,7 +370,7 @@ lang::RuntimeStr lang::InterpretContext::popRuntimeString()
 std::vector<lang::DebugSection*> lang::InterpretContext::getStackTrace() const
 {
 	std::vector<DebugSection*> result;
-	result.push_back(this->debug->getSectionAt(bytecodeBuffer->streamPos));
+	result.push_back(this->debug->getSectionAt(uint32_t(bytecodeBuffer->streamPos)));
 	for (int i = callStackPos - 1; i >= 0; i--)
 	{
 		result.push_back(this->debug->getSectionAt(callStack[i]));

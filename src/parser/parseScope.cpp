@@ -4,6 +4,7 @@
 #include <list>
 #include <parser/types/arrayType.hpp>
 #include <parser/types/lambdaType.hpp>
+#include <service/languageService.hpp>
 using namespace lang;
 
 ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
@@ -106,6 +107,11 @@ ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, E
 			currentLine.get();
 			auto index = pushExpression(currentLine, errors, false, hintType);
 
+			if (!index.valid)
+			{
+				break;
+			}
+
 			Type* oldType = result.type;
 
 			result = result.type->compileIndex(result, index, errors, setExpression, this);
@@ -114,6 +120,7 @@ ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, E
 			{
 				errors->error(ErrorCode::parseInvalidType, nextToken,
 					"Cannot use operator [] with the type " + Type::toString(oldType));
+				break;
 			}
 
 			if (currentLine.get() != "]")
@@ -173,8 +180,7 @@ ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, E
 	if (!a.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
-			"The operator '" + opToken.string + "' does not accept types '"
-			+ Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
+			"The operator '" + opToken.string + "' does not accept types '" + Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
 	}
 	return a;
 }
@@ -270,6 +276,14 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 
 			result.setCode->addBuffer(foundVariable->second.writeValue());
 		}
+
+#ifdef WITH_LANGUAGE_SERVICE
+		if (context->service)
+		{
+			context->service->files[this->scopeFile->name].variables.push_back(value);
+		}
+#endif
+
 		return result;
 	}
 
@@ -289,6 +303,13 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 
 			ExpressionResult callCode = parseFunctionArguments(value, functionArgs,
 				argsLine, errors);
+
+#ifdef WITH_LANGUAGE_SERVICE
+			if (context->service)
+			{
+				context->service->files[this->scopeFile->name].functions.push_back(value);
+			}
+#endif
 
 			auto fn = function->compileCall();
 
@@ -346,6 +367,7 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, st
 	conditionScope.code = options.targetBuffer ? options.targetBuffer : this->code;
 	conditionScope.tempCounter = this->tempCounter;
 	conditionScope.breakTarget = breakTarget;
+	conditionScope.inClass = inClass;
 	conditionScope.continueTarget = continueTarget;
 	conditionScope.breakContinueDepth = breakContinueDepth;
 	conditionScope.depth = this->depth + 1;
@@ -387,11 +409,14 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(Token functionName, s
 
 		if (arguments.size() <= argIndex)
 		{
-			errors->error(ErrorCode::parseUnexpectedToken, exprToken,
-				"Unexpected argument of type " + expr.type->name + " for function '" +
-					functionName.string + "'. Only " + std::to_string(arguments.size()) +
-					" argument(s) expected.");
-			break;
+			if (expr.valid)
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, exprToken,
+					"Unexpected argument of type " + Type::toString(expr.type) + " for function '" +
+						functionName.string + "'. Only " + std::to_string(arguments.size()) +
+						" argument(s) expected.");
+			}
+			return ExpressionResult();
 		}
 
 		auto& currentArg = arguments[argIndex++];
@@ -608,6 +633,13 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	{
 		if (scopeFunction->returnType)
 		{
+			if (line.empty())
+			{
+				errors->error(ErrorCode::parseUnknownExpressionType, first,
+					"Return statement doesn't return a value, but it must return '" + Type::toString(scopeFunction->returnType) + "'");
+				return;
+			}
+
 			auto expr = pushExpression(line, errors, false, scopeFunction->returnType);
 
 			if (!expr.valid)
@@ -711,6 +743,11 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 
 			if (isVar || isConst)
 			{
+				if (!expr.type)
+				{
+					errors->error(ErrorCode::parseInvalidType, variableName,
+						"Value of variable declaration does not have a type.");
+				}
 				type = expr.type;
 			}
 			else
@@ -724,19 +761,30 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		{
 			errors->error(ErrorCode::parseVarMustHaveInitializer, equals,
 				"Expected a '=', got: '" + equals.string + "'");
+			return;
 		}
 		else if (isVar || isConst)
 		{
 			errors->error(ErrorCode::parseVarMustHaveInitializer, variableName,
 				"A variable declared with 'var' or 'const' must have an initializer.");
+			return;
 		}
 		else
 		{
 			code->addBuffer(type->defaultValue().code);
 		}
-		pushVariableValue(type, true);
+		if (type)
+		{
+#ifdef WITH_LANGUAGE_SERVICE
+			if (context->service)
+			{
+				context->service->files[this->scopeFile->name].variables.push_back(variableName);
+			}
+#endif
+			pushVariableValue(type, true);
 
-		addVariable(variableName, type).readOnly = isConst;
+			addVariable(variableName, type).readOnly = isConst;
+		}
 		line.expectEndOfLine(errors);
 		return;
 	}

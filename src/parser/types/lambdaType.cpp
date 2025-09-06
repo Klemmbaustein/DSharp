@@ -31,7 +31,7 @@ ExpressionResult lang::LambdaType::compileValue(Token first, TokenLine& line, Er
 	newFunction.name = Token(with->scopeFunction->name.string + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
-	
+
 	with->parseSubScope(with->scopeFile, errors, nullptr, nullptr, with->depth,
 		ParsedScope::ScopeOptions{
 			.targetBuffer = &newFunction.functionCode,
@@ -46,13 +46,10 @@ ExpressionResult lang::LambdaType::compileValue(Token first, TokenLine& line, Er
 
 	std::vector<ScopeVariable*> variables;
 
-	size_t totalSize = 0;
+	Size totalSize = 0;
 
 	for (auto& i : newFunction.capturedVariables)
 	{
-		BinaryBuffer args;
-		args.addValue(i);
-		
 		auto& var = with->variables[i];
 		variables.push_back(&var);
 		totalSize += var.type->size;

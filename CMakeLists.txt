@@ -16,6 +16,7 @@ if(POLICY CMP0141)
 endif()
 
 option(BUILD_WINAPI_MODULE "Include Windows API standard module" ON)
+option(WITH_LANGUAGE_SERVICE "Include LanguageService class and related functionality." ON)
 option(HAS_CPP_FORMAT "Has C++23 <format> library. Used for better compiler messages." ON)
 option(MODULE_FS "Include system::fs module." ON)
 option(HAS_POPEN "Has popen or _popen function." ON)
@@ -32,12 +33,16 @@ file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/include/**.hpp"
 )
 
-add_executable(
+add_library(
 	ProgrammingLanguage
 	${SRCS} ${HEADERS})
 
 if(BUILD_WINAPI_MODULE AND WIN32)
 	target_compile_definitions(ProgrammingLanguage PUBLIC WITH_WINAPI=1)
+endif()
+
+if(WITH_LANGUAGE_SERVICE)
+	target_compile_definitions(ProgrammingLanguage PUBLIC WITH_LANGUAGE_SERVICE=1)
 endif()
 
 if(HAS_CPP_FORMAT)

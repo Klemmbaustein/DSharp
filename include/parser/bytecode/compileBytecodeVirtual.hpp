@@ -7,14 +7,13 @@ namespace lang
 	class BytecodeCallVirtual : public BytecodeInstruction
 	{
 	public:
-		BytecodeCallVirtual(Function* fn, ClassType* languageClass);
+		BytecodeCallVirtual(Function* fn);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		Function* functionToCall = nullptr;
-		ClassType* languageClass = nullptr;
 	};
 
 }

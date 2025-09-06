@@ -1,11 +1,19 @@
 #include <native/nativeModule.hpp>
 #include <parser/bytecode/compileBytecode.hpp>
+#include <parser/bytecode/compileBytecodeVirtual.hpp>
 using namespace lang;
 
 ExpressionResult NativeFunction::compileCall()
 {
 	ExpressionResult result;
-	result.code.addNew<BytecodeCallNative>(this);
+	if (isVirtual())
+	{
+		result.code.addNew<BytecodeCallVirtual>(this);
+	}
+	else
+	{
+		result.code.addNew<BytecodeCallNative>(this);
+	}
 	result.type = this->returnType;
 	result.valid = true;
 	return result;
@@ -28,7 +36,11 @@ std::string lang::NativeFunction::getShortName() const
 
 std::string NativeFunction::getFullName() const
 {
-	return this->moduleName + "::" + this->name;
+	if (this->className.empty())
+	{
+		return this->moduleName + "::" + this->name;
+	}
+	return this->moduleName + "::" + this->className + "." + this->name;
 }
 bool lang::NativeFunction::discardable() const
 {
@@ -71,7 +83,16 @@ void lang::NativeModule::addClassMethod(ClassType* type, NativeFunction function
 	auto fn = addFunction(function);
 	type->methods.insert({ fn->name,
 		fn });
-	fn->name = type->name + "." + fn->name;
+	fn->className = type->name;
+}
+
+void lang::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId)
+{
+	auto fn = addFunction(function);
+	type->methods.insert({ fn->name,
+		fn });
+	fn->className = type->name;
+	fn->virtualId = virtualId;
 }
 
 Module lang::NativeModule::create() const
@@ -82,10 +103,14 @@ Module lang::NativeModule::create() const
 	for (auto& i : this->functions)
 	{
 		i->moduleName = this->name;
-		outModule.moduleFunctions.insert({ i->name, i });
+		if (i->className.empty())
+		{
+			outModule.moduleFunctions.insert({ i->name, i });
+		}
 	}
 	for (auto& i : this->attributes)
 	{
+		i->moduleName = this->name;
 		outModule.moduleAttributes.insert({ i->name, i });
 	}
 	for (auto& i : this->types)

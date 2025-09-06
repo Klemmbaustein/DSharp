@@ -13,7 +13,7 @@ namespace lang
 	struct ParsedFunction;
 	struct ParsedClass;
 
-	struct ParsedClassMember
+	struct ParsedClassMember : public Attributable
 	{
 		Type* type;
 		Token name;
@@ -66,6 +66,8 @@ namespace lang
 		ClassType* thisType = nullptr;
 		Module* classModule = nullptr;
 
+		Function* getDefaultConstructor();
+
 		bool scanned = false;
 
 		void registerType(ParseContext* context, ParsedFile* file);
@@ -74,7 +76,7 @@ namespace lang
 		void compile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 
 		void scan(ErrorContext* errors, ParsedFile* file);
-		bool scanLine(ErrorContext* errors, ParsedFile* file);
+		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file);
 
 		void compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 	};
