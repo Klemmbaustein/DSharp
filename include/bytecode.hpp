@@ -98,7 +98,8 @@ namespace lang
 		virtualCall,
 		/// Verifies that the current pointer on the stack is not null.
 		nullCheck,
-
+		getStructMember,
+		setStructMember,
 	};
 
 	/**

@@ -201,8 +201,11 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	{
 		currentLine.get();
 		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
-		ExpressionResult r;
-		return result.type->compileOperator(Operator::logicalNot, result, r, this);
+		if (result.valid && result.type)
+		{
+			ExpressionResult r;
+			return result.type->compileOperator(Operator::logicalNot, result, r, this);
+		}
 	}
 
 	auto initialPosition = currentLine.savePosition();
@@ -221,9 +224,25 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	if (enumValue)
 	{
 		ExpressionResult result;
-		result.code.pushInt(enumValue->values.at(Token(enumEntry)));
-		result.type = IntType::getInstance();
-		result.valid = true;
+
+		auto found = enumValue->values.find(Token(enumEntry));
+
+		if (found != enumValue->values.end())
+		{
+			result.code.pushInt(found->second);
+#ifdef WITH_LANGUAGE_SERVICE
+			if (context->service)
+			{
+				context->service->files[this->scopeFile->name].variables.push_back(value);
+			}
+#endif
+			result.type = IntType::getInstance();
+			result.valid = true;
+		}
+		else
+		{
+			result.valid = false;
+		}
 		return result;
 	}
 
@@ -307,7 +326,8 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 #ifdef WITH_LANGUAGE_SERVICE
 			if (context->service)
 			{
-				context->service->files[this->scopeFile->name].functions.push_back(value);
+				context->service->files[this->scopeFile->name]
+					.functions.push_back(ScannedFunction(function, value));
 			}
 #endif
 
@@ -422,7 +442,7 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(Token functionName, s
 		auto& currentArg = arguments[argIndex++];
 		expr.compileToType(exprToken, currentArg.type, this, errors);
 
-		if (!expr.type)
+		if (!expr.type || !expr.valid)
 		{
 			return ExpressionResult();
 		}

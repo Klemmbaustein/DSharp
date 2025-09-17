@@ -36,6 +36,12 @@ namespace lang
 		}
 	};
 
+	struct FunctionDefinition
+	{
+		ParsedFile* file = nullptr;
+		Token at;
+	};
+
 	/**
 	 * @brief
 	 * A function that can be called in the language.
@@ -74,6 +80,11 @@ namespace lang
 		virtual bytecodeOffset getVirtualOffset() const
 		{
 			return 0;
+		}
+
+		virtual std::optional<FunctionDefinition> getDefinition()
+		{
+			return {};
 		}
 
 		virtual BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const;

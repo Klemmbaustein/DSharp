@@ -60,7 +60,6 @@ std::string lang::NullableClassType::getName()
 {
 	return from->getName() + "?";
 }
-
 bool lang::ClassType::isSubclassOf(ClassType* parent)
 {
 	for (ClassType* i : parents)
@@ -76,7 +75,6 @@ bool lang::ClassType::isSubclassOf(ClassType* parent)
 	}
 	return false;
 }
-
 ExpressionResult lang::NullableClassType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
@@ -238,7 +236,8 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 #ifdef WITH_LANGUAGE_SERVICE
 			if (with->context->service)
 			{
-				with->context->service->files[with->scopeFile->name].functions.push_back(memberName);
+				with->context->service->files[with->scopeFile->name]
+					.functions.push_back(ScannedFunction(function, memberName));
 			}
 #endif
 

@@ -16,7 +16,11 @@ void lang::InterpretContext::loadBytecode(BytecodeStream* code)
 	this->bytecodeBuffer = &code->code;
 	this->vTable = &code->virtualTable;
 	this->debug = &code->debug;
+	this->callStackPos = 0;
+	this->stackPos = 0;
+	this->variableStackPos = 0;
 
+	this->externals.clear();
 	this->externals.reserve(code->externalFunctions.size());
 	for (auto& i : code->externalFunctions)
 	{
@@ -322,10 +326,27 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			if (!ptr)
 			{
 				runtimePanic(RuntimeStr("Attempted to use null reference"));
-
-				abort();
 			}
 			pushValue(ptr);
+			break;
+		}
+		case lang::BytecodeOp::getStructMember: {
+			Size size = *(Size*)&argumentBuffer[0];
+			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
+			Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
+			auto targetPos = stackPos - offset - size;
+			stackPos -= structSize;
+			pushBytes(&stack[targetPos], size);
+			break;
+		}
+		case lang::BytecodeOp::setStructMember: {
+			Size size = *(Size*)&argumentBuffer[0];
+			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
+			Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
+			auto targetPos = stackPos - structSize + offset;
+			memcpy(&stack[targetPos], &this->stack[stackPos - structSize - size], size);
+			memmove(&stack[stackPos - structSize - size], &this->stack[stackPos - structSize], structSize);
+			stackPos -= size;
 			break;
 		}
 		default:

@@ -75,6 +75,7 @@ namespace lang
 
 		bool functionIsVirtual = false;
 		bool isOverride = false;
+		bool foundOverride = false;
 		bool isLambda = false;
 		bytecodeOffset vTableOffset = 0;
 
@@ -100,6 +101,13 @@ namespace lang
 		}
 
 		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
+		std::optional<FunctionDefinition> getDefinition() override
+		{
+			return FunctionDefinition{
+				.file = functionFile,
+				.at = name
+			};
+		}
 
 		virtual bytecodeOffset getVirtualOffset() const
 		{

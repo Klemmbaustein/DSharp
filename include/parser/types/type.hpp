@@ -8,6 +8,7 @@ namespace lang
 {
 	class Function;
 	struct ParsedScope;
+	struct ParsedFile;
 
 	class Type
 	{

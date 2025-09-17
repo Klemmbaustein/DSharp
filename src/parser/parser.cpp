@@ -142,7 +142,11 @@ BytecodeStream lang::ParseContext::compile()
 		}
 	}
 
-	// this->compiler.printAssembly();
+	//if (!this->service)
+	//{
+	//	this->compiler.printAssembly();
+	//}
+
 	if (!errors.isOk())
 	{
 		return BytecodeStream();
@@ -419,7 +423,7 @@ void lang::ParsedFile::compile(ParseContext* context)
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scanInfo)
 		{
-			scanInfo->functions.push_back(fn.name);
+			scanInfo->functions.push_back(ScannedFunction(&fn, fn.name));
 		}
 #endif
 		fn.compile(context, this, &context->errors);

@@ -318,7 +318,8 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 #ifdef WITH_LANGUAGE_SERVICE
 		if (context->service)
 		{
-			context->service->files[file->name].functions.push_back(i->name);
+			context->service->files[file->name]
+				.functions.push_back(ScannedFunction(i, i->name));
 		}
 #endif
 
@@ -448,7 +449,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 				}
 				if (!Function::signaturesMatch(i, m.second))
 				{
-					errors->error(ErrorCode::parseInvalidType, i->name,
+					errors->error(ErrorCode::parseInvalidOverride, i->name,
 						"Function signatures of " + i->getFullName() + " and " +
 							m.second->getFullName() + " do not match.\nExpected signature: " +
 							m.second->getSignatureText() + "\nGot:                " + i->getSignatureText());
@@ -456,6 +457,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 				context->virtualTable.push_back(i);
 				i->vTableOffset = it++;
+				i->foundOverride = true;
 				it++;
 				found = true;
 				break;
@@ -471,6 +473,11 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	for (auto& i : this->methods)
 	{
+		if (!i->foundOverride)
+		{
+			errors->error(ErrorCode::parseInvalidOverride, i->name,
+				"Could not find any function that " + i->name.string + " can override.");
+		}
 		if (i->functionIsVirtual && !i->isOverride)
 		{
 			i->vTableOffset = it++;
