@@ -180,7 +180,8 @@ ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, E
 	if (!a.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
-			"The operator '" + opToken.string + "' does not accept types '" + Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
+			"The operator '" + opToken.string + "' does not accept types '"
+			+ Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
 	}
 	return a;
 }
@@ -189,13 +190,22 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression, Type* hintType)
 {
 	Token value = currentLine.peek();
-
+	// TODO: Clean up with proper unary operator support.
 	if (value == "*")
 	{
 		currentLine.get();
 		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
-		ExpressionResult r;
-		return result.type->compileOperator(Operator::dereference, result, r, this);
+		if (result.type && result.valid)
+		{
+			ExpressionResult r;
+			r = result.type->compileOperator(Operator::dereference, result, r, this);
+			if (!r.valid)
+			{
+				errors->error(ErrorCode::parseInvalidType, value,
+					"The operator '*' does not accept the type '" + Type::toString(result.type) + "'");
+			}
+			return r;
+		}
 	}
 	if (value == "not")
 	{
@@ -204,7 +214,29 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 		if (result.valid && result.type)
 		{
 			ExpressionResult r;
-			return result.type->compileOperator(Operator::logicalNot, result, r, this);
+			r = result.type->compileOperator(Operator::logicalNot, result, r, this);
+			if (!r.valid)
+			{
+				errors->error(ErrorCode::parseInvalidType, value,
+					"The operator 'not' does not accept the type '" + Type::toString(result.type) + "'");
+			}
+			return r;
+		}
+	}
+	if (value == "-")
+	{
+		currentLine.get();
+		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
+		if (result.valid && result.type)
+		{
+			ExpressionResult r;
+			r = result.type->compileOperator(Operator::unaryMinus, result, r, this);
+			if (!r.valid)
+			{
+				errors->error(ErrorCode::parseInvalidType, value,
+					"The operator '-' does not accept the type '" + Type::toString(result.type) + "'");
+			}
+			return r;
 		}
 	}
 
@@ -825,17 +857,27 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 		}
 
 		auto valueExpr = pushExpression(line, errors, false, expr.type);
-		if (!valueExpr.type)
+		if (!valueExpr.type || !valueExpr.valid)
 		{
 			return;
 		}
 		valueExpr.compileToType(equals, expr.type, this, errors);
+		if (!valueExpr.type)
+		{
+			return;
+		}
 
 		if (compoundOperator != CompoundOperator::unknown)
 		{
 			valueExpr = expr.type->compileOperator(
 				Operator(compoundOperator), expr, valueExpr, this);
 		}
+
+		if (!valueExpr.type)
+		{
+			return;
+		}
+
 		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
 
 		this->code->addBuffer(valueExpr.code);

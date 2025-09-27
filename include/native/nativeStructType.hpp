@@ -30,5 +30,8 @@ namespace lang
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;;
 
 		std::vector<NativeStructMember> members;
+		std::map<std::string, Function*> methods;
+		std::vector<Function*> constructors;
+		std::vector<std::pair<Operator, Function*>> operators;
 	};
 } // namespace lang

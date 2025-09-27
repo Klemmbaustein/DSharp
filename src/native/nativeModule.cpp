@@ -95,6 +95,18 @@ void lang::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction f
 	fn->virtualId = virtualId;
 }
 
+void lang::NativeModule::initialize()
+{
+	for (auto& i : this->functions)
+	{
+		i->moduleName = this->name;
+	}
+	for (auto& i : this->attributes)
+	{
+		i->moduleName = this->name;
+	}
+}
+
 Module lang::NativeModule::create() const
 {
 	Module outModule;
@@ -102,7 +114,6 @@ Module lang::NativeModule::create() const
 
 	for (auto& i : this->functions)
 	{
-		i->moduleName = this->name;
 		if (i->className.empty())
 		{
 			outModule.moduleFunctions.insert({ i->name, i });
@@ -110,7 +121,6 @@ Module lang::NativeModule::create() const
 	}
 	for (auto& i : this->attributes)
 	{
-		i->moduleName = this->name;
 		outModule.moduleAttributes.insert({ i->name, i });
 	}
 	for (auto& i : this->types)

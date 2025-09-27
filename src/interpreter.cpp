@@ -343,7 +343,7 @@ void lang::InterpretContext::run(bytecodeOffset position)
 			Size size = *(Size*)&argumentBuffer[0];
 			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
 			Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
-			auto targetPos = stackPos - structSize + offset;
+			auto targetPos = stackPos - offset - size;
 			memcpy(&stack[targetPos], &this->stack[stackPos - structSize - size], size);
 			memmove(&stack[stackPos - structSize - size], &this->stack[stackPos - structSize], structSize);
 			stackPos -= size;

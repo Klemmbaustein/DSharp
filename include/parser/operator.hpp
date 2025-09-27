@@ -38,6 +38,8 @@ namespace lang
 		dereference,
 		/// a.member operator
 		member,
+		/// -a operator
+		unaryMinus,
 		/// Unknown operator
 		unknown,
 	};

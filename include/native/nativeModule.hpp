@@ -93,6 +93,8 @@ namespace lang
 		void addClassMethod(ClassType* type, NativeFunction function);
 		void addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId);
 
+		void initialize();
+
 		Module create() const;
 	};
 } // namespace lang

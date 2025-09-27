@@ -20,5 +20,7 @@ LanguageService* lang::LanguageContext::startService()
 
 void lang::LanguageContext::addNativeModule(const NativeModule& module)
 {
-	this->languageModules.insert({ module.name, new NativeModule(module) });
+	auto m = new NativeModule(module);
+	m->initialize();
+	this->languageModules.insert({ module.name, m });
 }
