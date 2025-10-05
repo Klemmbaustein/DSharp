@@ -473,7 +473,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 
 	for (auto& i : this->methods)
 	{
-		if (!i->foundOverride)
+		if (!i->foundOverride && i->isOverride)
 		{
 			errors->error(ErrorCode::parseInvalidOverride, i->name,
 				"Could not find any function that " + i->name.string + " can override.");

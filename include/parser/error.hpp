@@ -40,8 +40,10 @@ namespace lang
 		parseInvalidFormat = 3010,
 		/// E3011 Expected a name here.
 		parseExpectedName = 3011,
-		// / E3012 Override does not override an existing function or there's a type mismatch.
+		/// E3012 Override does not override an existing function or there's a type mismatch.
 		parseInvalidOverride = 3012,
+		/// E3013 Variable redefinition
+		parseVariableRedefinition = 3013,
 		/// E4000 NoDiscard function return value discarded.
 		returnValueDiscarded = 4000,
 	};

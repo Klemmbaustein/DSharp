@@ -546,10 +546,19 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
 
-ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type)
+ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type, ErrorContext* errors)
 {
 	auto instruction = std::make_shared<BytecodePushVariable>(name.string, type);
 	code->add(instruction);
+
+	auto found = this->variables.find(name);
+
+	if (found != this->variables.end() && errors)
+	{
+		errors->error(ErrorCode::parseVariableRedefinition, name, "Variable redefinition of '" + name.string + "'");
+		errors->error(ErrorCode::parseVariableRedefinition, found->first, "'" + name.string + "' first defined here.");
+		return this->variables[name];
+	}
 
 	auto result = this->variables.insert({ name,
 		ScopeVariable{
@@ -631,7 +640,7 @@ void lang::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 		this->code->addBuffer(inClass->thisType->compileMove(this));
 	}
 	pushVariableValue(inClass->thisType, false);
-	this->thisVariable = &addVariable(Token("this"), inClass->thisType);
+	this->thisVariable = &addVariable(Token("this"), inClass->thisType, nullptr);
 	this->thisVariable->readOnly = true;
 }
 
@@ -643,7 +652,7 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 	if (isLambda)
 	{
 		pushVariableValue(LambdaType::getInstance(), true);
-		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance());
+		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance(), nullptr);
 	}
 
 	while (true)
@@ -835,7 +844,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 #endif
 			pushVariableValue(type, true);
 
-			addVariable(variableName, type).readOnly = isConst;
+			addVariable(variableName, type, errors).readOnly = isConst;
 		}
 		line.expectEndOfLine(errors);
 		return;
@@ -1032,14 +1041,14 @@ void lang::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContex
 
 	this->code->addBuffer(arrayExpression.code);
 	pushVariableValue(arrayExpression.type, true);
-	auto& iterated = addVariable(Token(".for_iterated"), arrayType);
+	auto& iterated = addVariable(Token(".for_iterated"), arrayType, errors);
 
 	auto iterType = IntType::getInstance();
 
 	this->code->addBuffer(iterType->defaultValue().code);
 
 	pushVariableValue(iterType, true);
-	auto& iterator = addVariable(Token(".for_iterator"), iterType);
+	auto& iterator = addVariable(Token(".for_iterator"), iterType, errors);
 
 	auto beginLabel = std::make_shared<BytecodeJumpLabel>("for_begin");
 	auto continueLabel = std::make_shared<BytecodeJumpLabel>("for_continue");
@@ -1062,7 +1071,7 @@ void lang::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContex
 	this->code->addBuffer(index.code);
 
 	pushVariableValue(type, true);
-	addVariable(name, type);
+	addVariable(name, type, errors);
 
 	parseSubScope(file, errors, endLabel, continueLabel, this->depth);
 

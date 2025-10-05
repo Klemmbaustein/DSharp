@@ -40,7 +40,7 @@ namespace lang
 		ScopeVariable* lambdaVariable = nullptr;
 
 		void pushVariableValue(Type* type, bool copy);
-		ScopeVariable& addVariable(Token name, Type* type);
+		ScopeVariable& addVariable(Token name, Type* type, ErrorContext* errors);
 		void compileScopeExit(size_t toDepth, bool isEnd);
 
 		uint32_t variableStackPosition = 0;

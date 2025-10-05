@@ -449,7 +449,7 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
 	{
 		functionScope.pushVariableValue(it->type, false);
-		functionScope.addVariable(it->name, it->type);
+		functionScope.addVariable(it->name, it->type, errors);
 	}
 
 	functionScope.compile(context, file, errors);

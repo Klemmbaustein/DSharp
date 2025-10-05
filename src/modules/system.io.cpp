@@ -45,7 +45,7 @@ static void io_file_destruct(InterpretContext* context)
 static void io_procFile_destruct(InterpretContext* context)
 {
 	ClassPtr<io::File> thisPtr = context->popValue<RuntimeClass*>();
-#if WIN32
+#if _WIN32
 	_pclose(thisPtr->handle);
 	#else
 	pclose(thisPtr->handle);
