@@ -1,9 +1,9 @@
-#include <parser/types/stringType.hpp>
-#include <parser/parseScope.hpp>
-#include <parser/varArgs.hpp>
-using namespace lang;
+#include <ds/parser/types/stringType.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/varArgs.hpp>
+using namespace ds;
 
-ExpressionResult lang::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
+ExpressionResult ds::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
 	if (second.type != this)
@@ -26,7 +26,7 @@ ExpressionResult lang::StringType::compileOperator(Operator operatorType, Expres
 	return result;
 }
 
-ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::StringType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first.string.size() > 3 && first.string[0] == '$')
@@ -43,12 +43,12 @@ ExpressionResult lang::StringType::compileValue(Token first, TokenLine& line,
 	return compileStringValue(content, with);
 }
 
-ExpressionResult lang::StringType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::StringType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::StringType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	if (!indexValue.type->sameAs(IntType::getInstance()))
@@ -78,7 +78,7 @@ ExpressionResult lang::StringType::compileIndex(ExpressionResult thisValue, Expr
 	return result;
 }
 
-ExpressionResult lang::StringType::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+ExpressionResult ds::StringType::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 	ErrorContext* errors, ParsedScope* with)
 {
 	first.code.addOperation(BytecodeOp::refClass);
@@ -98,7 +98,7 @@ ExpressionResult lang::StringType::compileEqualsTo(ExpressionResult first, Expre
 	return first;
 }
 
-ExpressionResult lang::StringType::compileFormatString(Token first, TokenLine& line, ErrorContext* errors,
+ExpressionResult ds::StringType::compileFormatString(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with)
 {
 	std::string content = first.string.substr(2, first.string.size() - 3);
@@ -196,7 +196,7 @@ bool replace(std::string& str, const std::string& from, const std::string& to)
 	str.replace(start_pos, from.length(), to);
 	return true;
 }
-ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedScope* with)
+ExpressionResult ds::StringType::compileStringValue(std::string str, ParsedScope* with)
 {
 	replace(str, "\\n", "\n");
 
@@ -264,7 +264,7 @@ ExpressionResult lang::StringType::compileStringValue(std::string str, ParsedSco
 	return result;
 }
 
-ExpressionResult lang::StringType::compileMember(ExpressionResult value, TokenLine& line,
+ExpressionResult ds::StringType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	Token memberName = line.get();

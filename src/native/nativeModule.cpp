@@ -1,7 +1,7 @@
-#include <native/nativeModule.hpp>
-#include <parser/bytecode/compileBytecode.hpp>
-#include <parser/bytecode/compileBytecodeVirtual.hpp>
-using namespace lang;
+#include <ds/native/nativeModule.hpp>
+#include <ds/parser/bytecode/compileBytecode.hpp>
+#include <ds/parser/bytecode/compileBytecodeVirtual.hpp>
+using namespace ds;
 
 ExpressionResult NativeFunction::compileCall()
 {
@@ -24,12 +24,12 @@ std::vector<FunctionArgument> NativeFunction::getArguments()
 	return this->arguments;
 }
 
-Type* lang::NativeFunction::getReturnType()
+Type* ds::NativeFunction::getReturnType()
 {
 	return this->returnType;
 }
 
-std::string lang::NativeFunction::getShortName() const
+std::string ds::NativeFunction::getShortName() const
 {
 	return this->name;
 }
@@ -42,12 +42,12 @@ std::string NativeFunction::getFullName() const
 	}
 	return this->moduleName + "::" + this->className + "." + this->name;
 }
-bool lang::NativeFunction::discardable() const
+bool ds::NativeFunction::discardable() const
 {
 	return true;
 }
 
-BytecodeBuffer lang::NativeFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
+BytecodeBuffer ds::NativeFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
 {
 	BytecodeBuffer result;
 	result.addNew<BytecodeFunctionAddress>(this->getFullName(), true);
@@ -55,12 +55,12 @@ BytecodeBuffer lang::NativeFunction::compileCallable(ErrorContext* errors, Parse
 	return result;
 }
 
-NativeFunction* lang::NativeModule::addFunction(NativeFunction function)
+NativeFunction* ds::NativeModule::addFunction(NativeFunction function)
 {
 	return this->functions.emplace_back(new NativeFunction(function));
 }
 
-EnumType* lang::NativeModule::createEnum(std::string name)
+EnumType* ds::NativeModule::createEnum(std::string name)
 {
 	auto newType = new EnumType();
 	newType->name = name;
@@ -68,17 +68,17 @@ EnumType* lang::NativeModule::createEnum(std::string name)
 	return newType;
 }
 
-void lang::NativeModule::addEnumIntValue(EnumType* type, std::string name, int value)
+void ds::NativeModule::addEnumIntValue(EnumType* type, std::string name, int value)
 {
 	type->values.insert({ Token(name), value });
 }
 
-void lang::NativeModule::addClassConstructor(ClassType* type, NativeFunction constructor)
+void ds::NativeModule::addClassConstructor(ClassType* type, NativeFunction constructor)
 {
 	type->constructors.push_back(addFunction(constructor));
 }
 
-void lang::NativeModule::addClassMethod(ClassType* type, NativeFunction function)
+void ds::NativeModule::addClassMethod(ClassType* type, NativeFunction function)
 {
 	auto fn = addFunction(function);
 	type->methods.insert({ fn->name,
@@ -86,7 +86,7 @@ void lang::NativeModule::addClassMethod(ClassType* type, NativeFunction function
 	fn->className = type->name;
 }
 
-void lang::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId)
+void ds::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId)
 {
 	auto fn = addFunction(function);
 	type->methods.insert({ fn->name,
@@ -95,7 +95,7 @@ void lang::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction f
 	fn->virtualId = virtualId;
 }
 
-void lang::NativeModule::initialize()
+void ds::NativeModule::initialize()
 {
 	for (auto& i : this->functions)
 	{
@@ -107,7 +107,7 @@ void lang::NativeModule::initialize()
 	}
 }
 
-Module lang::NativeModule::create() const
+Module ds::NativeModule::create() const
 {
 	Module outModule;
 	outModule.name = this->name;

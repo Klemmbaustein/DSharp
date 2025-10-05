@@ -1,7 +1,7 @@
-#include "class.hpp"
-using namespace lang;
+#include <ds/class.hpp>
+using namespace ds;
 
-RuntimeClass* lang::RuntimeClass::allocateClass(size_t bodySize, VTableEntry* vTable)
+RuntimeClass* ds::RuntimeClass::allocateClass(size_t bodySize, VTableEntry* vTable)
 {
 	classRefCount++;
 	void* classMemory = calloc(sizeof(RuntimeClass) + bodySize, 1);

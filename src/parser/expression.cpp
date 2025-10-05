@@ -1,8 +1,8 @@
-#include <parser/expression.hpp>
-#include <parser/error.hpp>
-#include <parser/types/type.hpp>
+#include <ds/parser/expression.hpp>
+#include <ds/parser/error.hpp>
+#include <ds/parser/types/type.hpp>
 
-void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
+void ds::ExpressionResult::discard(Token at, ErrorContext* errors)
 {
 	if (this->discardable || !this->type)
 	{
@@ -13,7 +13,7 @@ void lang::ExpressionResult::discard(Token at, ErrorContext* errors)
 		"If this is a function and the return value is supposed to be discardable, add the Discard attribute.");
 }
 
-void lang::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* with, ErrorContext* errors)
+void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* with, ErrorContext* errors)
 {
 	if (!type)
 	{

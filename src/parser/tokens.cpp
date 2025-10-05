@@ -1,10 +1,10 @@
-#include <parser/tokens.hpp>
-#include <parser/error.hpp>
-#include <parser/stringUtils.hpp>
+#include <ds/parser/tokens.hpp>
+#include <ds/parser/error.hpp>
+#include <ds/parser/stringUtils.hpp>
 #include <set>
 #include <sstream>
 
-namespace lang
+namespace ds
 {
 	static std::set<std::string> specialWords = {
 		"==",
@@ -51,9 +51,9 @@ namespace lang
 		'\n',
 	};
 
-} // namespace lang
+} // namespace ds
 
-using namespace lang;
+using namespace ds;
 
 void Token::addChar(char c)
 {
@@ -61,19 +61,19 @@ void Token::addChar(char c)
 	this->position.endPos++;
 }
 
-void lang::Token::addStr(std::string str)
+void ds::Token::addStr(std::string str)
 {
 	this->string.append(str);
 	this->position.endPos += uint32_t(str.size());
 }
 
-void lang::Token::merge(const Token& other)
+void ds::Token::merge(const Token& other)
 {
 	this->string += other.string;
 	this->position.endPos = other.position.endPos;
 }
 
-void lang::Token::checkIsName(ErrorContext* errors) const
+void ds::Token::checkIsName(ErrorContext* errors) const
 {
 	if (this->empty())
 	{
@@ -101,21 +101,21 @@ void lang::Token::checkIsName(ErrorContext* errors) const
 	}
 }
 
-void lang::TokenStream::fromFile(std::string path, ErrorContext* errors)
+void ds::TokenStream::fromFile(std::string path, ErrorContext* errors)
 {
 	std::ifstream file = std::ifstream(path);
 	fromStream(file, path, errors);
 	file.close();
 }
 
-void lang::TokenStream::fromString(std::string stringData, std::string path, ErrorContext* errors)
+void ds::TokenStream::fromString(std::string stringData, std::string path, ErrorContext* errors)
 {
 	std::stringstream stream;
 	stream << stringData;
 	fromStream(stream, path, errors);
 }
 
-void lang::TokenStream::fromTokens(const std::vector<Token> from)
+void ds::TokenStream::fromTokens(const std::vector<Token> from)
 {
 	currentLine = &this->lineTokens.emplace_back();
 	size_t lastLine = SIZE_MAX;
@@ -130,7 +130,7 @@ void lang::TokenStream::fromTokens(const std::vector<Token> from)
 	}
 }
 
-void lang::TokenStream::fromStream(std::istream& stream, std::string name, ErrorContext* errors)
+void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorContext* errors)
 {
 	Token currentWord = newToken();
 
@@ -246,7 +246,7 @@ void lang::TokenStream::fromStream(std::istream& stream, std::string name, Error
 	}
 }
 
-bool lang::TokenStream::tryReadWord(std::istream& stream, std::string word, size_t beginAt)
+bool ds::TokenStream::tryReadWord(std::istream& stream, std::string word, size_t beginAt)
 {
 	StreamPosition startPos = StreamPosition(this, stream);
 	readWhitespace(stream);
@@ -261,7 +261,7 @@ bool lang::TokenStream::tryReadWord(std::istream& stream, std::string word, size
 	return true;
 }
 
-bool lang::TokenStream::tryReadChar(std::istream& stream, char c)
+bool ds::TokenStream::tryReadChar(std::istream& stream, char c)
 {
 	StreamPosition startPos = StreamPosition(this, stream);
 	while (true)
@@ -287,7 +287,7 @@ bool lang::TokenStream::tryReadChar(std::istream& stream, char c)
 	return false;
 }
 
-void lang::TokenStream::readWhitespace(std::istream& stream)
+void ds::TokenStream::readWhitespace(std::istream& stream)
 {
 	while (true)
 	{
@@ -305,14 +305,14 @@ void lang::TokenStream::readWhitespace(std::istream& stream)
 	stream.seekg(-1, stream.cur);
 }
 
-char lang::TokenStream::getNextChar(std::istream& stream)
+char ds::TokenStream::getNextChar(std::istream& stream)
 {
 	char newChar = stream.get();
 	character++;
 	return char(newChar);
 }
 
-TokenLine& lang::TokenLine::postProcessTokens(ErrorContext* errors)
+TokenLine& ds::TokenLine::postProcessTokens(ErrorContext* errors)
 {
 	for (auto it = this->lineTokens->begin(); it < this->lineTokens->end(); it++)
 	{
@@ -349,7 +349,7 @@ TokenLine& lang::TokenLine::postProcessTokens(ErrorContext* errors)
 	return *this;
 }
 
-void lang::TokenStream::addToken(const Token& target)
+void ds::TokenStream::addToken(const Token& target)
 {
 	if (!target.string.empty())
 	{
@@ -357,14 +357,14 @@ void lang::TokenStream::addToken(const Token& target)
 	}
 }
 
-Token lang::TokenLine::peek()
+Token ds::TokenLine::peek()
 {
 	if (this->empty())
 		return Token();
 	return this->lineTokens->at(this->position);
 }
 
-Token lang::TokenLine::get()
+Token ds::TokenLine::get()
 {
 	if (this->empty())
 		return Token();
@@ -372,7 +372,7 @@ Token lang::TokenLine::get()
 	return this->lineTokens->at(this->position++);
 }
 
-bool lang::TokenLine::expect(std::string token, ErrorContext* errors)
+bool ds::TokenLine::expect(std::string token, ErrorContext* errors)
 {
 	auto next = get();
 
@@ -393,12 +393,12 @@ bool lang::TokenLine::expect(std::string token, ErrorContext* errors)
 	return false;
 }
 
-bool lang::TokenLine::empty() const
+bool ds::TokenLine::empty() const
 {
 	return !this->lineTokens || this->lineTokens->empty() || this->position >= this->lineTokens->size();
 }
 
-std::vector<Token> lang::TokenLine::getInBraces(ErrorContext* errors)
+std::vector<Token> ds::TokenLine::getInBraces(ErrorContext* errors)
 {
 	std::vector<Token> result;
 
@@ -445,7 +445,7 @@ std::vector<Token> lang::TokenLine::getInBraces(ErrorContext* errors)
 	return result;
 }
 
-std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* errors)
+std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* errors)
 {
 	std::vector<Token> result;
 
@@ -513,7 +513,7 @@ std::vector<Token> lang::TokenLine::getUntil(std::string token, ErrorContext* er
 	return result;
 }
 
-bool lang::TokenLine::contains(std::string token) const
+bool ds::TokenLine::contains(std::string token) const
 {
 	for (auto& i : *this->lineTokens)
 	{
@@ -525,22 +525,22 @@ bool lang::TokenLine::contains(std::string token) const
 	return false;
 }
 
-Token lang::TokenLine::previous()
+Token ds::TokenLine::previous()
 {
 	return this->lineTokens && this->lineTokens->size() ? this->lineTokens->at(this->position - 1) : Token();
 }
 
-size_t lang::TokenLine::savePosition() const
+size_t ds::TokenLine::savePosition() const
 {
 	return this->position;
 }
 
-void lang::TokenLine::loadPosition(size_t oldPos)
+void ds::TokenLine::loadPosition(size_t oldPos)
 {
 	this->position = oldPos;
 }
 
-void lang::TokenLine::expectEndOfLine(ErrorContext* errors)
+void ds::TokenLine::expectEndOfLine(ErrorContext* errors)
 {
 	if (!empty())
 	{
@@ -548,7 +548,7 @@ void lang::TokenLine::expectEndOfLine(ErrorContext* errors)
 	}
 }
 
-TokenLine lang::TokenStream::next(ErrorContext* errors)
+TokenLine ds::TokenStream::next(ErrorContext* errors)
 {
 	if (currentStreamLine == this->lineTokens.size())
 	{
@@ -559,7 +559,7 @@ TokenLine lang::TokenStream::next(ErrorContext* errors)
 	}.postProcessTokens(errors);
 }
 
-TokenLine lang::TokenStream::peek(ErrorContext* errors)
+TokenLine ds::TokenStream::peek(ErrorContext* errors)
 {
 	if (currentStreamLine == this->lineTokens.size())
 	{
@@ -570,12 +570,12 @@ TokenLine lang::TokenStream::peek(ErrorContext* errors)
 	}.postProcessTokens(errors);
 }
 
-void lang::TokenStream::addLine(TokenLine ln)
+void ds::TokenStream::addLine(TokenLine ln)
 {
 	this->lineTokens.push_back(*ln.lineTokens);
 }
 
-void lang::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_t beginDepth)
+void ds::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_t beginDepth)
 {
 	size_t depth = beginDepth;
 	while (true)
@@ -607,7 +607,7 @@ void lang::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_
 	}
 }
 
-Token lang::TokenStream::newToken()
+Token ds::TokenStream::newToken()
 {
 	TokenPos p;
 
@@ -625,7 +625,7 @@ TokenStream::StreamPosition::StreamPosition(TokenStream* from, std::istream& str
 	this->line = from->line;
 }
 
-void lang::TokenStream::StreamPosition::apply(TokenStream* to, std::istream& stream) const
+void ds::TokenStream::StreamPosition::apply(TokenStream* to, std::istream& stream) const
 {
 	stream.seekg(this->position);
 	to->character = this->character;

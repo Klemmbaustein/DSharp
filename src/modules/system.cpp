@@ -1,9 +1,9 @@
-#include <modules/system.hpp>
-#include <parser/types/stringType.hpp>
+#include <ds/modules/system.hpp>
+#include <ds/parser/types/stringType.hpp>
 #include <cstring>
 
-using namespace lang;
-using namespace lang::modules::system;
+using namespace ds;
+using namespace ds::modules::system;
 
 static void string_format(InterpretContext* context)
 {
@@ -225,7 +225,7 @@ static void fn_new_native(InterpretContext* context)
 	context->pushValue(RuntimeClass::allocateClass(0, entries));
 }
 
-lang::NativeModule lang::modules::system::createModule()
+ds::NativeModule ds::modules::system::createModule()
 {
 	NativeModule out;
 	out.name = "system";
@@ -292,7 +292,7 @@ lang::NativeModule lang::modules::system::createModule()
 	return out;
 }
 
-RuntimeClass* lang::modules::system::createArrayObject()
+RuntimeClass* ds::modules::system::createArrayObject()
 {
 	static VTableEntry arrayVTable = VTableEntry{
 		.nativeFn = &array_delete

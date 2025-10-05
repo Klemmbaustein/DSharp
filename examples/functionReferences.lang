@@ -1,0 +1,52 @@
+using system::io
+
+module functionReferences
+
+[EntryPoint]
+fn example()
+{
+	fn() -> int reference
+
+	// Regular function
+	reference = getNumberFunction
+
+	writeInt(reference.call())
+
+	// Function class
+	reference = new GetNumberFunctionClass(5)
+
+	writeInt(reference.call())
+
+	// Lambda
+	reference = fn() -> int
+	{
+		return 10
+	}
+
+	writeInt(reference.call())
+
+	// Output:
+	// 6
+	// 10
+	// 15
+}
+
+fn getNumberFunction()
+{
+	return 1
+}
+
+class GetNumberFunctionClass : fn() -> int
+{
+	int number
+
+	fn new(int number)
+	{
+		this.number = number
+	}
+
+	override fn call() -> int
+	{
+		return number
+	}
+}

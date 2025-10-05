@@ -1,10 +1,10 @@
-#include <parser/parseClass.hpp>
-#include <parser/parser.hpp>
-#include <parser/parseScope.hpp>
-#include <service/languageService.hpp>
-using namespace lang;
+#include <ds/parser/parseClass.hpp>
+#include <ds/parser/parser.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/service/languageService.hpp>
+using namespace ds;
 
-bool lang::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file)
+bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file)
 {
 	TokenLine currentLine = classStream.next(errors);
 
@@ -108,7 +108,7 @@ bool lang::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Err
 	return true;
 }
 
-Function* lang::ParsedClass::getDefaultConstructor()
+Function* ds::ParsedClass::getDefaultConstructor()
 {
 	if (this->thisType->constructors.empty())
 	{
@@ -125,7 +125,7 @@ Function* lang::ParsedClass::getDefaultConstructor()
 	return &this->constructor;
 }
 
-void lang::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
 	ParsedScope destructorScope;
 	destructorScope.scopeFile = file;
@@ -168,7 +168,7 @@ void lang::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* e
 	}
 }
 
-ExpressionResult lang::ClassLifetimeFunction::compileCall()
+ExpressionResult ds::ClassLifetimeFunction::compileCall()
 {
 	ExpressionResult result;
 	result.code.addNew<BytecodeCallFunction>(getFullName());
@@ -177,27 +177,27 @@ ExpressionResult lang::ClassLifetimeFunction::compileCall()
 	return result;
 }
 
-std::vector<FunctionArgument> lang::ClassLifetimeFunction::getArguments()
+std::vector<FunctionArgument> ds::ClassLifetimeFunction::getArguments()
 {
 	return {};
 }
 
-std::string lang::ClassLifetimeFunction::getShortName() const
+std::string ds::ClassLifetimeFunction::getShortName() const
 {
 	return std::string();
 }
 
-std::string lang::ClassLifetimeFunction::getFullName() const
+std::string ds::ClassLifetimeFunction::getFullName() const
 {
 	return this->parent->classModule->name + "::" + this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
 }
 
-bool lang::ClassLifetimeFunction::discardable() const
+bool ds::ClassLifetimeFunction::discardable() const
 {
 	return true;
 }
 
-lang::ParsedClass::~ParsedClass()
+ds::ParsedClass::~ParsedClass()
 {
 	delete thisType;
 	for (ParsedFunction* i : this->methods)
@@ -206,7 +206,7 @@ lang::ParsedClass::~ParsedClass()
 	}
 }
 
-void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
+void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 {
 	thisType = new ClassType();
 	thisType->from = name;
@@ -216,7 +216,7 @@ void lang::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	file->fileModule->moduleTypes.insert({ name.string, thisType });
 }
 
-void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
+void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 {
 	if (scanned)
 	{
@@ -350,7 +350,7 @@ void lang::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 	}
 }
 
-void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
 	ParsedScope constructorScope;
 	constructorScope.scopeFile = file;
@@ -486,7 +486,7 @@ void lang::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Par
 	}
 }
 
-void lang::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
+void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
 	this->usedDestructor = &baseDestructor;
 	std::vector<AttribInfo> currentAttributes;
@@ -495,7 +495,7 @@ void lang::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 	}
 }
 
-BytecodeBuffer lang::ParsedClassMember::readValue() const
+BytecodeBuffer ds::ParsedClassMember::readValue() const
 {
 	BytecodeBuffer out;
 	out.pushInt(offset);
@@ -505,7 +505,7 @@ BytecodeBuffer lang::ParsedClassMember::readValue() const
 	return out;
 }
 
-BytecodeBuffer lang::ParsedClassMember::writeValue() const
+BytecodeBuffer ds::ParsedClassMember::writeValue() const
 {
 	BytecodeBuffer out;
 	out.pushInt(offset);

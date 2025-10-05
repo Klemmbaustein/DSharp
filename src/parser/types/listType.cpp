@@ -1,9 +1,9 @@
-#include <parser/types/listType.hpp>
-#include <parser/parseScope.hpp>
-#include <parser/types/arrayType.hpp>
-using namespace lang;
+#include <ds/parser/types/listType.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/types/arrayType.hpp>
+using namespace ds;
 
-ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first != "[")
@@ -82,12 +82,12 @@ ExpressionResult lang::ListType::compileValue(Token first, TokenLine& line,
 	return arrayType->makeArrayValue(arrayElements, with);
 }
 
-ExpressionResult lang::ListType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::ListType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ListType::compileOperator(Operator operatorType,
+ExpressionResult ds::ListType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();

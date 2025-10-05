@@ -1,10 +1,10 @@
 #ifndef NO_MAIN
-#include <language.hpp>
-#include <modules/standardLibrary.hpp>
+#include <ds/language.hpp>
+#include <ds/modules/standardLibrary.hpp>
 #include <cassert>
 #include <print>
 
-using namespace lang;
+using namespace ds;
 
 int main()
 {
@@ -12,7 +12,7 @@ int main()
 	modules::registerStandardLibrary(&language);
 
 	ParseContext* compiler = language.createCompiler();
-	compiler->addFile("test.lang");
+	compiler->addFile("test.ds");
 	BytecodeStream compiled = compiler->compile();
 	delete compiler;
 

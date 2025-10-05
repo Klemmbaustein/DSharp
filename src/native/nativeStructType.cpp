@@ -1,22 +1,22 @@
-#include <native/nativeStructType.hpp>
-#include <parser/parseScope.hpp>
-#include <parser/parser.hpp>
-#include <service/languageService.hpp>
+#include <ds/native/nativeStructType.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/parser.hpp>
+#include <ds/service/languageService.hpp>
 
-using namespace lang;
+using namespace ds;
 
-lang::NativeStructType::NativeStructType(Size size, std::string name)
+ds::NativeStructType::NativeStructType(Size size, std::string name)
 {
 	this->size = size;
 	this->name = name;
 }
 
-std::string lang::NativeStructType::getName()
+std::string ds::NativeStructType::getName()
 {
 	return this->name;
 }
 
-ExpressionResult lang::NativeStructType::compileOperator(Operator operatorType,
+ExpressionResult ds::NativeStructType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	for (auto& [op, fn] : this->operators)
@@ -67,7 +67,7 @@ ExpressionResult lang::NativeStructType::compileOperator(Operator operatorType,
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NativeStructType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::NativeStructType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	auto constructorArgs = line.getInBraces(errors);
@@ -86,12 +86,12 @@ ExpressionResult lang::NativeStructType::compileValue(Token first, TokenLine& li
 	return result;
 }
 
-ExpressionResult lang::NativeStructType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::NativeStructType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NativeStructType::compileMember(ExpressionResult value, TokenLine& line,
+ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	auto next = line.get();

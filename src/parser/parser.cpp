@@ -1,16 +1,16 @@
-#include <parser/parser.hpp>
-#include <parser/parseScope.hpp>
-#include <parser/bytecode/compileBytecodeVirtual.hpp>
-#include <parser/types/stringType.hpp>
-#include <parser/types/listType.hpp>
-#include <parser/types/functionType.hpp>
-#include <parser/types/lambdaType.hpp>
-#include <modules/system.hpp>
-#include <language.hpp>
-#include <service/languageService.hpp>
-using namespace lang;
+#include <ds/parser/parser.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/bytecode/compileBytecodeVirtual.hpp>
+#include <ds/parser/types/stringType.hpp>
+#include <ds/parser/types/listType.hpp>
+#include <ds/parser/types/functionType.hpp>
+#include <ds/parser/types/lambdaType.hpp>
+#include <ds/modules/system.hpp>
+#include <ds/language.hpp>
+#include <ds/service/languageService.hpp>
+using namespace ds;
 
-lang::ParseContext::ParseContext(LanguageContext* context)
+ds::ParseContext::ParseContext(LanguageContext* context)
 {
 	for (auto& [name, module] : context->languageModules)
 	{
@@ -31,11 +31,11 @@ lang::ParseContext::ParseContext(LanguageContext* context)
 	}
 }
 
-lang::ParseContext::~ParseContext()
+ds::ParseContext::~ParseContext()
 {
 }
 
-void lang::ParseContext::addFile(std::string filePath)
+void ds::ParseContext::addFile(std::string filePath)
 {
 	this->errors.currentFile = filePath;
 	auto& newFile = this->files.emplace_back();
@@ -45,7 +45,7 @@ void lang::ParseContext::addFile(std::string filePath)
 	newFile.scan(&errors);
 }
 
-void lang::ParseContext::addString(const std::string& str, std::string fileName)
+void ds::ParseContext::addString(const std::string& str, std::string fileName)
 {
 	this->errors.currentFile = fileName;
 	auto& newFile = this->files.emplace_back();
@@ -55,7 +55,7 @@ void lang::ParseContext::addString(const std::string& str, std::string fileName)
 	newFile.scan(&errors);
 }
 
-void lang::ParseContext::updateFile(const std::string& str, std::string fileName)
+void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 {
 	for (auto& i : this->files)
 	{
@@ -70,7 +70,7 @@ void lang::ParseContext::updateFile(const std::string& str, std::string fileName
 	}
 }
 
-BytecodeStream lang::ParseContext::compile()
+BytecodeStream ds::ParseContext::compile()
 {
 	virtualTable.clear();
 	this->defaultTypes.clear();
@@ -154,7 +154,7 @@ BytecodeStream lang::ParseContext::compile()
 	return out;
 }
 
-void lang::ParseContext::scanModules()
+void ds::ParseContext::scanModules()
 {
 	// Register all modules
 	for (ParsedFile& file : this->files)
@@ -248,11 +248,11 @@ void lang::ParseContext::scanModules()
 	}
 }
 
-void lang::ParsedFile::loadAvailableTypes(ParseContext* context)
+void ds::ParsedFile::loadAvailableTypes(ParseContext* context)
 {
 }
 
-void lang::ParsedFile::scan(ErrorContext* errors)
+void ds::ParsedFile::scan(ErrorContext* errors)
 {
 	this->scopeName = "";
 	this->usings.clear();
@@ -263,11 +263,11 @@ void lang::ParsedFile::scan(ErrorContext* errors)
 	std::vector<AttribInfo> currentAttributes;
 	while (scanLine(currentAttributes, errors)) {}
 }
-lang::ParsedFile::~ParsedFile()
+ds::ParsedFile::~ParsedFile()
 {
 }
 
-bool lang::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors)
+bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors)
 {
 	TokenLine currentLine = stream.next(errors);
 
@@ -333,7 +333,7 @@ bool lang::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, Erro
 	return true;
 }
 
-ParsedFunction& lang::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext* errors)
+ParsedFunction& ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext* errors)
 {
 	ParsedFunction& fn = this->functions.emplace_back();
 
@@ -342,7 +342,7 @@ ParsedFunction& lang::ParsedFile::scanFunction(TokenLine currentLine, ErrorConte
 	return fn;
 }
 
-ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* errors)
+ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* errors)
 {
 	ParsedClass& newClass = this->classes.emplace_back();
 	newClass.name = currentLine.get();
@@ -387,7 +387,7 @@ ParsedClass& lang::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* er
 	return newClass;
 }
 
-ParsedEnum& lang::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* errors)
+ParsedEnum& ds::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* errors)
 {
 	ParsedEnum& newEnum = this->enums.emplace_back();
 	newEnum.name = currentLine.get();
@@ -402,7 +402,7 @@ ParsedEnum& lang::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* erro
 	return newEnum;
 }
 
-void lang::ParsedFile::compile(ParseContext* context)
+void ds::ParsedFile::compile(ParseContext* context)
 {
 #ifdef WITH_LANGUAGE_SERVICE
 	ScannedFile* scanInfo = nullptr;
@@ -430,7 +430,7 @@ void lang::ParsedFile::compile(ParseContext* context)
 	}
 }
 
-void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
+void ds::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
 {
 	ParsedScope functionScope;
 	functionScope.tokenStream = &functionStream;
@@ -459,19 +459,19 @@ void lang::ParsedFunction::compile(ParseContext* context, ParsedFile* file, Erro
 	bytecodeFunction.isEntryPoint = getAttribute<modules::system::EntryPointAttribute>();
 }
 
-std::string lang::ParsedFunction::getFullName() const
+std::string ds::ParsedFunction::getFullName() const
 {
 	if (this->inClass)
 		return this->functionModule->name + "::" + this->inClass->name.string + "." + this->name.string;
 	return this->functionModule->name + "::" + this->name.string;
 }
 
-std::string lang::ParsedFunction::getShortName() const
+std::string ds::ParsedFunction::getShortName() const
 {
 	return this->name.string;
 }
 
-void lang::ParsedFunction::scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors)
+void ds::ParsedFunction::scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors)
 {
 	name = currentLine.get();
 	functionFile = file;
@@ -501,7 +501,7 @@ void lang::ParsedFunction::scanDeclaration(TokenLine currentLine, TokenStream& s
 	stream.getScope(functionStream, errors);
 }
 
-void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* errors)
+void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* errors)
 {
 	TokenLine line;
 
@@ -557,7 +557,7 @@ void lang::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* err
 	resolveAttributes(functionFile, errors);
 }
 
-ExpressionResult lang::ParsedFunction::compileCall()
+ExpressionResult ds::ParsedFunction::compileCall()
 {
 	ExpressionResult result;
 	if (this->functionIsVirtual)
@@ -574,22 +574,22 @@ ExpressionResult lang::ParsedFunction::compileCall()
 	return result;
 }
 
-std::vector<FunctionArgument> lang::ParsedFunction::getArguments()
+std::vector<FunctionArgument> ds::ParsedFunction::getArguments()
 {
 	return this->arguments;
 }
 
-Type* lang::ParsedFunction::getReturnType()
+Type* ds::ParsedFunction::getReturnType()
 {
 	return this->returnType;
 }
 
-bool lang::ParsedFunction::discardable() const
+bool ds::ParsedFunction::discardable() const
 {
 	return getAttribute<modules::system::DiscardAttribute>();
 }
 
-BytecodeBuffer lang::ParsedFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
+BytecodeBuffer ds::ParsedFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
 {
 	BytecodeBuffer result;
 	result.addNew<BytecodeFunctionAddress>(getFullName());
@@ -663,7 +663,7 @@ Attribute* ParsedFile::getAttribute(TokenLine& from)
 	return nullptr;
 }
 
-std::pair<EnumType*, std::string> lang::ParsedFile::getEnum(TokenLine& from)
+std::pair<EnumType*, std::string> ds::ParsedFile::getEnum(TokenLine& from)
 {
 	auto initialPos = from.savePosition();
 	auto name = from.get();

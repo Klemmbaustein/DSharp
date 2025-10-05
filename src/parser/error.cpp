@@ -1,8 +1,8 @@
-#include <parser/error.hpp>
+#include <ds/parser/error.hpp>
 #include <format>
 #include <iostream>
 
-void lang::ErrorContext::error(ErrorCode code, const Token& at, std::string description)
+void ds::ErrorContext::error(ErrorCode code, const Token& at, std::string description)
 {
 	this->hasError = true;
 

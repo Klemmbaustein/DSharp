@@ -1,7 +1,7 @@
-#include <modules/system.err.hpp>
+#include <ds/modules/system.err.hpp>
 
-using namespace lang;
-using namespace lang::modules::system;
+using namespace ds;
+using namespace ds::modules::system;
 
 static void err_getStackTrace()
 {
@@ -11,7 +11,6 @@ static void err_getStackTrace()
 static void err_abort(InterpretContext* context)
 {
 	context->runtimePanic(RuntimeStr("Aborted"));
-	abort();
 }
 
 NativeModule err::createModule()

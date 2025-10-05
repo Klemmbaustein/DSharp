@@ -1,9 +1,9 @@
-#include <parser/varArgs.hpp>
-#include <languageTypes.hpp>
+#include <ds/parser/varArgs.hpp>
+#include <ds/languageTypes.hpp>
 
-using namespace lang;
+using namespace ds;
 
-BytecodeBuffer lang::varArgs::writeVarArgs(std::vector<ExpressionResult> args)
+BytecodeBuffer ds::varArgs::writeVarArgs(std::vector<ExpressionResult> args)
 {
 	BytecodeBuffer result;
 

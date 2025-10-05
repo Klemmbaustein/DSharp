@@ -1,29 +1,29 @@
-#include <parser/bytecode/compileBytecode.hpp>
-#include <parser/types/classType.hpp>
-#include <native/nativeModule.hpp>
+#include <ds/parser/bytecode/compileBytecode.hpp>
+#include <ds/parser/types/classType.hpp>
+#include <ds/native/nativeModule.hpp>
 #include <print>
 #include <stdlib.h>
-using namespace lang;
+using namespace ds;
 
 // ------------- //
 // Operation     //
 // ------------- //
 
-lang::BytecodeOperation::BytecodeOperation(BytecodeOp operation, BinaryBuffer arguments)
+ds::BytecodeOperation::BytecodeOperation(BytecodeOp operation, BinaryBuffer arguments)
 {
 	this->operation = operation;
 	this->arguments = arguments;
 }
-void lang::BytecodeOperation::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeOperation::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	stream.addBuffer(this->arguments);
 }
-bytecodeOffset lang::BytecodeOperation::getArgsSize()
+bytecodeOffset ds::BytecodeOperation::getArgsSize()
 {
 	return bytecodeOffset(this->arguments.buffer.size());
 }
 
-std::string lang::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments)
+std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments)
 {
 	static std::map<BytecodeOp, const char*> operations = {
 		{ BytecodeOp::push, "PUSH" },
@@ -85,7 +85,7 @@ std::string BytecodeOperation::toString()
 // CallFunction  //
 // ------------- //
 
-lang::BytecodeCallFunction::BytecodeCallFunction(std::string callName)
+ds::BytecodeCallFunction::BytecodeCallFunction(std::string callName)
 {
 	this->operation = BytecodeOp::call;
 	this->callName = callName;
@@ -96,12 +96,12 @@ std::string BytecodeCallFunction::toString()
 	return "\tCALL " + this->callName;
 }
 
-void lang::BytecodeCallFunction::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeCallFunction::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	stream.addValue(compiler->functions[this->callName].offset);
 }
 
-bytecodeOffset lang::BytecodeCallFunction::getArgsSize()
+bytecodeOffset ds::BytecodeCallFunction::getArgsSize()
 {
 	return sizeof(bytecodeOffset);
 }
@@ -110,7 +110,7 @@ bytecodeOffset lang::BytecodeCallFunction::getArgsSize()
 // FunctionAddress //
 // --------------- //
 
-lang::BytecodeFunctionAddress::BytecodeFunctionAddress(std::string callName, bool native)
+ds::BytecodeFunctionAddress::BytecodeFunctionAddress(std::string callName, bool native)
 {
 	this->operation = BytecodeOp::push;
 	this->callName = callName;
@@ -122,7 +122,7 @@ std::string BytecodeFunctionAddress::toString()
 	return "\tPUSH ADDROFF {}" + this->callName;
 }
 
-void lang::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	if (native)
 	{
@@ -149,7 +149,7 @@ void lang::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompil
 	}
 }
 
-bytecodeOffset lang::BytecodeFunctionAddress::getArgsSize()
+bytecodeOffset ds::BytecodeFunctionAddress::getArgsSize()
 {
 	return sizeof(bytecodeOffset);
 }
@@ -158,13 +158,13 @@ bytecodeOffset lang::BytecodeFunctionAddress::getArgsSize()
 // CallNative    //
 // ------------- //
 
-lang::BytecodeCallNative::BytecodeCallNative(NativeFunction* function)
+ds::BytecodeCallNative::BytecodeCallNative(NativeFunction* function)
 {
 	this->functionName = function->getFullName();
 	this->operation = BytecodeOp::callExternal;
 }
 
-lang::BytecodeCallNative::BytecodeCallNative(std::string functionName)
+ds::BytecodeCallNative::BytecodeCallNative(std::string functionName)
 {
 	this->operation = BytecodeOp::callExternal;
 	this->functionName = functionName;
@@ -175,7 +175,7 @@ std::string BytecodeCallNative::toString()
 	return "\tNATIVE_CALL " + functionName;
 }
 
-void lang::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	auto foundPosition = compiler->usedExternals.find(this->functionName);
 
@@ -195,7 +195,7 @@ void lang::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* c
 	stream.addValue(position);
 }
 
-bytecodeOffset lang::BytecodeCallNative::getArgsSize()
+bytecodeOffset ds::BytecodeCallNative::getArgsSize()
 {
 	return sizeof(uint32_t);
 }
@@ -204,17 +204,17 @@ bytecodeOffset lang::BytecodeCallNative::getArgsSize()
 // JumpLabel     //
 // ------------- //
 
-lang::BytecodeJumpLabel::BytecodeJumpLabel(std::string name)
+ds::BytecodeJumpLabel::BytecodeJumpLabel(std::string name)
 {
 	this->name = name;
 	this->baseSize = 0;
 }
 
-void lang::BytecodeJumpLabel::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeJumpLabel::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 }
 
-bytecodeOffset lang::BytecodeJumpLabel::getArgsSize()
+bytecodeOffset ds::BytecodeJumpLabel::getArgsSize()
 {
 	return 0;
 }
@@ -227,18 +227,18 @@ std::string BytecodeJumpLabel::toString()
 // Jump          //
 // ------------- //
 
-lang::BytecodeJump::BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target)
+ds::BytecodeJump::BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target)
 {
 	this->operation = operation;
 	this->target = target;
 }
 
-void lang::BytecodeJump::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeJump::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	stream.addValue<bytecodeOffset>(this->target->offset);
 }
 
-bytecodeOffset lang::BytecodeJump::getArgsSize()
+bytecodeOffset ds::BytecodeJump::getArgsSize()
 {
 	return sizeof(bytecodeOffset);
 }
@@ -252,12 +252,12 @@ std::string BytecodeJump::toString()
 // AllocClass    //
 // ------------- //
 
-lang::BytecodeAllocClass::BytecodeAllocClass(ClassType* languageClass)
+ds::BytecodeAllocClass::BytecodeAllocClass(ClassType* languageClass)
 {
 	this->languageClass = languageClass;
 	this->operation = BytecodeOp::allocClass;
 }
-void lang::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	// typeid
 	stream.addValue(uint32_t(0));
@@ -265,7 +265,7 @@ void lang::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* c
 	stream.addValue(languageClass->vTableOffset);
 }
 
-bytecodeOffset lang::BytecodeAllocClass::getArgsSize()
+bytecodeOffset ds::BytecodeAllocClass::getArgsSize()
 {
 	return sizeof(uint32_t) * 2;
 }
@@ -275,7 +275,7 @@ std::string BytecodeAllocClass::toString()
 	return "\tALLOC " + this->languageClass->name;
 }
 
-void lang::BytecodeCompiler::printAssembly()
+void ds::BytecodeCompiler::printAssembly()
 {
 	for (auto& fn : this->functions)
 	{
@@ -296,7 +296,7 @@ void lang::BytecodeCompiler::printAssembly()
 	}
 }
 
-void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors)
+void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors)
 {
 	bytecodeOffset bytecodePos = 0;
 
@@ -372,12 +372,12 @@ void lang::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Funct
 	stream.externalFunctions = this->externals;
 }
 
-void lang::BytecodeBuffer::add(InstructionPtr instruction)
+void ds::BytecodeBuffer::add(InstructionPtr instruction)
 {
 	this->instructions.push_back(instruction);
 }
 
-void lang::BytecodeBuffer::pushInt(uint32_t data)
+void ds::BytecodeBuffer::pushInt(uint32_t data)
 {
 	static BinaryBuffer args;
 	args.clear();
@@ -385,17 +385,17 @@ void lang::BytecodeBuffer::pushInt(uint32_t data)
 	addOperation(BytecodeOp::push, args);
 }
 
-void lang::BytecodeBuffer::addOperation(BytecodeOp operation, const BinaryBuffer& arguments)
+void ds::BytecodeBuffer::addOperation(BytecodeOp operation, const BinaryBuffer& arguments)
 {
 	add(std::make_shared<BytecodeOperation>(operation, arguments));
 }
 
-void lang::BytecodeBuffer::addOperation(BytecodeOp operation)
+void ds::BytecodeBuffer::addOperation(BytecodeOp operation)
 {
 	add(std::make_shared<BytecodeOperation>(operation, BinaryBuffer()));
 }
 
-void lang::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)
+void ds::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)
 {
 	this->instructions.reserve(this->instructions.size() + other.instructions.size());
 
@@ -406,7 +406,7 @@ void lang::BytecodeBuffer::prependBuffer(const BytecodeBuffer& other)
 //	this->instructions.insert(instructions.begin(), other.instructions);
 #endif
 }
-void lang::BytecodeBuffer::addBuffer(const BytecodeBuffer& other)
+void ds::BytecodeBuffer::addBuffer(const BytecodeBuffer& other)
 {
 	this->instructions.reserve(this->instructions.size() + other.instructions.size());
 

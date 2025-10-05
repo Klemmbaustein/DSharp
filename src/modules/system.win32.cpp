@@ -1,6 +1,6 @@
 #if WITH_WINAPI
-#include <modules/system.win32.hpp>
-#include <parser/types/stringType.hpp>
+#include <ds/modules/system.win32.hpp>
+#include <ds/parser/types/stringType.hpp>
 #include <Windows.h>
 #include <print>
 
@@ -8,8 +8,8 @@
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
-using namespace lang;
-using namespace lang::modules::system;
+using namespace ds;
+using namespace ds::modules::system;
 
 static void win32_messageBox(InterpretContext* context)
 {

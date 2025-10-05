@@ -1,10 +1,10 @@
-#include <parser/types/type.hpp>
-#include <parser/stringUtils.hpp>
-#include <parser/parseScope.hpp>
-#include <parser/types/stringType.hpp>
-using namespace lang;
+#include <ds/parser/types/type.hpp>
+#include <ds/parser/stringUtils.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/types/stringType.hpp>
+using namespace ds;
 
-ExpressionResult lang::IntType::compileOperator(Operator operatorType,
+ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
@@ -33,25 +33,25 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 
 	switch (operatorType)
 	{
-	case lang::Operator::add:
+	case ds::Operator::add:
 		result.code.addOperation(BytecodeOp::addInt);
 		break;
-	case lang::Operator::subtract:
+	case ds::Operator::subtract:
 		result.code.addOperation(BytecodeOp::subInt);
 		break;
-	case lang::Operator::multiply:
+	case ds::Operator::multiply:
 		result.code.addOperation(BytecodeOp::mulInt);
 		break;
-	case lang::Operator::divide:
+	case ds::Operator::divide:
 		result.code.addOperation(BytecodeOp::divInt);
 		break;
-	case lang::Operator::less:
-	case lang::Operator::greater:
+	case ds::Operator::less:
+	case ds::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterInt);
 		result.type = BoolType::getInstance();
 		break;
-	case lang::Operator::modulo:
-	case lang::Operator::unknown:
+	case ds::Operator::modulo:
+	case ds::Operator::unknown:
 	default:
 		return ExpressionResult();
 	}
@@ -59,7 +59,7 @@ ExpressionResult lang::IntType::compileOperator(Operator operatorType,
 	return result;
 }
 
-ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::IntType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	bool isNegative = false;
@@ -94,7 +94,7 @@ ExpressionResult lang::IntType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::IntType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::IntType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto floatValue = dynamic_cast<FloatType*>(value.type);
 	if (floatValue)
@@ -106,7 +106,7 @@ ExpressionResult lang::IntType::compileCast(ExpressionResult value, ParsedScope*
 	return ExpressionResult();
 }
 
-ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, ErrorContext* errors,
+ExpressionResult ds::IntType::compileToString(ExpressionResult thisValue, ErrorContext* errors,
 	ParsedScope* with)
 {
 	ExpressionResult result = thisValue;
@@ -116,7 +116,7 @@ ExpressionResult lang::IntType::compileToString(ExpressionResult thisValue, Erro
 	return result;
 }
 
-ExpressionResult lang::Type::defaultValue()
+ExpressionResult ds::Type::defaultValue()
 {
 	ExpressionResult result;
 	result.valid = true;
@@ -132,13 +132,13 @@ ExpressionResult lang::Type::defaultValue()
 	return result;
 }
 
-ExpressionResult lang::Type::compileMember(ExpressionResult value, TokenLine& line,
+ExpressionResult ds::Type::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+ExpressionResult ds::Type::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 	ErrorContext* errors, ParsedScope* with)
 {
 	second.compileToType(opToken, first.type, with, errors);
@@ -160,23 +160,23 @@ ExpressionResult lang::Type::compileEqualsTo(ExpressionResult first, ExpressionR
 	return result;
 }
 
-ExpressionResult lang::Type::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+ExpressionResult ds::Type::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 	ErrorContext* errors, bool setMember, ParsedScope* scope)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::Type::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
+ExpressionResult ds::Type::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-std::string lang::Type::toString(Type* target)
+std::string ds::Type::toString(Type* target)
 {
 	return target ? target->getName() : "<void>";
 }
 
-ExpressionResult lang::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,
+ExpressionResult ds::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
 
@@ -205,26 +205,26 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 
 	switch (operatorType)
 	{
-	case lang::Operator::add:
+	case ds::Operator::add:
 		result.code.addOperation(BytecodeOp::addFloat);
 		break;
-	case lang::Operator::subtract:
+	case ds::Operator::subtract:
 		result.code.addOperation(BytecodeOp::subFloat);
 		break;
-	case lang::Operator::multiply:
+	case ds::Operator::multiply:
 		result.code.addOperation(BytecodeOp::mulFloat);
 		break;
-	case lang::Operator::divide:
+	case ds::Operator::divide:
 		result.code.addOperation(BytecodeOp::divFloat);
 		break;
-	case lang::Operator::less:
-	case lang::Operator::greater:
+	case ds::Operator::less:
+	case ds::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterFloat);
 		result.type = BoolType::getInstance();
 		break;
 
-	case lang::Operator::modulo:
-	case lang::Operator::unknown:
+	case ds::Operator::modulo:
+	case ds::Operator::unknown:
 	default:
 		return ExpressionResult();
 	}
@@ -234,7 +234,7 @@ ExpressionResult lang::FloatType::compileOperator(Operator operatorType, Express
 	return result;
 }
 
-ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::FloatType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	bool isNegative = false;
@@ -269,7 +269,7 @@ ExpressionResult lang::FloatType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::FloatType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::FloatType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto intValue = dynamic_cast<IntType*>(value.type);
 	if (intValue)
@@ -281,7 +281,7 @@ ExpressionResult lang::FloatType::compileCast(ExpressionResult value, ParsedScop
 	return ExpressionResult();
 }
 
-ExpressionResult lang::FloatType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
+ExpressionResult ds::FloatType::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
 {
 	ExpressionResult result = thisValue;
 	result.code.addNew<BytecodeCallNative>("system::float.toString");
@@ -290,7 +290,7 @@ ExpressionResult lang::FloatType::compileToString(ExpressionResult thisValue, Er
 	return result;
 }
 
-ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
+ExpressionResult ds::BoolType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
@@ -305,13 +305,13 @@ ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
 
 	switch (operatorType)
 	{
-	case lang::Operator::logicalAnd:
+	case ds::Operator::logicalAnd:
 		result.code.addOperation(BytecodeOp::boolAnd);
 		break;
-	case lang::Operator::logicalNot:
+	case ds::Operator::logicalNot:
 		result.code.addOperation(BytecodeOp::boolNot);
 		break;
-	case lang::Operator::logicalOr:
+	case ds::Operator::logicalOr:
 		result.code.addOperation(BytecodeOp::boolOr);
 		break;
 	default:
@@ -323,7 +323,7 @@ ExpressionResult lang::BoolType::compileOperator(Operator operatorType,
 	return result;
 }
 
-ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::BoolType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	bool value = false;
@@ -345,12 +345,12 @@ ExpressionResult lang::BoolType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::BoolType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::BoolType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::CharType::compileOperator(Operator operatorType,
+ExpressionResult ds::CharType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
@@ -360,7 +360,7 @@ ExpressionResult lang::CharType::compileOperator(Operator operatorType,
 
 	switch (operatorType)
 	{
-	case lang::Operator::logicalAnd:
+	case ds::Operator::logicalAnd:
 		result.code.addOperation(BytecodeOp::boolAnd);
 		break;
 	default:
@@ -372,7 +372,7 @@ ExpressionResult lang::CharType::compileOperator(Operator operatorType,
 	return result;
 }
 
-ExpressionResult lang::CharType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::CharType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first.string[0] != '\'')
@@ -389,7 +389,7 @@ ExpressionResult lang::CharType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::CharType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::CharType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }

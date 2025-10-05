@@ -1,7 +1,7 @@
-#include "binaryBuffer.hpp"
+#include <ds/binaryBuffer.hpp>
 #include <format>
 
-std::string lang::BinaryBuffer::toString() const
+std::string ds::BinaryBuffer::toString() const
 {
 	std::string out;
 

@@ -1,27 +1,27 @@
-#include <parser/bytecode/compileBytecodeVirtual.hpp>
-#include <parser/types/classType.hpp>
-#include <parser/parser.hpp>
+#include <ds/parser/bytecode/compileBytecodeVirtual.hpp>
+#include <ds/parser/types/classType.hpp>
+#include <ds/parser/parser.hpp>
 #include <format>
 
-using namespace lang;
+using namespace ds;
 
-lang::BytecodeCallVirtual::BytecodeCallVirtual(Function* fn)
+ds::BytecodeCallVirtual::BytecodeCallVirtual(Function* fn)
 {
 	this->functionToCall = fn;
 	this->operation = BytecodeOp::virtualCall;
 }
 
-void lang::BytecodeCallVirtual::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+void ds::BytecodeCallVirtual::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	stream.addValue(this->functionToCall->getVirtualOffset());
 }
 
-bytecodeOffset lang::BytecodeCallVirtual::getArgsSize()
+bytecodeOffset ds::BytecodeCallVirtual::getArgsSize()
 {
 	return sizeof(bytecodeOffset);
 }
 
-std::string lang::BytecodeCallVirtual::toString()
+std::string ds::BytecodeCallVirtual::toString()
 {
 	return "\tVIRTUAL_CALL " + this->functionToCall->getFullName();
 }

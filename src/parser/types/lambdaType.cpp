@@ -1,9 +1,9 @@
-#include <parser/types/lambdaType.hpp>
-#include <parser/types/functionType.hpp>
-#include <parser/parseScope.hpp>
-using namespace lang;
+#include <ds/parser/types/lambdaType.hpp>
+#include <ds/parser/types/functionType.hpp>
+#include <ds/parser/parseScope.hpp>
+using namespace ds;
 
-ExpressionResult lang::LambdaType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
+ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with, Type* hintType)
 {
 	if (first != "fn")
@@ -66,18 +66,18 @@ ExpressionResult lang::LambdaType::compileValue(Token first, TokenLine& line, Er
 	return result;
 }
 
-ExpressionResult lang::LambdaType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::LambdaType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::LambdaType::compileOperator(Operator operatorType, ExpressionResult& first,
+ExpressionResult ds::LambdaType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ParsedFunction* lang::LambdaType::compileDestructorFor(std::vector<ScopeVariable*> variables, Token lambdaName, ParsedScope* with)
+ParsedFunction* ds::LambdaType::compileDestructorFor(std::vector<ScopeVariable*> variables, Token lambdaName, ParsedScope* with)
 {
 	BytecodeBuffer code;
 	for (auto i = variables.rbegin(); i < variables.rend(); i++)

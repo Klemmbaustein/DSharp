@@ -1,13 +1,12 @@
 #if MODULE_FS
-#include <modules/system.fs.hpp>
-#include <modules/system.hpp>
-#include <parser/types/stringType.hpp>
-#include <parser/types/arrayType.hpp>
+#include <ds/modules/system.fs.hpp>
+#include <ds/modules/system.hpp>
+#include <ds/parser/types/stringType.hpp>
+#include <ds/parser/types/arrayType.hpp>
 #include <filesystem>
-#include <print>
 
-using namespace lang;
-using namespace lang::modules::system;
+using namespace ds;
+using namespace ds::modules::system;
 using std::filesystem::directory_iterator;
 using std::filesystem::canonical;
 using std::filesystem::current_path;
@@ -102,7 +101,7 @@ static void fs_getCurrentPath(InterpretContext* context)
 }
 #endif
 
-lang::NativeModule fs::createModule()
+ds::NativeModule fs::createModule()
 {
 	NativeModule out;
 	out.name = "system::fs";
@@ -151,7 +150,7 @@ lang::NativeModule fs::createModule()
 	return out;
 }
 
-RuntimeClass* lang::modules::system::fs::createPath()
+RuntimeClass* ds::modules::system::fs::createPath()
 {
 	return RuntimeClass::allocateClass(sizeof(FilePath), &pathVTable);
 }

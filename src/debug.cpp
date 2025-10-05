@@ -1,6 +1,6 @@
-#include <debug.hpp>
+#include <ds/debug.hpp>
 
-using namespace lang;
+using namespace ds;
 
 DebugInfo::DebugInfo()
 {
@@ -10,7 +10,7 @@ DebugInfo::~DebugInfo()
 {
 }
 
-DebugSection* lang::DebugInfo::getSectionAt(uint32_t offset)
+DebugSection* ds::DebugInfo::getSectionAt(uint32_t offset)
 {
 	DebugSection* last = nullptr;
 

@@ -1,24 +1,24 @@
-#include <language.hpp>
-using namespace lang;
+#include <ds/language.hpp>
+using namespace ds;
 
-InterpretContext* lang::LanguageContext::createInterpreter()
+InterpretContext* ds::LanguageContext::createInterpreter()
 {
 	return new InterpretContext(this);
 }
 
-ParseContext* lang::LanguageContext::createCompiler()
+ParseContext* ds::LanguageContext::createCompiler()
 {
 	return new ParseContext(this);
 }
 
 #ifdef WITH_LANGUAGE_SERVICE
-LanguageService* lang::LanguageContext::startService()
+LanguageService* ds::LanguageContext::startService()
 {
 	return new LanguageService(this);
 }
 #endif
 
-void lang::LanguageContext::addNativeModule(const NativeModule& module)
+void ds::LanguageContext::addNativeModule(const NativeModule& module)
 {
 	auto m = new NativeModule(module);
 	m->initialize();

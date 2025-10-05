@@ -1,7 +1,7 @@
-#include <parser/types/enumType.hpp>
-using namespace lang;
+#include <ds/parser/types/enumType.hpp>
+using namespace ds;
 
-ExpressionResult lang::EnumType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
+ExpressionResult ds::EnumType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
@@ -12,7 +12,7 @@ ExpressionResult EnumType::compileValue(Token first, TokenLine& line,
 	return ExpressionResult();
 }
 
-ExpressionResult lang::EnumType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::EnumType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	if (value.type->sameAs(IntType::getInstance()))
 	{

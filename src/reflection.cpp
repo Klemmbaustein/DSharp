@@ -1,7 +1,7 @@
-#include <reflection.hpp>
-#include <interpreter.hpp>
+#include <ds/reflection.hpp>
+#include <ds/interpreter.hpp>
 
-using namespace lang;
+using namespace ds;
 
 RuntimeClass* TypeInfo::create(InterpretContext* context) const
 {

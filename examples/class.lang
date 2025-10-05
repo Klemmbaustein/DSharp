@@ -1,0 +1,30 @@
+using system::io
+
+module classExample
+
+class BaseClass
+{
+	virtual fn f()
+	{
+		writeln("Base function")
+	}
+}
+
+class Derived : BaseClass
+{
+	virtual fn f()
+	{
+		writeln("Base function")
+	}
+}
+
+[EntryPoint]
+fn example()
+{
+	BaseClass c = new Derived()
+
+	c.f()
+
+	// Output:
+	// Derived function
+}

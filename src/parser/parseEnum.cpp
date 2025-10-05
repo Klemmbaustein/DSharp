@@ -1,7 +1,7 @@
-#include <parser/parseEnum.hpp>
-#include <parser/parser.hpp>
+#include <ds/parser/parseEnum.hpp>
+#include <ds/parser/parser.hpp>
 
-using namespace lang;
+using namespace ds;
 
 void ParsedEnum::registerType(ParseContext* context, ParsedFile* file)
 {

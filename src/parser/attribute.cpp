@@ -1,8 +1,8 @@
-#include <parser/attribute.hpp>
-#include <parser/error.hpp>
-#include <parser/parser.hpp>
+#include <ds/parser/attribute.hpp>
+#include <ds/parser/error.hpp>
+#include <ds/parser/parser.hpp>
 
-void lang::Attributable::addAttributes(const std::vector<AttribInfo>& newAttributes)
+void ds::Attributable::addAttributes(const std::vector<AttribInfo>& newAttributes)
 {
 	for (auto& i : newAttributes)
 	{
@@ -10,7 +10,7 @@ void lang::Attributable::addAttributes(const std::vector<AttribInfo>& newAttribu
 	}
 }
 
-void lang::Attributable::resolveAttributes(ParsedFile* file, ErrorContext* errors)
+void ds::Attributable::resolveAttributes(ParsedFile* file, ErrorContext* errors)
 {
 	for (auto& i : this->attributes)
 	{

@@ -1,10 +1,10 @@
-#include <modules/system.io.hpp>
-#include <parser/types/stringType.hpp>
+#include <ds/modules/system.io.hpp>
+#include <ds/parser/types/stringType.hpp>
 #include <cstring>
 #include <cstdio>
 
-using namespace lang::modules::system;
-using namespace lang;
+using namespace ds::modules::system;
+using namespace ds;
 
 static void io_writeLine(InterpretContext* context)
 {
@@ -132,7 +132,7 @@ static void io_popen(InterpretContext* context)
 }
 #endif
 
-lang::NativeModule lang::modules::system::io::createModule()
+ds::NativeModule ds::modules::system::io::createModule()
 {
 	NativeModule out;
 	out.name = "system::io";

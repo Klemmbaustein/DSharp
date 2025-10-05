@@ -1,11 +1,11 @@
-#include <parser/types/arrayType.hpp>
-#include <parser/types/listType.hpp>
-#include <parser/types/builtinClassFunction.hpp>
-#include <parser/parseScope.hpp>
-#include <native/nativeModule.hpp>
-using namespace lang;
+#include <ds/parser/types/arrayType.hpp>
+#include <ds/parser/types/listType.hpp>
+#include <ds/parser/types/builtinClassFunction.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/native/nativeModule.hpp>
+using namespace ds;
 
-lang::ArrayType::ArrayType(Type* baseType)
+ds::ArrayType::ArrayType(Type* baseType)
 {
 	this->name = baseType->name + "[]";
 	this->size = sizeof(Pointer);
@@ -19,19 +19,19 @@ lang::ArrayType::ArrayType(Type* baseType)
 		new BuiltinClassFunction({ }, nullptr, "system::array.pop") });
 }
 
-ExpressionResult lang::ArrayType::compileOperator(Operator operatorType, ExpressionResult& first,
+ExpressionResult ds::ArrayType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ArrayType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
+ExpressionResult ds::ArrayType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with, Type* hintType)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ArrayType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::ArrayType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	if (value.type->sameAs(ListType::getInstance()))
 	{
@@ -40,7 +40,7 @@ ExpressionResult lang::ArrayType::compileCast(ExpressionResult value, ParsedScop
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLine& line,
+ExpressionResult ds::ArrayType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	Token memberName = line.peek();
@@ -56,7 +56,7 @@ ExpressionResult lang::ArrayType::compileMember(ExpressionResult value, TokenLin
 	return ClassType::compileMember(value, line, errors, setMember, with);
 }
 
-ExpressionResult lang::ArrayType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+ExpressionResult ds::ArrayType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	uint32_t elementSize = this->baseType->size;
@@ -77,7 +77,7 @@ ExpressionResult lang::ArrayType::compileIndex(ExpressionResult thisValue, Expre
 	return result;
 }
 
-ExpressionResult lang::ArrayType::getLength(BytecodeBuffer thisValue)
+ExpressionResult ds::ArrayType::getLength(BytecodeBuffer thisValue)
 {
 	ExpressionResult result;
 	result.code.addBuffer(thisValue);
@@ -91,7 +91,7 @@ ExpressionResult lang::ArrayType::getLength(BytecodeBuffer thisValue)
 	return result;
 }
 
-ExpressionResult lang::ArrayType::makeArrayValue(std::vector<ExpressionResult> values, ParsedScope* with)
+ExpressionResult ds::ArrayType::makeArrayValue(std::vector<ExpressionResult> values, ParsedScope* with)
 {
 	ExpressionResult result;
 

@@ -1,8 +1,8 @@
-#include <parser/operator.hpp>
+#include <ds/parser/operator.hpp>
 #include <map>
-using namespace lang;
+using namespace ds;
 
-Operator lang::stringToOperator(std::string opString)
+Operator ds::stringToOperator(std::string opString)
 {
 	static std::map<std::string, Operator> operatorStrings = {
 		{ "+", Operator::add },
@@ -31,7 +31,7 @@ Operator lang::stringToOperator(std::string opString)
 	return Operator::unknown;
 }
 
-CompoundOperator lang::stringToCompoundOperator(std::string opString)
+CompoundOperator ds::stringToCompoundOperator(std::string opString)
 {
 	static std::map<std::string, CompoundOperator> operatorStrings = {
 		{ "+=", CompoundOperator::add },
@@ -51,7 +51,7 @@ CompoundOperator lang::stringToCompoundOperator(std::string opString)
 	return CompoundOperator::unknown;
 }
 
-int32_t lang::getOperatorPriority(Operator op)
+int32_t ds::getOperatorPriority(Operator op)
 {
 	static std::map<Operator, int32_t> priorities = {
 		{ Operator::add, 0 },

@@ -1,10 +1,10 @@
-#include <parser/bytecode/compileBytecodeVariables.hpp>
-#include <parser/types/type.hpp>
+#include <ds/parser/bytecode/compileBytecodeVariables.hpp>
+#include <ds/parser/types/type.hpp>
 #include <format>
 
-using namespace lang;
+using namespace ds;
 
-lang::BytecodePushVariable::BytecodePushVariable(std::string name, Type* variableType)
+ds::BytecodePushVariable::BytecodePushVariable(std::string name, Type* variableType)
 {
 	this->name = name;
 	this->variableType = variableType;
@@ -32,7 +32,7 @@ bytecodeOffset BytecodePushVariable::getArgsSize()
 	return sizeof(uint32_t);
 }
 
-lang::BytecodeReadVariable::BytecodeReadVariable(std::shared_ptr<BytecodePushVariable> variablePtr)
+ds::BytecodeReadVariable::BytecodeReadVariable(std::shared_ptr<BytecodePushVariable> variablePtr)
 {
 	this->variable = variablePtr;
 	this->operation = BytecodeOp::readVariable;
@@ -59,7 +59,7 @@ bytecodeOffset BytecodeReadVariable::getArgsSize()
 	return sizeof(uint32_t) * 2;
 }
 
-lang::BytecodeStoreVariable::BytecodeStoreVariable(std::shared_ptr<BytecodePushVariable> variablePtr)
+ds::BytecodeStoreVariable::BytecodeStoreVariable(std::shared_ptr<BytecodePushVariable> variablePtr)
 {
 	this->variable = variablePtr;
 	this->operation = BytecodeOp::storeVariable;
@@ -85,7 +85,7 @@ bytecodeOffset BytecodeStoreVariable::getArgsSize()
 	return sizeof(uint32_t) * 2;
 }
 
-lang::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit)
+ds::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit)
 {
 	this->operation = BytecodeOp::popVariable;
 	this->isScopeExit = isScopeExit;

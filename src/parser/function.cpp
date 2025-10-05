@@ -1,13 +1,13 @@
-#include <parser/function.hpp>
+#include <ds/parser/function.hpp>
 
-using namespace lang;
+using namespace ds;
 
-BytecodeBuffer lang::Function::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
+BytecodeBuffer ds::Function::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
 {
 	return BytecodeBuffer();
 }
 
-std::string lang::Function::getSignatureText()
+std::string ds::Function::getSignatureText()
 {
 	std::string arguments;
 

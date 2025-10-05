@@ -1,11 +1,11 @@
-#include <parser/types/classType.hpp>
-#include <parser/function.hpp>
-#include <service/languageService.hpp>
-#include <parser/parseScope.hpp>
+#include <ds/parser/types/classType.hpp>
+#include <ds/parser/function.hpp>
+#include <ds/service/languageService.hpp>
+#include <ds/parser/parseScope.hpp>
 
-using namespace lang;
+using namespace ds;
 
-BytecodeBuffer lang::ClassType::compileUnref()
+BytecodeBuffer ds::ClassType::compileUnref()
 {
 	BytecodeBuffer outBuffer;
 
@@ -14,7 +14,7 @@ BytecodeBuffer lang::ClassType::compileUnref()
 	return outBuffer;
 }
 
-BytecodeBuffer lang::ClassType::compileEndMove(ParsedScope* with)
+BytecodeBuffer ds::ClassType::compileEndMove(ParsedScope* with)
 {
 	BytecodeBuffer outBuffer;
 	BinaryBuffer args;
@@ -24,7 +24,7 @@ BytecodeBuffer lang::ClassType::compileEndMove(ParsedScope* with)
 	return outBuffer;
 }
 
-BytecodeBuffer lang::ClassType::compileMove(ParsedScope* with)
+BytecodeBuffer ds::ClassType::compileMove(ParsedScope* with)
 {
 	BytecodeBuffer outBuffer;
 	BinaryBuffer args;
@@ -34,33 +34,33 @@ BytecodeBuffer lang::ClassType::compileMove(ParsedScope* with)
 	return outBuffer;
 }
 
-lang::NullableClassType::NullableClassType(ClassType* from)
+ds::NullableClassType::NullableClassType(ClassType* from)
 {
 	this->size = from->size;
 	this->from = from;
 	this->name = from->name + "?";
 }
 
-BytecodeBuffer lang::NullableClassType::compileUnref()
+BytecodeBuffer ds::NullableClassType::compileUnref()
 {
 	return from->compileUnref();
 }
 
-BytecodeBuffer lang::NullableClassType::compileMove(ParsedScope* with)
+BytecodeBuffer ds::NullableClassType::compileMove(ParsedScope* with)
 {
 	return from->compileMove(with);
 }
 
-BytecodeBuffer lang::NullableClassType::compileEndMove(ParsedScope* with)
+BytecodeBuffer ds::NullableClassType::compileEndMove(ParsedScope* with)
 {
 	return from->compileEndMove(with);
 }
 
-std::string lang::NullableClassType::getName()
+std::string ds::NullableClassType::getName()
 {
 	return from->getName() + "?";
 }
-bool lang::ClassType::isSubclassOf(ClassType* parent)
+bool ds::ClassType::isSubclassOf(ClassType* parent)
 {
 	for (ClassType* i : parents)
 	{
@@ -75,7 +75,7 @@ bool lang::ClassType::isSubclassOf(ClassType* parent)
 	}
 	return false;
 }
-ExpressionResult lang::NullableClassType::compileOperator(Operator operatorType,
+ExpressionResult ds::NullableClassType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	if (operatorType == Operator::dereference)
@@ -88,13 +88,13 @@ ExpressionResult lang::NullableClassType::compileOperator(Operator operatorType,
 	return from->compileOperator(operatorType, first, second, with);
 }
 
-ExpressionResult lang::NullableClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
+ExpressionResult ds::NullableClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with, Type* hintType)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NullableClassType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::NullableClassType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	if (!value.type)
 	{
@@ -118,14 +118,14 @@ ExpressionResult lang::NullableClassType::compileCast(ExpressionResult value, Pa
 	return from->compileCast(value, with);
 }
 
-ExpressionResult lang::NullableClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors,
+ExpressionResult ds::NullableClassType::compileMember(ExpressionResult value, TokenLine& line, ErrorContext* errors,
 	bool setMember, ParsedScope* with)
 {
 	value.code.addBuffer(compileNullCheck());
 	return from->compileMember(value, line, errors, setMember, with);
 }
 
-ExpressionResult lang::NullableClassType::compileEqualsTo(ExpressionResult first, ExpressionResult second,
+ExpressionResult ds::NullableClassType::compileEqualsTo(ExpressionResult first, ExpressionResult second,
 	Token opToken, ErrorContext* errors, ParsedScope* with)
 {
 	if (second.type->sameAs(NullType::getInstance()))
@@ -140,20 +140,20 @@ ExpressionResult lang::NullableClassType::compileEqualsTo(ExpressionResult first
 	return this->from->compileEqualsTo(first, second, opToken, errors, with);
 }
 
-BytecodeBuffer lang::NullableClassType::compileNullCheck() const
+BytecodeBuffer ds::NullableClassType::compileNullCheck() const
 {
 	BytecodeBuffer result;
 	result.addOperation(BytecodeOp::nullCheck);
 	return result;
 }
 
-ExpressionResult lang::ClassType::compileOperator(Operator operatorType,
+ExpressionResult ds::ClassType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	ExpressionResult result;
@@ -189,7 +189,7 @@ ExpressionResult lang::ClassType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
-ExpressionResult lang::ClassType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::ClassType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto castValue = dynamic_cast<ClassType*>(value.type);
 
@@ -201,7 +201,7 @@ ExpressionResult lang::ClassType::compileCast(ExpressionResult value, ParsedScop
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLine& line,
+ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	Token memberName = line.get();
@@ -296,12 +296,12 @@ ExpressionResult lang::ClassType::compileMember(ExpressionResult value, TokenLin
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NullType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
+ExpressionResult ds::NullType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType)
+ExpressionResult ds::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	if (first == "null")
 	{
@@ -318,7 +318,7 @@ ExpressionResult lang::NullType::compileValue(Token first, TokenLine& line, Erro
 	return ExpressionResult();
 }
 
-ExpressionResult lang::NullType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::NullType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ExpressionResult();
 }

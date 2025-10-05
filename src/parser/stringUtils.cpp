@@ -1,6 +1,6 @@
-#include <parser/stringUtils.hpp>
+#include <ds/parser/stringUtils.hpp>
 
-bool lang::isNumber(std::string text, bool isFloatingPoint)
+bool ds::isNumber(std::string text, bool isFloatingPoint)
 {
 	if (text.empty())
 	{

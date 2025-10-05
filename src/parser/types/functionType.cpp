@@ -1,9 +1,9 @@
-#include <parser/types/functionType.hpp>
-#include <parser/parseScope.hpp>
-#include <parser/types/builtinClassFunction.hpp>
-using namespace lang;
+#include <ds/parser/types/functionType.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/types/builtinClassFunction.hpp>
+using namespace ds;
 
-lang::FunctionType::FunctionType(Type* returnType, std::vector<Type*> arguments)
+ds::FunctionType::FunctionType(Type* returnType, std::vector<Type*> arguments)
 {
 	this->returnType = returnType;
 	this->arguments = arguments;
@@ -19,13 +19,13 @@ lang::FunctionType::FunctionType(Type* returnType, std::vector<Type*> arguments)
 		new BuiltinClassFunction(args, returnType, "call", 1, this) });
 }
 
-ExpressionResult lang::FunctionType::compileOperator(Operator operatorType, ExpressionResult& first,
+ExpressionResult ds::FunctionType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult lang::FunctionType::compileValue(Token first, TokenLine& line,
+ExpressionResult ds::FunctionType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	auto fn = with->scopeFile->getMethod(first.string);
@@ -57,7 +57,7 @@ ExpressionResult lang::FunctionType::compileValue(Token first, TokenLine& line,
 	return ExpressionResult();
 }
 
-FunctionType* lang::FunctionType::compileType(Token first, TokenLine& line, ErrorContext* errors,
+FunctionType* ds::FunctionType::compileType(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedFile* file)
 {
 	if (first != "fn")
@@ -103,24 +103,24 @@ FunctionType* lang::FunctionType::compileType(Token first, TokenLine& line, Erro
 	return getInstance(file->getType(line, errors), types);
 }
 
-ExpressionResult lang::FunctionType::compileCast(ExpressionResult value, ParsedScope* with)
+ExpressionResult ds::FunctionType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	return ClassType::compileCast(value, with);
 }
 
-ExpressionResult lang::FunctionType::compileMember(ExpressionResult value, TokenLine& line,
+ExpressionResult ds::FunctionType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	return ClassType::compileMember(value, line, errors, setMember, with);
 }
 
-ExpressionResult lang::FunctionType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
+ExpressionResult ds::FunctionType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-std::string lang::FunctionType::getFunctionTypeName(Type* returnType, const std::vector<Type*>& arguments)
+std::string ds::FunctionType::getFunctionTypeName(Type* returnType, const std::vector<Type*>& arguments)
 {
 	std::string result = "fn(";
 

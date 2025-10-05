@@ -1,13 +1,13 @@
-#include <parser/parseScope.hpp>
-#include <parser/bytecode/compileBytecodeVariables.hpp>
+#include <ds/parser/parseScope.hpp>
+#include <ds/parser/bytecode/compileBytecodeVariables.hpp>
 #include <format>
 #include <list>
-#include <parser/types/arrayType.hpp>
-#include <parser/types/lambdaType.hpp>
-#include <service/languageService.hpp>
-using namespace lang;
+#include <ds/parser/types/arrayType.hpp>
+#include <ds/parser/types/lambdaType.hpp>
+#include <ds/service/languageService.hpp>
+using namespace ds;
 
-ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
+ExpressionResult ds::ParsedScope::pushExpression(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression, Type* hintType)
 {
 	ExpressionResult result = getExpressionValue(currentLine, errors, setExpression, hintType);
@@ -86,7 +86,7 @@ ExpressionResult lang::ParsedScope::pushExpression(TokenLine& currentLine,
 	return expression.begin()->first;
 }
 
-ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
+ExpressionResult ds::ParsedScope::getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
 	bool setExpression, Type* hintType)
 {
 	ExpressionResult result = pushValue(currentLine, errors, setExpression, hintType);
@@ -153,7 +153,7 @@ ExpressionResult lang::ParsedScope::getExpressionValue(TokenLine& currentLine, E
 	return result;
 }
 
-ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op,
+ExpressionResult ds::ParsedScope::compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op,
 	Token opToken, ErrorContext* errors, bool setExpression)
 {
 	auto oldType = a.type;
@@ -186,7 +186,7 @@ ExpressionResult lang::ParsedScope::compileOperatorBetween(ExpressionResult a, E
 	return a;
 }
 
-ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
+ExpressionResult ds::ParsedScope::pushValue(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression, Type* hintType)
 {
 	Token value = currentLine.peek();
@@ -404,14 +404,14 @@ ExpressionResult lang::ParsedScope::pushValue(TokenLine& currentLine,
 	return ExpressionResult();
 }
 
-ExpressionResult lang::ParsedScope::pushClassValue(TokenLine& currentLine,
+ExpressionResult ds::ParsedScope::pushClassValue(TokenLine& currentLine,
 	ErrorContext* errors, bool setExpression)
 {
 	return this->inClass->thisType->compileMember(thisVariable->readExpression(this), currentLine,
 		errors, setExpression, this);
 }
 
-void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
+void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
 	std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options)
 {
 	ParsedScope conditionScope;
@@ -445,7 +445,7 @@ void lang::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, st
 	conditionScope.compile(this->context, file, errors);
 }
 
-ExpressionResult lang::ParsedScope::parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
+ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
 	TokenLine& currentLine, ErrorContext* errors)
 {
 	ExpressionResult callCode;
@@ -501,7 +501,7 @@ ExpressionResult lang::ParsedScope::parseFunctionArguments(Token functionName, s
 	return callCode;
 }
 
-BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
+BytecodeBuffer ds::ParsedScope::addTemporaryVariable(Type* type)
 {
 	BytecodeBuffer buffer;
 	BinaryBuffer args;
@@ -532,7 +532,7 @@ BytecodeBuffer lang::ParsedScope::addTemporaryVariable(Type* type)
 	return buffer;
 }
 
-void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
+void ds::ParsedScope::pushVariableValue(Type* type, bool copy)
 {
 	BinaryBuffer args;
 	// size
@@ -546,7 +546,7 @@ void lang::ParsedScope::pushVariableValue(Type* type, bool copy)
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
 
-ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type, ErrorContext* errors)
+ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext* errors)
 {
 	auto instruction = std::make_shared<BytecodePushVariable>(name.string, type);
 	code->add(instruction);
@@ -574,7 +574,7 @@ ScopeVariable& lang::ParsedScope::addVariable(Token name, Type* type, ErrorConte
 	return result.first->second;
 }
 
-void lang::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
+void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 {
 	uint32_t size = 0;
 
@@ -631,7 +631,7 @@ void lang::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 	}
 }
 
-void lang::ParsedScope::setClass(ParsedClass* inClass, bool copy)
+void ds::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 {
 	this->inClass = inClass;
 
@@ -644,7 +644,7 @@ void lang::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 	this->thisVariable->readOnly = true;
 }
 
-void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
+void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
 {
 	this->context = context;
 	this->scopeFile = file;
@@ -686,7 +686,7 @@ void lang::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCo
 	}
 }
 
-void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors)
+void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
 	auto first = line.get();
 
@@ -920,7 +920,7 @@ void lang::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorConte
 	return;
 }
 
-void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
+void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
 	auto conditionLine = line.getUntil("{", errors);
 
@@ -968,7 +968,7 @@ void lang::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext
 	}
 }
 
-void lang::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext* errors)
+void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
 	this->depth++;
 
@@ -1090,7 +1090,7 @@ void lang::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContex
 	compileScopeExit(this->depth + 1, true);
 }
 
-BytecodeBuffer lang::ScopeVariable::readValue(ParsedScope* with) const
+BytecodeBuffer ds::ScopeVariable::readValue(ParsedScope* with) const
 {
 	BytecodeBuffer result;
 	if (with->isLambda && ownedBy != with)
@@ -1123,14 +1123,14 @@ BytecodeBuffer lang::ScopeVariable::readValue(ParsedScope* with) const
 	return result;
 }
 
-BytecodeBuffer lang::ScopeVariable::writeValue() const
+BytecodeBuffer ds::ScopeVariable::writeValue() const
 {
 	BytecodeBuffer result;
 	result.addNew<BytecodeStoreVariable>(this->variableInstruction);
 	return result;
 }
 
-ExpressionResult lang::ScopeVariable::readExpression(ParsedScope* with) const
+ExpressionResult ds::ScopeVariable::readExpression(ParsedScope* with) const
 {
 	ExpressionResult result;
 	result.valid = true;
