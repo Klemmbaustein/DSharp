@@ -73,16 +73,35 @@ ExpressionResult ds::NativeStructType::compileValue(Token first, TokenLine& line
 	auto constructorArgs = line.getInBraces(errors);
 	TokenLine argsLine;
 	argsLine.lineTokens = &constructorArgs;
-	ExpressionResult result = with->parseFunctionArguments(first.string, {}, argsLine, errors);
 
-	BinaryBuffer buffer;
-	for (Size i = 0; i < this->size; i++)
+	auto initialPosition = argsLine.savePosition();
+	ExpressionResult result;
+	for (auto& i : constructors)
 	{
-		buffer.addValue<uint8_t>(0);
+		result = with->parseFunctionArguments(first.string, i->getArguments(), argsLine, errors, false);
+		if (result.valid)
+		{
+			result.code.addBuffer(i->compileCall().code);
+			break;
+		}
+		argsLine.loadPosition(initialPosition);
+	}
+
+	if (!constructors.empty() && !result.valid)
+	{
+		errors->error(ErrorCode::parseNoMatchingConstructor, first, "No matching constructor found.");
+	}
+	else if (constructors.empty())
+	{
+		BinaryBuffer buffer;
+		for (Size i = 0; i < this->size; i++)
+		{
+			buffer.addValue<uint8_t>(0);
+		}
+		result.code.addOperation(BytecodeOp::push, buffer);
 	}
 	result.type = this;
 	result.valid = true;
-	result.code.addOperation(BytecodeOp::push, buffer);
 	return result;
 }
 
@@ -115,7 +134,7 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = with->parseFunctionArguments(next, functionArgs, argsLine, errors);
+			ExpressionResult callCode = with->parseFunctionArguments(next, functionArgs, argsLine, errors, true);
 			callCode.code.addBuffer(value.code);
 			auto compiled = function->compileCall();
 			if (compiled.type)
@@ -169,4 +188,9 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 	}
 
 	return ExpressionResult();
+}
+
+void ds::NativeStructType::addConstructor(Function* newConstructor)
+{
+	this->constructors.push_back(newConstructor);
 }

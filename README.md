@@ -1,5 +1,8 @@
 # D# scripting language
 
+> [!WARNING]
+> the language is still in early development. It isn't stable yet.
+
 D# is a lightweight scripting language that looks like a less verbose C#,
 and takes some additional inspiration from C++, Rust and JavaScript.
 
@@ -37,3 +40,9 @@ fn helloWorld()
 ```
 
 For more examples see the `examples/` directory.
+
+## Documentation
+
+- [Language guide](docs/guide.md)
+- [Standard library](docs/stdlib.md)
+- [Syntax documentation](docs/syntax.md)

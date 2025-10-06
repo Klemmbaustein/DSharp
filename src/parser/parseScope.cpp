@@ -353,7 +353,7 @@ ExpressionResult ds::ParsedScope::pushValue(TokenLine& currentLine,
 			auto functionArgs = function->getArguments();
 
 			ExpressionResult callCode = parseFunctionArguments(value, functionArgs,
-				argsLine, errors);
+				argsLine, errors, true);
 
 #ifdef WITH_LANGUAGE_SERVICE
 			if (context->service)
@@ -446,7 +446,7 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std:
 }
 
 ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
-	TokenLine& currentLine, ErrorContext* errors)
+	TokenLine& currentLine, ErrorContext* errors, bool hasToMatch)
 {
 	ExpressionResult callCode;
 	size_t argIndex = 0;
@@ -461,7 +461,7 @@ ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std
 
 		if (arguments.size() <= argIndex)
 		{
-			if (expr.valid)
+			if (expr.valid && hasToMatch)
 			{
 				errors->error(ErrorCode::parseUnexpectedToken, exprToken,
 					"Unexpected argument of type " + Type::toString(expr.type) + " for function '" +
@@ -472,7 +472,7 @@ ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std
 		}
 
 		auto& currentArg = arguments[argIndex++];
-		expr.compileToType(exprToken, currentArg.type, this, errors);
+		expr.compileToType(exprToken, currentArg.type, this, hasToMatch ? errors : nullptr);
 
 		if (!expr.type || !expr.valid)
 		{
@@ -491,13 +491,18 @@ ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std
 
 	if (argIndex < arguments.size())
 	{
-		errors->error(ErrorCode::parseUnexpectedToken,
-			currentLine.lineTokens->size() ? currentLine.previous() : functionName,
-			"Wrong number of arguments for function '" +
-				functionName.string + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
-				" argument(s) were expected.");
+		if (hasToMatch)
+		{
+			errors->error(ErrorCode::parseUnexpectedToken,
+				currentLine.lineTokens->size() ? currentLine.previous() : functionName,
+				"Wrong number of arguments for function '" +
+					functionName.string + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
+					" argument(s) were expected.");
+		}
+		return ExpressionResult();
 	}
 
+	callCode.valid = true;
 	return callCode;
 }
 

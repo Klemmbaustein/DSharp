@@ -4,10 +4,10 @@ The D# standard library is made up of multiple modules.
 
 ## Overview
 
-- [`system`](#system-module)
-  - [`system::err`](#systemerr-module)
-  - [`system::io`](#systemio-module)
-  - [`system::fs`](#systemio-module)
+- [system](#system-module) - Standard library root module
+  - [err](#systemerr-module) - Error handling
+  - [io](#systemio-module) - Input/output
+  - [fs](#systemio-module) - Filesystem access
 
 ## `system` module
 
@@ -27,8 +27,11 @@ The D# standard library is made up of multiple modules.
   
   For simple formatting, use the string interpolation syntax.
   It internally generates a call to the `format` function.
+  
+  The function will replace all occurrences of `{}` with strings from `args`. If not enough
+  strings were provided, it throws an error.
 - `fn compareString(string str1, string str2) -> int`:
-  Works like the C `strcmp` function.
+  Works like the C [strcmp](https://cplusplus.com/reference/cstring/strcmp/) function.
 
 ### Notes
 
@@ -80,3 +83,37 @@ The D# standard library is made up of multiple modules.
     Returns `true` if the file is empty, `false` if not.
 
 ## `system::fs` module
+
+> Contains functions for accessing the file system.
+
+### Functions
+
+- `fn writeln(string toWrite)`:
+  Writes the given string to the standard output, followed by a newline.
+
+- `fn write(string toWrite)`:
+  Writes the given string to the standard output.
+
+- `fn writeInt(int toWrite)`:
+  Writes a string representation of the given integer to the standard output.
+ 
+- `fn readln() -> string`:
+  Reads a line from the standard input and returns it.
+
+- `fn popen(string command) -> system::io::File`:
+  Creates a process and returns a file object that can be used to read from the standard output of that file.
+
+### Classes
+
+- `class Path`:
+  A filesystem path.
+  
+  #### Constructors:
+  - `fn new(string path)`:
+    Creates a path object from the given string.
+ 
+  #### Methods:
+  - `fn readln() -> string`:
+    Reads a line from this file and returns it.
+  - `fn isEmpty() -> bool`:
+    Returns `true` if the file is empty, `false` if not.

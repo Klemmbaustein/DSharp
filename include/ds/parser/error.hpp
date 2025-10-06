@@ -44,6 +44,8 @@ namespace ds
 		parseInvalidOverride = 3012,
 		/// E3013 Variable redefinition
 		parseVariableRedefinition = 3013,
+		/// E3014 No matching constructor
+		parseNoMatchingConstructor = 3014,
 		/// E4000 NoDiscard function return value discarded.
 		returnValueDiscarded = 4000,
 	};

@@ -29,6 +29,8 @@ namespace ds
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;;
 
+		void addConstructor(Function* newConstructor);
+
 		std::vector<NativeStructMember> members;
 		std::map<std::string, Function*> methods;
 		std::vector<Function*> constructors;

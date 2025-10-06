@@ -88,7 +88,7 @@ namespace ds
 			});
 
 		ExpressionResult parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
-			TokenLine& currentLine, ErrorContext* errors);
+			TokenLine& currentLine, ErrorContext* errors, bool hasToMatch);
 
 	private:
 

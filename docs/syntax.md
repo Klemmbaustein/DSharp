@@ -8,13 +8,18 @@
 4. [Scopes](#scopes)
 5. [Statements](#statements)
     - [If-statements](#if-statements-if-condition-scope)
-    - [While-statements](#while-statements-while-condition-scope)
     - [Variable definition statements](#variable-definition-statements-type-name-or-type-name-value)
+    - [While-statements](#while-statements-while-condition-scope)
 6. [Expressions](#expressions)
     - [Literals](#literals)
+    - [Variables](#variables)
     - [Operators](#operators)
         - [Unary](#unary)
         - [Ternary](#ternary)
+    - [Discardable expressions](#discardable-expressions)
+7. [Classes](#classes)
+    - [Class methods](#class-methods)
+8. [Attributes](#attributes)
 
 ## Files
 
@@ -123,11 +128,15 @@ Types of statements are:
   At the end of the scope, the statement will be repeated. If [condition] still evaluates to `true`, the scope
   will be run again.
 
-- ### Variable definition statement `[type] [name]` or `[type] [name] = [value]`
+- ### Variable definition statements `[type] [name]` or `[type] [name] = [value]`
   
   A variable definition defines a variable in the scope.
 
 - ### For-statements `for [varDef] in [arrayExpression] [scope]`
+
+  TODO:
+- ### Expression statements
+  A statement can also just be an [expression](#expressions).
   
 ## Expressions
 
@@ -150,11 +159,45 @@ Types of expressions are:
     As an example: The string `$"1 + 1 = {1 + 1}"` evaluates to `1 + 1 = 2` at runtime.
   - #### Boolean literals
     Either `true` or `false`, evaluate to their `bool` type equivalents.
+  - #### Function references
+    Writing just the name of a function will be interpreted as a function reference.
 - ### Variables
   A variable expression reads the value of a variable that was earlier defined with a
   [variable definition statement](#variable-definition-statements-type-name-or-type-name-value).
   The expression will have the same type as the one the variable has been declared as.
+
+- ### Function calls
+
+  A function call follows the form `[name] ([arguments])`, where [name] is the name of a function
+  and [arguments] is a comma-separated list of argument expressions, where the number of expressions given
+  to the function must match the number of arguments the function has and each expression must be convertible
+  to the matching argument's type defined in the function.
+
 - ### Operators
+  Operators chain together or modify expressions. The behavior of an operator changes depending on
+  which types the operator is being used with. There are two kinds of operators:
+  - #### Unary
+    Unary operators only operate on a single expression, and are written before the expression.
+    Unary operators are:
+    - `not` operator - returns the opposite value of a Boolean. Other standard types do not use it.
+    
+    - `*` (dereference) operator - Performs a null check a nullable type, then converts it
+      to it's non nullable version.
+    
+    - `-` (unary minus) operator - Converts a number to the negative value of itself.
+      As an example, `-(5)` is equal to `-5` (the literal version)
+  - #### Ternary
+    Ternary operators operate on two expressions. The operator goes between these 2 expressions, for example
+    `1 + 2` contains the two expressions `1` and `2`, and the `+` operator combines these two expressions.
+    - `+`, `-`, `*`, `/`, `%` (add, subtract, multiply, divide, modulo) - Apply their respective
+      mathematical operations to the value.
+    - `and`, `or` logical operators - performs these logical operators
+
+### Discardable expressions
+
+An expression is discardable if it doesn't have any resulting type (such as functions returning no type)
+or if it is a function or variable marked with the `[system::Discard]` attribute.
+
 ## Classes
 
 A class in D# has the form
@@ -187,5 +230,5 @@ class X
 }
 ```
 
-However, in a class method, any expression that does not have another meaning will implicitly be interpreted as a member
-of the `this` variable.
+However, in a class method, any expression that does not have another meaning will implicitly be interpreted
+as a member of the `this` variable.

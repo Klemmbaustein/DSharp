@@ -26,7 +26,7 @@ void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* wi
 	}
 
 	auto cast = target->compileCast(*this, with);
-	if (!cast.valid)
+	if (!cast.valid && errors)
 	{
 		errors->error(ErrorCode::parseInvalidType, at,
 			"Type mismatch. Expected " + Type::toString(target) + ", got " + Type::toString(type) + " and no cast is possible.");

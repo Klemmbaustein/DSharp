@@ -173,14 +173,29 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	}
 	else
 	{
+		bool found = false;
 		for (auto& i : this->constructors)
 		{
-			result.code.addBuffer(with->parseFunctionArguments(Token(first), i->getArguments(), argsLine, errors).code);
+			auto constructor = with->parseFunctionArguments(Token(first), i->getArguments(), argsLine, errors, false);
+
+			if (!constructor.valid)
+			{
+				continue;
+			}
+
+			result.code.addBuffer(constructor.code);
 
 			result.code.pushInt(Size(this->classSize));
 			result.code.add(std::make_shared<BytecodeAllocClass>(this));
 			result.code.addBuffer(i->compileCall().code);
+			found = true;
 			break;
+		}
+
+		if (!found)
+		{
+			errors->error(ErrorCode::parseNoMatchingConstructor, first, "No matching constructor found.");
+			return ExpressionResult();
 		}
 	}
 	result.type = this;
@@ -225,7 +240,7 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = with->parseFunctionArguments(memberName, functionArgs, argsLine, errors);
+			ExpressionResult callCode = with->parseFunctionArguments(memberName, functionArgs, argsLine, errors, true);
 			callCode.code.addBuffer(value.code);
 			auto compiled = function->compileCall();
 			if (compiled.type)
