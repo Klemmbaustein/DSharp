@@ -123,10 +123,8 @@ ExpressionResult ds::ParsedScope::getExpressionValue(TokenLine& currentLine, Err
 				break;
 			}
 
-			if (currentLine.get() != "]")
+			if (currentLine.expect("[", errors))
 			{
-				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
-					"Unexpected '" + currentLine.previous().string + "'");
 				break;
 			}
 
@@ -484,9 +482,8 @@ ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std
 
 		if (currentLine.empty())
 			break;
-		else if (currentLine.get() != ",")
-			errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
-				"Expected a ',', got '" + currentLine.previous().string + "'");
+		else
+			currentLine.expect(",", errors);
 	}
 
 	if (argIndex < arguments.size())

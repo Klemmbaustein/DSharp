@@ -1,0 +1,265 @@
+#include <ds/parser/parseFile.hpp>
+#include <ds/parser/parseEnum.hpp>
+#include <ds/service/languageService.hpp>
+
+using namespace ds;
+
+void ds::ParsedFile::loadAvailableTypes(ParseContext* context)
+{
+}
+
+void ds::ParsedFile::scan(ErrorContext* errors)
+{
+	this->scopeName = "";
+	this->usings.clear();
+	this->enums.clear();
+	this->attributes.clear();
+	this->functions.clear();
+	this->classes.clear();
+	std::vector<AttribInfo> currentAttributes;
+	while (scanLine(currentAttributes, errors)) {}
+}
+ds::ParsedFile::~ParsedFile()
+{
+}
+
+bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors)
+{
+	TokenLine currentLine = stream.next(errors);
+
+	if (currentLine.empty())
+		return false;
+
+	Token first = currentLine.get();
+
+	// Module declaration
+	if (first == "module")
+	{
+		this->addAttributes(currentAttributes);
+		currentAttributes.clear();
+		this->scopeName = currentLine.get().string;
+		return true;
+	}
+
+	// Using other module
+	if (first == "using")
+	{
+		this->usings[currentLine.get()] = nullptr;
+		return true;
+	}
+
+	// Attribute
+	if (first == "[")
+	{
+		auto attribTokens = currentLine.getUntil("]", errors);
+
+		if (attribTokens.empty())
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, first, "Expected an attribute name after '['");
+			return true;
+		}
+
+		currentAttributes.push_back(AttribInfo(attribTokens));
+		return true;
+	}
+
+	if (first == "fn")
+	{
+		scanFunction(currentLine, errors).addAttributes(currentAttributes);
+		currentAttributes.clear();
+		return true;
+	}
+
+	if (first == "class")
+	{
+		scanClass(currentLine, errors).addAttributes(currentAttributes);
+		currentAttributes.clear();
+		return true;
+	}
+
+	if (first == "enum")
+	{
+		scanEnum(currentLine, errors).addAttributes(currentAttributes);
+		currentAttributes.clear();
+		return true;
+	}
+
+	errors->error(ErrorCode::parseUnexpectedToken, first, "Unexpected '" + first.string + "'");
+
+	return true;
+}
+
+ParsedFunction& ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext* errors)
+{
+	ParsedFunction& fn = this->functions.emplace_back();
+
+	fn.scanDeclaration(currentLine, stream, this, errors);
+
+	return fn;
+}
+
+ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* errors)
+{
+	ParsedClass& newClass = this->classes.emplace_back();
+	newClass.name = currentLine.get();
+	newClass.name.checkIsName(errors);
+
+	if (currentLine.peek() == ":")
+	{
+		currentLine.get();
+		while (true)
+		{
+			newClass.derivedFrom.push_back(currentLine.getUntil("{,", errors));
+
+			if (currentLine.previous() == "{")
+			{
+				break;
+			}
+			else if (currentLine.empty())
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
+				return newClass;
+			}
+			else if (currentLine.expect(",", errors))
+			{
+				break;
+			}
+		}
+	}
+	else
+	{
+		auto found = currentLine.get();
+
+		if (found != "{" && !found.empty())
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, found, "Expected a '{', got: '" + found.string + "'");
+			return newClass;
+		}
+	}
+
+	stream.getScope(newClass.classStream, errors, 1);
+
+	return newClass;
+}
+
+ParsedEnum& ds::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* errors)
+{
+	ParsedEnum& newEnum = this->enums.emplace_back();
+	newEnum.name = currentLine.get();
+
+	if (currentLine.expect("{", errors))
+	{
+		return newEnum;
+	}
+
+	stream.getScope(newEnum.scope, errors, 1);
+	return newEnum;
+}
+
+void ds::ParsedFile::compile(ParseContext* context)
+{
+#ifdef WITH_LANGUAGE_SERVICE
+	ScannedFile* scanInfo = nullptr;
+
+	if (context->service)
+	{
+		scanInfo = &context->service->files[this->name];
+	}
+#endif
+
+	for (auto& c : this->classes)
+	{
+		c.compile(context, &context->errors, this);
+	}
+
+	for (auto& fn : this->functions)
+	{
+#ifdef WITH_LANGUAGE_SERVICE
+		if (scanInfo)
+		{
+			scanInfo->functions.push_back(ScannedFunction(&fn, fn.name));
+		}
+#endif
+		fn.compile(context, this, &context->errors);
+	}
+}
+
+Function* ParsedFile::getMethod(std::string name)
+{
+	Function* found = this->fileModule->getMethod(name);
+	if (found)
+		return found;
+
+	for (auto& i : this->usings)
+	{
+		if (!i.second)
+			continue;
+		found = i.second->getMethod(name);
+		if (found)
+			return found;
+	}
+	return nullptr;
+}
+
+Type* ParsedFile::getType(TokenLine& from, ErrorContext* errors)
+{
+	auto initialPos = from.savePosition();
+	auto name = from.get();
+	auto pos = from.savePosition();
+	Type* found = this->fileModule->getType(name, from, errors, this, this->context);
+	if (found)
+		return found;
+	for (auto& i : this->usings)
+	{
+		if (!i.second)
+			continue;
+		from.loadPosition(pos);
+		found = i.second->getType(name, from, errors, this, this->context);
+		if (found)
+			return found;
+	}
+	from.loadPosition(initialPos);
+	return nullptr;
+}
+
+Attribute* ParsedFile::getAttribute(TokenLine& from)
+{
+	auto initialPos = from.savePosition();
+	auto name = from.get();
+	auto pos = from.savePosition();
+	Attribute* found = this->fileModule->getAttribute(name, from, this, this->context);
+	if (found)
+		return found;
+	for (auto& i : this->usings)
+	{
+		if (!i.second)
+			continue;
+		from.loadPosition(pos);
+		found = i.second->getAttribute(name, from, this, this->context);
+		if (found)
+			return found;
+	}
+	from.loadPosition(initialPos);
+	return nullptr;
+}
+
+std::pair<EnumType*, std::string> ds::ParsedFile::getEnum(TokenLine& from)
+{
+	auto initialPos = from.savePosition();
+	auto name = from.get();
+	auto pos = from.savePosition();
+	auto found = this->fileModule->getEnum(name.string, from);
+	if (found.first)
+		return found;
+	for (auto& i : this->usings)
+	{
+		if (!i.second)
+			continue;
+		from.loadPosition(pos);
+		found = i.second->getEnum(name.string, from);
+		if (found.first)
+			return found;
+	}
+	from.loadPosition(initialPos);
+	return { nullptr, "" };
+}
