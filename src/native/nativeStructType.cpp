@@ -2,6 +2,7 @@
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/parser.hpp>
 #include <ds/service/languageService.hpp>
+#include <ds/parser/parseExpression.hpp>
 
 using namespace ds;
 
@@ -78,7 +79,8 @@ ExpressionResult ds::NativeStructType::compileValue(Token first, TokenLine& line
 	ExpressionResult result;
 	for (auto& i : constructors)
 	{
-		result = with->parseFunctionArguments(first.string, i->getArguments(), argsLine, errors, false);
+		result = Expression::parseFunctionArguments(first.string, i->getArguments(),
+			argsLine, errors, false, with);
 		if (result.valid)
 		{
 			result.code.addBuffer(i->compileCall().code);
@@ -134,7 +136,8 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = with->parseFunctionArguments(next, functionArgs, argsLine, errors, true);
+			ExpressionResult callCode = Expression::parseFunctionArguments(next, functionArgs, argsLine,
+				errors, true, with);
 			callCode.code.addBuffer(value.code);
 			auto compiled = function->compileCall();
 			if (compiled.type)

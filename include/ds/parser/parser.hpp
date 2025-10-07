@@ -38,7 +38,8 @@ namespace ds
 
 		friend struct ParsedFunction;
 		friend struct ParsedFile;
-		friend struct ParsedScope;
+
+		void generateReflectionMetadata(BytecodeStream& toStream);
 
 		ErrorContext errors;
 		BytecodeCompiler compiler;
@@ -46,12 +47,12 @@ namespace ds
 #ifdef WITH_LANGUAGE_SERVICE
 		LanguageService* service = nullptr;
 #endif
+		std::vector<Type*> defaultTypes;
 
 	private:
 		void scanModules();
 
 		std::map<std::string, Module> programModules;
-		std::vector<Type*> defaultTypes;
 		std::list<ParsedFile> files;
 	};
 } // namespace ds

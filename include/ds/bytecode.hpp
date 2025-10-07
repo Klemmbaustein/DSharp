@@ -116,6 +116,6 @@ namespace ds
 		ReflectInfo reflect;
 
 		std::vector<std::string> externalFunctions;
-		std::vector<VTableEntry> virtualTable;
+		std::vector<RuntimeFunction> virtualTable;
 	};
 } // namespace ds

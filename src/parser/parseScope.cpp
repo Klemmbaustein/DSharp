@@ -5,413 +5,99 @@
 #include <ds/parser/types/arrayType.hpp>
 #include <ds/parser/types/lambdaType.hpp>
 #include <ds/service/languageService.hpp>
+#include <ds/parser/parseExpression.hpp>
 using namespace ds;
 
-ExpressionResult ds::ParsedScope::pushExpression(TokenLine& currentLine,
-	ErrorContext* errors, bool setExpression, Type* hintType)
+std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& line, ParsedFile* file,
+	ErrorContext* errors, bool matchTypes)
 {
-	ExpressionResult result = getExpressionValue(currentLine, errors, setExpression, hintType);
+	VariableInfo info;
 
-	// 1 + 1 -> (1, '+'), (1, null)
-	// 1 + 1 * 2 -> (1, '+'), (2, '*'), (1, null)
-	using exprPart = std::pair<ExpressionResult, std::optional<Token>>;
-	std::list<exprPart> expression;
-	exprPart* lastElement = &expression.emplace_back(result, std::optional<Token>());
+	auto first = line.peek();
 
-	int32_t highestPriority = INT32_MIN;
+	info.type = file->getType(line, errors);
 
-	while (!currentLine.empty())
+	// If there is a type, it's probably a variable declaration.
+	if (!info.type && first != "var" && first != "const")
 	{
-		if (!result.valid)
-		{
-			return ExpressionResult();
-		}
-		if (!result.type)
-		{
-			return result;
-		}
-
-		Token operatorToken = currentLine.peek();
-
-		auto exprOperator = stringToOperator(operatorToken.string);
-
-		if (exprOperator == Operator::unknown)
-		{
-			break;
-		}
-
-		highestPriority = std::max(highestPriority, getOperatorPriority(exprOperator));
-
-		lastElement->second = operatorToken;
-
-		currentLine.get();
-
-		auto secondValue = getExpressionValue(currentLine, errors, setExpression, hintType);
-		lastElement = &expression.emplace_back(secondValue, std::optional<Token>());
+		return {};
 	}
 
-	if (expression.empty())
+	info.isVar = first == "var";
+	info.isConst = first == "const";
+
+	if (info.isVar || info.isConst)
 	{
-		return result;
+		// var/const
+		line.get();
 	}
 
-	while (expression.size() > 1)
-	{
-		int32_t currentPriority = highestPriority;
-		highestPriority = INT32_MIN;
-		for (auto i = expression.begin(); i != expression.end();)
-		{
-			if (!i->second)
-			{
-				break;
-			}
+	info.name = line.get();
+	info.name.checkIsName(errors);
 
-			auto op = stringToOperator(i->second->string);
-			auto opPriority = getOperatorPriority(op);
-			if (opPriority == currentPriority)
+	BinaryBuffer args;
+
+	info.equals = line.get();
+	if (info.equals == "=")
+	{
+		info.assignedValue = Expression::pushExpression(line, errors, false, info.type, this);
+
+		if (info.isVar || info.isConst)
+		{
+			if (!info.assignedValue.type)
 			{
-				std::list<exprPart>::iterator a = i;
-				std::list<exprPart>::iterator b = ++i;
-				b->first = compileOperatorBetween(a->first, b->first, op, a->second.value(), errors, true);
-				expression.erase(a);
+				errors->error(ErrorCode::parseInvalidType, info.name,
+					"Value of variable declaration does not have a type.");
 			}
-			else
+			if (matchTypes)
 			{
-				highestPriority = std::max(highestPriority, opPriority);
-				i++;
+				info.type = info.assignedValue.type;
 			}
+		}
+		else if (matchTypes)
+		{
+			info.assignedValue.compileToType(info.equals, info.type, this, errors);
 		}
 	}
-
-	return expression.begin()->first;
-}
-
-ExpressionResult ds::ParsedScope::getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
-	bool setExpression, Type* hintType)
-{
-	ExpressionResult result = pushValue(currentLine, errors, setExpression, hintType);
-
-	while (!currentLine.empty())
+	else if (!info.equals.empty())
 	{
-		if (!result.valid)
-		{
-			return ExpressionResult();
-		}
-		if (!result.type)
-		{
-			return result;
-		}
-		Token nextToken = currentLine.peek();
-		if (nextToken == "[")
-		{
-			currentLine.get();
-			auto index = pushExpression(currentLine, errors, false, hintType);
-
-			if (!index.valid)
-			{
-				break;
-			}
-
-			Type* oldType = result.type;
-
-			result = result.type->compileIndex(result, index, errors, setExpression, this);
-
-			if (!result.valid)
-			{
-				errors->error(ErrorCode::parseInvalidType, nextToken,
-					"Cannot use operator [] with the type " + Type::toString(oldType));
-				break;
-			}
-
-			if (currentLine.expect("[", errors))
-			{
-				break;
-			}
-
-			continue;
-		}
-		if (nextToken == ".")
-		{
-			currentLine.get();
-			auto memberName = currentLine.peek();
-			auto oldType = result.type;
-			result = result.type->compileMember(result,
-				currentLine, errors, setExpression, this);
-
-			if (!result.valid)
-			{
-				errors->error(ErrorCode::parseUnknowmMember, memberName,
-					"The type " + Type::toString(oldType) + " does not contain a member called '" +
-						memberName.string + "'");
-			}
-			continue;
-		}
-		break;
+		errors->error(ErrorCode::parseVarMustHaveInitializer, info.equals,
+			"Expected a '=', got: '" + info.equals.string + "'");
+		return {};
 	}
-	return result;
-}
-
-ExpressionResult ds::ParsedScope::compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op,
-	Token opToken, ErrorContext* errors, bool setExpression)
-{
-	auto oldType = a.type;
-
-	if (op == Operator::equals || op == Operator::notEquals)
+	else if (info.isVar || info.isConst)
 	{
-		a = a.type->compileEqualsTo(a, b, opToken, errors, this);
-		if (op == Operator::notEquals)
-		{
-			a.code.addOperation(BytecodeOp::boolNot);
-		}
-	}
-	// a <= b is the same as !(b < a) and a >= b is the same thing as !(b > a)
-	else if (op == Operator::greaterEquals || op == Operator::lessEquals)
-	{
-		op = op == Operator::greaterEquals ? Operator::greater : Operator::less;
-		a = a.type->compileOperator(op, b, a, this);
-		a.code.addOperation(BytecodeOp::boolNot);
+		errors->error(ErrorCode::parseVarMustHaveInitializer, info.name,
+			"A variable declared with 'var' or 'const' must have an initializer.");
+		return {};
 	}
 	else
 	{
-		a = a.type->compileOperator(op, a, b, this);
+		info.assignedValue = info.type->defaultValue();
 	}
-	if (!a.valid)
-	{
-		errors->error(ErrorCode::parseInvalidType, opToken,
-			"The operator '" + opToken.string + "' does not accept types '"
-			+ Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
-	}
-	return a;
+
+	return info;
 }
 
-ExpressionResult ds::ParsedScope::pushValue(TokenLine& currentLine,
-	ErrorContext* errors, bool setExpression, Type* hintType)
+void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 {
-	Token value = currentLine.peek();
-	// TODO: Clean up with proper unary operator support.
-	if (value == "*")
-	{
-		currentLine.get();
-		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
-		if (result.type && result.valid)
-		{
-			ExpressionResult r;
-			r = result.type->compileOperator(Operator::dereference, result, r, this);
-			if (!r.valid)
-			{
-				errors->error(ErrorCode::parseInvalidType, value,
-					"The operator '*' does not accept the type '" + Type::toString(result.type) + "'");
-			}
-			return r;
-		}
-	}
-	if (value == "not")
-	{
-		currentLine.get();
-		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
-		if (result.valid && result.type)
-		{
-			ExpressionResult r;
-			r = result.type->compileOperator(Operator::logicalNot, result, r, this);
-			if (!r.valid)
-			{
-				errors->error(ErrorCode::parseInvalidType, value,
-					"The operator 'not' does not accept the type '" + Type::toString(result.type) + "'");
-			}
-			return r;
-		}
-	}
-	if (value == "-")
-	{
-		currentLine.get();
-		auto result = getExpressionValue(currentLine, errors, setExpression, hintType);
-		if (result.valid && result.type)
-		{
-			ExpressionResult r;
-			r = result.type->compileOperator(Operator::unaryMinus, result, r, this);
-			if (!r.valid)
-			{
-				errors->error(ErrorCode::parseInvalidType, value,
-					"The operator '-' does not accept the type '" + Type::toString(result.type) + "'");
-			}
-			return r;
-		}
-	}
-
-	auto initialPosition = currentLine.savePosition();
-
-	// If the value is a bracket it means it's another expression.
-	if (value == "(")
-	{
-		auto inBraces = currentLine.getInBraces(errors);
-		TokenLine line;
-		line.lineTokens = &inBraces;
-		return pushExpression(line, errors, setExpression, hintType);
-	}
-
-	auto [enumValue, enumEntry] = this->scopeFile->getEnum(currentLine);
-
-	if (enumValue)
-	{
-		ExpressionResult result;
-
-		auto found = enumValue->values.find(Token(enumEntry));
-
-		if (found != enumValue->values.end())
-		{
-			result.code.pushInt(found->second);
 #ifdef WITH_LANGUAGE_SERVICE
-			if (context->service)
-			{
-				context->service->files[this->scopeFile->name].variables.push_back(value);
-			}
+	if (in->context->service)
+	{
+		in->context->service->files[in->scopeFile->name].variables.push_back(this->name);
+	}
 #endif
-			result.type = IntType::getInstance();
-			result.valid = true;
-		}
-		else
-		{
-			result.valid = false;
-		}
-		return result;
-	}
+	in->code->addBuffer(this->assignedValue.code);
+	in->pushVariableValue(type, true);
 
-	currentLine.get();
-
-	// Allocate a new class
-	if (value == "new")
-	{
-		Token className = currentLine.peek();
-
-		auto foundType = this->scopeFile->getType(currentLine, errors);
-
-		if (!foundType)
-		{
-			errors->error(ErrorCode::parseUnknownSymbol, value,
-				"Unknown class: '" + className.string + "'");
-			return ExpressionResult();
-		}
-
-		auto compiled = foundType->compileValue(className, currentLine, errors, this, hintType);
-
-		if (compiled.type == nullptr)
-		{
-			return ExpressionResult();
-		}
-
-		compiled.code.addBuffer(compiled.type->compileEndMove(this));
-		return compiled;
-	}
-
-	// if it's a variable, it's a variable (shocking)
-	auto foundVariable = this->variables.find(value);
-
-	if (foundVariable != this->variables.end())
-	{
-		ExpressionResult result = foundVariable->second.readExpression(this);
-		if (setExpression && !foundVariable->second.readOnly)
-		{
-			auto unrefCode = result.type->compileUnref();
-
-			if (unrefCode.instructions.size())
-			{
-				result.setCode = result.code;
-				result.setCode->addBuffer(unrefCode);
-			}
-			else
-			{
-				result.setCode = BytecodeBuffer();
-			}
-
-			result.setCode->addBuffer(foundVariable->second.writeValue());
-		}
-
-#ifdef WITH_LANGUAGE_SERVICE
-		if (context->service)
-		{
-			context->service->files[this->scopeFile->name].variables.push_back(value);
-		}
-#endif
-
-		return result;
-	}
-
-	// If this comes after the value, probably a function call
-	if (currentLine.peek() == "(")
-	{
-		Function* function = this->scopeFile->getMethod(value.string);
-
-		if (function)
-		{
-			auto args = currentLine.getInBraces(errors);
-
-			TokenLine argsLine;
-			argsLine.lineTokens = &args;
-
-			auto functionArgs = function->getArguments();
-
-			ExpressionResult callCode = parseFunctionArguments(value, functionArgs,
-				argsLine, errors, true);
-
-#ifdef WITH_LANGUAGE_SERVICE
-			if (context->service)
-			{
-				context->service->files[this->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, value));
-			}
-#endif
-
-			auto fn = function->compileCall();
-
-			if (fn.type)
-			{
-				fn.code.addBuffer(fn.type->compileEndMove(this));
-			}
-
-			callCode.code.addBuffer(fn.code);
-			callCode.discardable = fn.discardable;
-			callCode.type = fn.type;
-			callCode.valid = fn.valid;
-
-			return callCode;
-		}
-	}
-
-	// Try to convert it into each default type.
-	for (auto& i : this->context->defaultTypes)
-	{
-		size_t pos = currentLine.savePosition();
-		auto compiled = i->compileValue(value, currentLine, errors, this, hintType);
-		if (compiled.valid)
-		{
-			return compiled;
-		}
-		currentLine.loadPosition(pos);
-	}
-
-	if (this->inClass)
-	{
-		currentLine.loadPosition(initialPosition);
-		auto result = pushClassValue(currentLine, errors, setExpression);
-
-		if (result.valid)
-			return result;
-	}
-
-	errors->error(ErrorCode::parseUnknownExpressionType, value, "Unknown symbol: " + value.string);
-	return ExpressionResult();
-}
-
-ExpressionResult ds::ParsedScope::pushClassValue(TokenLine& currentLine,
-	ErrorContext* errors, bool setExpression)
-{
-	return this->inClass->thisType->compileMember(thisVariable->readExpression(this), currentLine,
-		errors, setExpression, this);
+	auto& newVariable = in->addVariable(this->name, type, errors);
+	newVariable.readOnly = isConst;
 }
 
 void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
 	std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options)
 {
+	// Create a sub scope that optionally takes in the ScopeOptions
 	ParsedScope conditionScope;
 	conditionScope.scopeFunction = options.scopeFunction ? options.scopeFunction : this->scopeFunction;
 	conditionScope.code = options.targetBuffer ? options.targetBuffer : this->code;
@@ -441,66 +127,6 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std:
 	conditionScope.tokenStream = options.scopeTokens;
 
 	conditionScope.compile(this->context, file, errors);
-}
-
-ExpressionResult ds::ParsedScope::parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
-	TokenLine& currentLine, ErrorContext* errors, bool hasToMatch)
-{
-	ExpressionResult callCode;
-	size_t argIndex = 0;
-
-	while (!currentLine.empty())
-	{
-		auto exprToken = currentLine.peek();
-
-		Type* hintType = arguments.size() > argIndex ? arguments[argIndex].type : nullptr;
-
-		auto expr = this->pushExpression(currentLine, errors, false, hintType);
-
-		if (arguments.size() <= argIndex)
-		{
-			if (expr.valid && hasToMatch)
-			{
-				errors->error(ErrorCode::parseUnexpectedToken, exprToken,
-					"Unexpected argument of type " + Type::toString(expr.type) + " for function '" +
-						functionName.string + "'. Only " + std::to_string(arguments.size()) +
-						" argument(s) expected.");
-			}
-			return ExpressionResult();
-		}
-
-		auto& currentArg = arguments[argIndex++];
-		expr.compileToType(exprToken, currentArg.type, this, hasToMatch ? errors : nullptr);
-
-		if (!expr.type || !expr.valid)
-		{
-			return ExpressionResult();
-		}
-
-		callCode.code.addBuffer(expr.code);
-		callCode.code.addBuffer(expr.type->compileMove(this));
-
-		if (currentLine.empty())
-			break;
-		else
-			currentLine.expect(",", errors);
-	}
-
-	if (argIndex < arguments.size())
-	{
-		if (hasToMatch)
-		{
-			errors->error(ErrorCode::parseUnexpectedToken,
-				currentLine.lineTokens->size() ? currentLine.previous() : functionName,
-				"Wrong number of arguments for function '" +
-					functionName.string + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
-					" argument(s) were expected.");
-		}
-		return ExpressionResult();
-	}
-
-	callCode.valid = true;
-	return callCode;
 }
 
 BytecodeBuffer ds::ParsedScope::addTemporaryVariable(Type* type)
@@ -580,6 +206,7 @@ void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 {
 	uint32_t size = 0;
 
+	// Find the variables to erase because erasing variables while iterating them at the same time is a bad idea
 	std::vector<Token> toErase;
 
 	for (auto& i : variables)
@@ -588,7 +215,8 @@ void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 		{
 			continue;
 		}
-		if (&i.second != thisVariable || !scopeFunction || scopeFunction->name != "delete")
+		// Don't unref the this variable unless we are in a destructor
+		if (&i.second != thisVariable || scopeFunction && scopeFunction->name != "delete")
 		{
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
@@ -611,6 +239,7 @@ void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 		variables.erase(i);
 	}
 
+	// Also call the base (compiler generated) destructor if this is a destructor function
 	if (inClass && scopeFunction && scopeFunction->name == "delete")
 	{
 		code->addBuffer(thisVariable->readValue(this));
@@ -699,11 +328,12 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 			if (line.empty())
 			{
 				errors->error(ErrorCode::parseUnknownExpressionType, first,
-					"Return statement doesn't return a value, but it must return '" + Type::toString(scopeFunction->returnType) + "'");
+					"Return statement doesn't return a value, but it must return '"
+					+ Type::toString(scopeFunction->returnType) + "'");
 				return;
 			}
 
-			auto expr = pushExpression(line, errors, false, scopeFunction->returnType);
+			auto expr = Expression::pushExpression(line, errors, false, scopeFunction->returnType, this);
 
 			if (!expr.valid)
 			{
@@ -760,7 +390,8 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		TokenLine conditionTokens;
 		conditionTokens.lineTokens = &conditionLine;
 
-		auto condition = pushExpression(conditionTokens, errors, false, nullptr);
+		auto condition = Expression::pushExpression(conditionTokens, errors, false,
+			BoolType::getInstance(), this);
 		conditionTokens.expectEndOfLine(errors);
 		condition.compileToType(first, BoolType::getInstance(), this, errors);
 
@@ -781,79 +412,18 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 	}
 
 	line.position = 0;
-	Type* type = file->getType(line, errors);
-	// If there is a type, it's probably a variable declaration.
-	if (type || first == "var" || first == "const")
+
+	auto variable = parseVariableDefinition(line, file, errors);
+
+	if (variable)
 	{
-		bool isVar = first == "var";
-		bool isConst = first == "const";
-
-		if (isVar || isConst)
-		{
-			// var/const
-			line.get();
-		}
-
-		Token variableName = line.get();
-		variableName.checkIsName(errors);
-
-		BinaryBuffer args;
-
-		Token equals = line.get();
-		if (equals == "=")
-		{
-			auto expr = pushExpression(line, errors, false, type);
-
-			if (isVar || isConst)
-			{
-				if (!expr.type)
-				{
-					errors->error(ErrorCode::parseInvalidType, variableName,
-						"Value of variable declaration does not have a type.");
-				}
-				type = expr.type;
-			}
-			else
-			{
-				expr.compileToType(equals, type, this, errors);
-			}
-
-			code->addBuffer(expr.code);
-		}
-		else if (!equals.empty())
-		{
-			errors->error(ErrorCode::parseVarMustHaveInitializer, equals,
-				"Expected a '=', got: '" + equals.string + "'");
-			return;
-		}
-		else if (isVar || isConst)
-		{
-			errors->error(ErrorCode::parseVarMustHaveInitializer, variableName,
-				"A variable declared with 'var' or 'const' must have an initializer.");
-			return;
-		}
-		else
-		{
-			code->addBuffer(type->defaultValue().code);
-		}
-		if (type)
-		{
-#ifdef WITH_LANGUAGE_SERVICE
-			if (context->service)
-			{
-				context->service->files[this->scopeFile->name].variables.push_back(variableName);
-			}
-#endif
-			pushVariableValue(type, true);
-
-			addVariable(variableName, type, errors).readOnly = isConst;
-		}
+		variable->create(this, errors);
 		line.expectEndOfLine(errors);
 		return;
 	}
 
 	line.position = 0;
-	auto expr = pushExpression(line, errors, true, nullptr);
+	auto expr = Expression::pushExpression(line, errors, true, nullptr, this);
 
 	auto compoundOperator = stringToCompoundOperator(line.peek().string);
 	if ((line.peek() == "=" || compoundOperator != CompoundOperator::unknown) && expr.valid)
@@ -867,7 +437,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 			return;
 		}
 
-		auto valueExpr = pushExpression(line, errors, false, expr.type);
+		auto valueExpr = Expression::pushExpression(line, errors, false, expr.type, this);
 		if (!valueExpr.type || !valueExpr.valid)
 		{
 			return;
@@ -882,11 +452,11 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		{
 			valueExpr = expr.type->compileOperator(
 				Operator(compoundOperator), expr, valueExpr, this);
-		}
 
-		if (!valueExpr.type)
-		{
-			return;
+			if (!valueExpr.type)
+			{
+				return;
+			}
 		}
 
 		valueExpr.code.addBuffer(valueExpr.type->compileMove(this));
@@ -904,17 +474,9 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		// Pop the return value from the stack because we're not using it.
 		if (expr.type)
 		{
-			// auto unrefCode = expr.type->compileUnref();
-			// if (unrefCode.instructions.size())
-			//{
-			//	this->code->addBuffer(unrefCode);
-			// }
-			// else
-			{
-				BinaryBuffer args;
-				args.addValue<uint32_t>(expr.type->size);
-				this->code->addOperation(BytecodeOp::pop, args);
-			}
+			BinaryBuffer args;
+			args.addValue<uint32_t>(expr.type->size);
+			this->code->addOperation(BytecodeOp::pop, args);
 			expr.discard(line.lineTokens->at(0), errors);
 		}
 		line.expectEndOfLine(errors);
@@ -924,15 +486,20 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 
 void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
+	// if [expr] [
+	//     [scope]
+	// }
+	// else ...
 	auto conditionLine = line.getUntil("{", errors);
 
 	TokenLine conditionTokens;
 	conditionTokens.lineTokens = &conditionLine;
 
-	auto condition = pushExpression(conditionTokens, errors, false, nullptr);
+	auto condition = Expression::pushExpression(conditionTokens, errors, false, nullptr, this);
 	conditionTokens.expectEndOfLine(errors);
 	this->code->addBuffer(condition.code);
 
+	// The end of the if-statement scope, might also be the start of an else statement if there is one
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("endif");
 
 	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
@@ -947,6 +514,7 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 
 		nextLine.get();
 
+		// Jump to the end of the else statement if the initial condition was true
 		auto endElseLabel = std::make_shared<BytecodeJumpLabel>("endElseLabel");
 		this->code->addNew<BytecodeJump>(BytecodeOp::jump, endElseLabel.get());
 
@@ -972,58 +540,24 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 
 void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
-	this->depth++;
-
-	// for [...type] [name] in [...expr] {
-	//     [block]
+	// for [var-def] {
+	//     [scope]
 	// }
-	auto type = file->getType(line, errors);
 
-	bool isVar = false;
-	bool isConst = false;
+	auto var = parseVariableDefinition(line, file, errors, false);
 
-	if (!type)
+	if (!var)
 	{
-		auto next = line.get();
-		if (next == "var")
-		{
-			isVar = true;
-		}
-		else if (next == "const")
-		{
-			isConst = true;
-		}
-		else
-		{
-			errors->error(ErrorCode::parseInvalidType, next, "Invalid type");
-			return;
-		}
-	}
-
-	auto name = line.get();
-
-	auto in = line.peek();
-	if (line.expect("in", errors))
-	{
+		errors->error(ErrorCode::parseUnexpectedToken, line.previous(),
+			"Expected a variable definition");
 		return;
 	}
 
-	auto iterLine = line.getUntil("{", errors);
-
-	TokenLine iterTokens;
-	iterTokens.lineTokens = &iterLine;
-
-	auto arrayExpression = pushExpression(iterTokens, errors, false, nullptr);
-	iterTokens.expectEndOfLine(errors);
-
+	auto arrayExpression = var->assignedValue;
 	if (!arrayExpression.valid)
 	{
-		return;
-	}
-
-	if (!arrayExpression.type)
-	{
-		errors->error(ErrorCode::parseUnexpectedToken, in, "Invalid type");
+		errors->error(ErrorCode::parseUnexpectedToken, line.previous(),
+			"For loop variable needs to have an array value assigned");
 		return;
 	}
 
@@ -1031,60 +565,70 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 	if (!arrayType)
 	{
-		errors->error(ErrorCode::parseUnexpectedToken, in,
+		errors->error(ErrorCode::parseUnexpectedToken, var->equals,
 			"For loop expression needs to be an array. Got: " + Type::toString(arrayExpression.type));
 		return;
 	}
 
-	if (isVar || isConst)
-	{
-		type = arrayType->baseType;
-	}
+	// Increment the scope depth so the loop has it's own scope to store the iterated array
+	this->depth++;
 
 	this->code->addBuffer(arrayExpression.code);
 	pushVariableValue(arrayExpression.type, true);
-	auto& iterated = addVariable(Token(".for_iterated"), arrayType, errors);
 
+	// Save the array to a temporary variable so the array lives for the entire loop
+	// For example, with for int i = [1, 2]
+	// The array would need to be reloaded for each iteration unless it's a variable
+	auto& iterated = addVariable(Token(".for_iterated" + std::to_string(tempCounter++)), arrayType, errors);
+
+	// The iterator is an int that stores the current index of the array
 	auto iterType = IntType::getInstance();
-
 	this->code->addBuffer(iterType->defaultValue().code);
-
 	pushVariableValue(iterType, true);
-	auto& iterator = addVariable(Token(".for_iterator"), iterType, errors);
+	auto& iterator = addVariable(Token(".for_iterator" + std::to_string(tempCounter++)), iterType, errors);
 
+	// The label for restarting the loop
 	auto beginLabel = std::make_shared<BytecodeJumpLabel>("for_begin");
+	// The label to jump to when continuing the loop with the continue statement
 	auto continueLabel = std::make_shared<BytecodeJumpLabel>("for_continue");
 	this->code->add(beginLabel);
 
+	// The end of the loop, when
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("for_end");
 	this->code->addBuffer(arrayType->getLength(iterated.readValue(this)).code);
 	this->code->addBuffer(iterator.readValue(this));
 	this->code->addOperation(BytecodeOp::greaterInt);
 
+	// Go to the endif the array length is not greater than the iterator
 	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
 
+	// Increment the scope for the for loop variable, which technically isn't part of the for loop's scope
 	this->depth++;
 
 	auto index = arrayType->compileIndex(iterated.readExpression(this), iterator.readExpression(this),
 		errors, false, this);
 
-	index.compileToType(in, type, this, errors);
+	if (!var->type)
+	{
+		var->type = index.type;
+	}
+	index.compileToType(var->equals, var->type, this, errors);
 
-	this->code->addBuffer(index.code);
+	var->assignedValue = index;
 
-	pushVariableValue(type, true);
-	addVariable(name, type, errors);
+	var->create(this, errors);
 
-	parseSubScope(file, errors, endLabel, continueLabel, this->depth);
-
+	parseSubScope(file, errors, endLabel, continueLabel, this->depth + 1);
 
 	this->code->add(continueLabel);
 	compileScopeExit(this->depth, true);
+	// Increment the iterator
 	this->code->addBuffer(iterator.readValue(this));
 	this->code->pushInt(1);
 	this->code->addOperation(BytecodeOp::addInt);
 	this->code->addBuffer(iterator.writeValue());
 
+	// jump to the start and repeat the loop again, it will jump back to the end label if the loop should end
 	this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel.get());
 	this->code->add(endLabel);
 

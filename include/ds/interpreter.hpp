@@ -67,12 +67,12 @@ namespace ds
 
 		std::vector<DebugSection*> getStackTrace() const;
 
-		void virtualCall(VTableEntry target);
+		void virtualCall(RuntimeFunction target);
 
 		[[noreturn]]
 		void runtimePanic(RuntimeStr message) const;
 		std::vector<ExternalFunctionPointer> externals;
-		std::vector<VTableEntry>* vTable = nullptr;
+		std::vector<RuntimeFunction>* vTable = nullptr;
 
 		void destruct(RuntimeClass* classObject);
 

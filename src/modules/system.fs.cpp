@@ -17,7 +17,7 @@ static void fs_path_delete(InterpretContext* context)
 	RuntimeClass::unref(path->pathString.classPtr);
 }
 
-static VTableEntry pathVTable = VTableEntry{
+static RuntimeFunction pathVTable = RuntimeFunction{
 	.nativeFn = &fs_path_delete
 };
 

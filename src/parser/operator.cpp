@@ -24,8 +24,26 @@ Operator ds::stringToOperator(std::string opString)
 	auto found = operatorStrings.find(opString);
 
 	if (found != operatorStrings.end())
-		return found->second;
 	{
+		return found->second;
+	}
+
+	return Operator::unknown;
+}
+
+Operator ds::stringToUnaryOperator(std::string opString)
+{
+	static std::map<std::string, Operator> operatorStrings = {
+		{ "-", Operator::unaryMinus },
+		{ "not", Operator::logicalNot },
+		{ "or", Operator::dereference },
+	};
+
+	auto found = operatorStrings.find(opString);
+
+	if (found != operatorStrings.end())
+	{
+		return found->second;
 	}
 
 	return Operator::unknown;

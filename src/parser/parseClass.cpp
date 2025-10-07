@@ -2,6 +2,7 @@
 #include <ds/parser/parser.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/service/languageService.hpp>
+#include <ds/parser/parseExpression.hpp>
 using namespace ds;
 
 bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file)
@@ -386,7 +387,8 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 		TokenLine valueLine;
 		valueLine.lineTokens = &member.value;
-		auto varExpr = constructorScope.pushExpression(valueLine, &context->errors, false, member.type);
+		auto varExpr = Expression::pushExpression(valueLine, &context->errors, false, member.type,
+			&constructorScope);
 		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
 		if (varExpr.type)
 		{

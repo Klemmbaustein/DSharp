@@ -132,7 +132,7 @@ Types of statements are:
   
   A variable definition defines a variable in the scope.
 
-- ### For-statements `for [varDef] in [arrayExpression] [scope]`
+- ### For-statements `for [varDef] [scope]`
 
   TODO:
 - ### Expression statements

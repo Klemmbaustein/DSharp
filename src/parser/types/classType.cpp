@@ -2,6 +2,7 @@
 #include <ds/parser/function.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/parser/parseScope.hpp>
+#include <ds/parser/parseExpression.hpp>
 
 using namespace ds;
 
@@ -176,7 +177,8 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 		bool found = false;
 		for (auto& i : this->constructors)
 		{
-			auto constructor = with->parseFunctionArguments(Token(first), i->getArguments(), argsLine, errors, false);
+			auto constructor = Expression::parseFunctionArguments(Token(first), i->getArguments(),
+				argsLine, errors, false, with);
 
 			if (!constructor.valid)
 			{
@@ -240,7 +242,8 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 
 			auto functionArgs = function->getArguments();
 
-			ExpressionResult callCode = with->parseFunctionArguments(memberName, functionArgs, argsLine, errors, true);
+			ExpressionResult callCode = Expression::parseFunctionArguments(memberName, functionArgs,
+				argsLine, errors, true, with);
 			callCode.code.addBuffer(value.code);
 			auto compiled = function->compileCall();
 			if (compiled.type)

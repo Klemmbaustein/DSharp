@@ -19,7 +19,7 @@ namespace ds
 
 	class InterpretContext;
 
-	struct VTableEntry
+	struct RuntimeFunction
 	{
 		bytecodeOffset codeOffset = UINT32_MAX;
 		void (*nativeFn)(InterpretContext*) = nullptr;

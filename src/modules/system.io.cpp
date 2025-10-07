@@ -52,13 +52,13 @@ static void io_procFile_destruct(InterpretContext* context)
 #endif
 }
 
-static VTableEntry io_procFile_vTable = VTableEntry{
+static RuntimeFunction io_procFile_vTable = RuntimeFunction{
 	.nativeFn = &io_procFile_destruct,
 };
 
 #endif
 
-static VTableEntry io_file_vTable = VTableEntry{
+static RuntimeFunction io_file_vTable = RuntimeFunction{
 	.nativeFn = &io_file_destruct,
 };
 

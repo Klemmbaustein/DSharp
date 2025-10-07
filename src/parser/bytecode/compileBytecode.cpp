@@ -335,12 +335,12 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 	{
 		if (i && functions.find(i->getFullName()) != functions.end())
 		{
-			stream.virtualTable.push_back(VTableEntry{
+			stream.virtualTable.push_back(RuntimeFunction{
 				.codeOffset = functions[i->getFullName()].offset });
 		}
 		else
 		{
-			stream.virtualTable.push_back(VTableEntry());
+			stream.virtualTable.push_back(RuntimeFunction());
 		}
 	}
 

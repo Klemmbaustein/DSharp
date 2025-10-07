@@ -1,6 +1,7 @@
 #include <ds/parser/types/listType.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/types/arrayType.hpp>
+#include <ds/parser/parseExpression.hpp>
 using namespace ds;
 
 ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
@@ -29,7 +30,7 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 
 	while (!inListLine.empty())
 	{
-		auto nextValue = with->pushExpression(inListLine, errors, false, itemType);
+		auto nextValue = Expression::pushExpression(inListLine, errors, false, itemType, with);
 
 		if (!nextValue.type && nextValue.valid)
 		{
@@ -52,21 +53,14 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 
 		arrayElements.push_back(nextValue);
 
-		auto next = inListLine.get();
+		auto next = inListLine.peek();
 
 		if (next.empty())
 		{
 			break;
 		}
-		else if (next == ",")
-		{
-			continue;
-		}
 		else
-		{
-			errors->error(ErrorCode::parseInvalidType, inListLine.previous(),
-				"Expected a comma, got '" + next.string + "'");
-		}
+			inListLine.expect(",", errors);
 	}
 
 	if (arrayElements.empty() || !itemType)

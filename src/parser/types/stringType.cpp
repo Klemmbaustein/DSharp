@@ -1,6 +1,7 @@
 #include <ds/parser/types/stringType.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/varArgs.hpp>
+#include <ds/parser/parseExpression.hpp>
 using namespace ds;
 
 ExpressionResult ds::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
@@ -143,7 +144,7 @@ ExpressionResult ds::StringType::compileFormatString(Token first, TokenLine& lin
 			expressionStream.fromString(currentExprCode, with->scopeFile->name, errors);
 			auto nextLine = expressionStream.next(errors);
 
-			ExpressionResult formatArg = with->pushExpression(nextLine, errors, false, this);
+			ExpressionResult formatArg = Expression::pushExpression(nextLine, errors, false, this, with);
 
 			auto argType = formatArg.type;
 			if (!argType || !argType->sameAs(this))

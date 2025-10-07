@@ -22,6 +22,18 @@ namespace ds
 		ExpressionResult readExpression(ParsedScope* with) const;
 	};
 
+	struct VariableInfo
+	{
+		Token name;
+		Token equals;
+		ExpressionResult assignedValue;
+		Type* type = nullptr;
+		bool isConst = false;
+		bool isVar = false;
+
+		void create(ParsedScope* in, ErrorContext* errors) const;
+	};
+
 	struct ParsedScope
 	{
 		ParsedFunction* scopeFunction = nullptr;
@@ -61,15 +73,6 @@ namespace ds
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		void compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		void compileFor(TokenLine line, ParsedFile* file, ErrorContext* errors);
-		ExpressionResult pushExpression(TokenLine& currentLine, ErrorContext* errors,
-			bool setExpression, Type* hintType);
-		ExpressionResult getExpressionValue(TokenLine& currentLine, ErrorContext* errors,
-			bool setExpression, Type* hintType);
-		ExpressionResult compileOperatorBetween(ExpressionResult a, ExpressionResult b, Operator op, Token opToken,
-			ErrorContext* errors, bool setExpression);
-		ExpressionResult pushValue(TokenLine& currentLine, ErrorContext* errors,
-			bool setExpression, Type* hintType);
-		ExpressionResult pushClassValue(TokenLine& currentLine, ErrorContext* errors, bool setExpression);
 
 		struct ScopeOptions
 		{
@@ -79,6 +82,8 @@ namespace ds
 			bool isLambda = false;
 		};
 
+		std::optional<VariableInfo> parseVariableDefinition(TokenLine& line, ParsedFile* file, ErrorContext* errors, bool matchTypes = true);
+
 		void parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
 			std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options = ScopeOptions{
 				.targetBuffer = nullptr,
@@ -86,9 +91,6 @@ namespace ds
 				.scopeFunction = nullptr,
 				.isLambda = false,
 			});
-
-		ExpressionResult parseFunctionArguments(Token functionName, std::vector<FunctionArgument> arguments,
-			TokenLine& currentLine, ErrorContext* errors, bool hasToMatch);
 
 	private:
 

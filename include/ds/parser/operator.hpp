@@ -61,6 +61,7 @@ namespace ds
 	 * @see Operator
 	 */
 	Operator stringToOperator(std::string opString);
+	Operator stringToUnaryOperator(std::string opString);
 
 	CompoundOperator stringToCompoundOperator(std::string opString);
 

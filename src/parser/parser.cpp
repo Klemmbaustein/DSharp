@@ -112,6 +112,22 @@ BytecodeStream ds::ParseContext::compile()
 	BytecodeStream out;
 	this->compiler.compileTo(out, virtualTable, &errors);
 
+	generateReflectionMetadata(out);
+
+	if (!this->service)
+	{
+		this->compiler.printAssembly();
+	}
+
+	if (!errors.isOk())
+	{
+		return BytecodeStream();
+	}
+	return out;
+}
+
+void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
+{
 	for (auto& i : this->files)
 	{
 		for (auto& cls : i.classes)
@@ -128,11 +144,11 @@ BytecodeStream ds::ParseContext::compile()
 						.type = 0,
 						.name = m.second.name.string,
 						.offset = m.second.offset,
-						});
+					});
 				}
 			}
 
-			out.reflect.types[0] = TypeInfo{
+			toStream.reflect.types[0] = TypeInfo{
 				.name = cls.classModule->name + "::" + cls.name.string,
 				.vTableOffset = cls.thisType->vTableOffset,
 				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,
@@ -141,17 +157,6 @@ BytecodeStream ds::ParseContext::compile()
 			};
 		}
 	}
-
-	//if (!this->service)
-	//{
-	//	this->compiler.printAssembly();
-	//}
-
-	if (!errors.isOk())
-	{
-		return BytecodeStream();
-	}
-	return out;
 }
 
 void ds::ParseContext::scanModules()

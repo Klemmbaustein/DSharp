@@ -173,7 +173,7 @@ static void fn_new_bytecode(InterpretContext* context)
 {
 	auto offset = context->popValue<bytecodeOffset>();
 
-	VTableEntry* entries = new VTableEntry[3]();
+	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
 	entries[1].nativeFn = &fn_call;
 	entries[2].codeOffset = offset;
@@ -195,7 +195,7 @@ static void fn_new_lambda(InterpretContext* context)
 {
 	auto offset = context->popValue<bytecodeOffset>();
 
-	VTableEntry* entries = new VTableEntry[3]();
+	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete_lambda;
 	entries[1].codeOffset = offset;
 
@@ -217,7 +217,7 @@ static void fn_new_native(InterpretContext* context)
 {
 	auto offset = context->popValue<bytecodeOffset>();
 
-	VTableEntry* entries = new VTableEntry[3]();
+	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
 	entries[1].nativeFn = &fn_call;
 	entries[2].nativeFn = context->externals[offset];
@@ -294,7 +294,7 @@ ds::NativeModule ds::modules::system::createModule()
 
 RuntimeClass* ds::modules::system::createArrayObject()
 {
-	static VTableEntry arrayVTable = VTableEntry{
+	static RuntimeFunction arrayVTable = RuntimeFunction{
 		.nativeFn = &array_delete
 	};
 

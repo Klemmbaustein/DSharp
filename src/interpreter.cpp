@@ -241,7 +241,7 @@ void ds::InterpretContext::run(bytecodeOffset position)
 		case ds::BytecodeOp::unrefClass: {
 			auto ptr = popValue<RuntimeClass*>();
 
-			VTableEntry destructor = RuntimeClass::unref(ptr);
+			RuntimeFunction destructor = RuntimeClass::unref(ptr);
 
 			if (destructor)
 			{
@@ -400,7 +400,7 @@ std::vector<ds::DebugSection*> ds::InterpretContext::getStackTrace() const
 	return result;
 }
 
-void ds::InterpretContext::virtualCall(VTableEntry target)
+void ds::InterpretContext::virtualCall(RuntimeFunction target)
 {
 	if (!target)
 	{
