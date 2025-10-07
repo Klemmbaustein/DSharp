@@ -108,6 +108,10 @@ void ds::InterpretContext::run(bytecodeOffset position)
 			pushValue(popValue<Int>() / first);
 			break;
 		}
+		case ds::BytecodeOp::negativeInt: {
+			pushValue(-popValue<Int>());
+			break;
+		}
 		case ds::BytecodeOp::greaterInt: {
 			Int first = popValue<Int>();
 			pushValue<Bool>(popValue<Int>() > first);
@@ -136,6 +140,10 @@ void ds::InterpretContext::run(bytecodeOffset position)
 		case ds::BytecodeOp::divFloat: {
 			Float first = popValue<Float>();
 			pushValue(popValue<Float>() / first);
+			break;
+		}
+		case ds::BytecodeOp::negativeFloat: {
+			pushValue(-popValue<Float>());
 			break;
 		}
 		case ds::BytecodeOp::greaterFloat: {

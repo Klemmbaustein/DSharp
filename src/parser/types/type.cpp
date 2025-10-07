@@ -8,7 +8,7 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
-	auto floatValue = dynamic_cast<FloatType*>(second.type);
+	auto floatValue = second.type ? dynamic_cast<FloatType*>(second.type) : nullptr;
 	if (floatValue)
 	{
 		ExpressionResult firstCopy = first;
@@ -49,6 +49,9 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 	case ds::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterInt);
 		result.type = BoolType::getInstance();
+		break;
+	case ds::Operator::unaryMinus:
+		result.code.addOperation(BytecodeOp::negativeInt);
 		break;
 	case ds::Operator::modulo:
 	case ds::Operator::unknown:
@@ -223,6 +226,9 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 		result.type = BoolType::getInstance();
 		break;
 
+	case ds::Operator::unaryMinus:
+		result.code.addOperation(BytecodeOp::negativeFloat);
+		break;
 	case ds::Operator::modulo:
 	case ds::Operator::unknown:
 	default:

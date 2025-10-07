@@ -45,6 +45,8 @@ namespace ds
 		/// Divides the 2 topmost 32 bit ints on the stack and pushes the result.
 		divInt,
 		greaterInt,
+		/// Takes the topmost 32 bit int on the stack and pushes it's inverse value.
+		negativeInt,
 		/// Checks if the 2 topmost values on the stack are equal.
 		/// Arguments: 4 bytes value size
 		equals,
@@ -56,6 +58,8 @@ namespace ds
 		mulFloat,
 		/// Divides the 2 topmost 32 bit floats on the stack and pushes the result.
 		divFloat,
+		/// Takes the topmost 32 bit float on the stack and pushes it's inverse value.
+		negativeFloat,
 		greaterFloat,
 		boolAnd,
 		boolOr,
