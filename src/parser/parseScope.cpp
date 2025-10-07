@@ -42,6 +42,11 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 	{
 		info.assignedValue = Expression::pushExpression(line, errors, false, info.type, this);
 
+		if (!info.assignedValue.valid)
+		{
+			return {};
+		}
+
 		if (info.isVar || info.isConst)
 		{
 			if (!info.assignedValue.type)
