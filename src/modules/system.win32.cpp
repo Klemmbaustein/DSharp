@@ -16,7 +16,7 @@ static void win32_messageBox(InterpretContext* context)
 	int32_t type = context->popValue<int32_t>();
 	RuntimeStr caption = context->popRuntimeString();
 	RuntimeStr text = context->popRuntimeString();
-	ClassPtr<HWND> cls = context->popValue<RuntimeClass*>();
+	ClassPtr<HWND> cls = context->popPtr<HWND>();
 
 	HWND window = cls.classPtr ? *cls.get() : nullptr;
 
@@ -57,9 +57,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static void win32_createWindow(InterpretContext* context)
 {
 	RuntimeClass* param = context->popValue<RuntimeClass*>();
-	ClassPtr<HINSTANCE> instanceHandle = context->popValue<RuntimeClass*>();
-	ClassPtr<HMENU> menuHandle = context->popValue<RuntimeClass*>();
-	ClassPtr<HWND> parent = context->popValue<RuntimeClass*>();
+	ClassPtr<HINSTANCE> instanceHandle = context->popPtr<HINSTANCE>();
+	ClassPtr<HMENU> menuHandle = context->popPtr<HMENU>();
+	ClassPtr<HWND> parent = context->popPtr<HWND>();
 	int height = context->popValue<int32_t>();
 	int width = context->popValue<int32_t>();
 	int y = context->popValue<int32_t>();

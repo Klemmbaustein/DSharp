@@ -1,5 +1,6 @@
 #pragma once
 #include "parser.hpp"
+#include "types/taskType.hpp"
 #include "parseClass.hpp"
 #include "bytecode/compileBytecodeVariables.hpp"
 #include "operator.hpp"
@@ -50,11 +51,12 @@ namespace ds
 		BytecodeBuffer addTemporaryVariable(Type* type);
 
 		ScopeVariable* thisVariable = nullptr;
+		ScopeVariable* taskVariable = nullptr;
 		ScopeVariable* lambdaVariable = nullptr;
 
 		void pushVariableValue(Type* type, bool copy);
 		ScopeVariable& addVariable(Token name, Type* type, ErrorContext* errors);
-		void compileScopeExit(size_t toDepth, bool isEnd);
+		BytecodeBuffer compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll = true);
 
 		uint32_t variableStackPosition = 0;
 		uint32_t lambdaOffset = 0;
@@ -68,6 +70,7 @@ namespace ds
 		size_t breakContinueDepth = 0;
 
 		void setClass(ParsedClass* inClass, bool copy);
+		void addTask(TaskType* taskType);
 
 		void compile(ParseContext* context, ParsedFile* file, ErrorContext* errors);
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);
@@ -81,6 +84,8 @@ namespace ds
 			ParsedFunction* scopeFunction = nullptr;
 			bool isLambda = false;
 		};
+
+		void returnCompletedTask(TaskType* taskType);
 
 		std::optional<VariableInfo> parseVariableDefinition(TokenLine& line, ParsedFile* file, ErrorContext* errors, bool matchTypes = true);
 

@@ -21,7 +21,7 @@ namespace ds
 	 */
 	struct LanguageContext
 	{
-		InterpretContext* createInterpreter();
+		LanguageRuntime* createRuntime();
 
 		/**
 		 * @brief

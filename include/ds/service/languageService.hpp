@@ -24,7 +24,7 @@ namespace ds
 
 			for (auto& i : functionArgs)
 			{
-				this->arguments.push_back({ i.type->getName(), i.name.string });
+				this->arguments.push_back({ Type::toString(i.type), i.name.string });
 			}
 
 			auto functionReturnType = from->getReturnType();

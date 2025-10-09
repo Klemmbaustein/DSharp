@@ -64,7 +64,7 @@ static void float_toString(InterpretContext* context)
 
 static void array_delete(InterpretContext* context)
 {
-	ClassPtr<ArrayData> array = context->popValue<RuntimeClass*>();
+	ClassPtr<ArrayData> array = context->popPtr<ArrayData>();
 
 	if (array->data)
 	{
@@ -220,7 +220,7 @@ static void fn_new_native(InterpretContext* context)
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
 	entries[1].nativeFn = &fn_call;
-	entries[2].nativeFn = context->externals[offset];
+	entries[2].nativeFn = context->runtime->externals[offset];
 
 	context->pushValue(RuntimeClass::allocateClass(0, entries));
 }

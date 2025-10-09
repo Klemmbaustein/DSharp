@@ -1,9 +1,9 @@
 #include <ds/language.hpp>
 using namespace ds;
 
-InterpretContext* ds::LanguageContext::createInterpreter()
+LanguageRuntime* ds::LanguageContext::createRuntime()
 {
-	return new InterpretContext(this);
+	return new LanguageRuntime(this);
 }
 
 ParseContext* ds::LanguageContext::createCompiler()

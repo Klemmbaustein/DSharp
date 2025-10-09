@@ -96,11 +96,12 @@ namespace ds
 		/**
 		 * @brief
 		 * Gets a pointer to the body of this class object
-		 * @return
-		 * The body
 		 *
 		 * The RuntimeClass struct only stores the "header" of the object
 		 * It's actual class data follows it right after in memory, and this function returns a pointer to that.
+		 *
+		 * @return
+		 * The body
 		 */
 		inline uint8_t* getBody()
 		{
@@ -111,12 +112,19 @@ namespace ds
 	template <typename T>
 	struct ClassPtr
 	{
-		ClassPtr(RuntimeClass* classPtr)
+		ClassPtr(RuntimeClass* classPtr, InterpretContext* context)
 		{
 			this->classPtr = classPtr;
+			this->context = context;
+		}
+
+		ClassPtr()
+		{
+
 		}
 
 		RuntimeClass* classPtr = nullptr;
+		InterpretContext* context = nullptr;
 
 		T* get() const
 		{
@@ -140,15 +148,31 @@ namespace ds
 			return *get();
 		}
 
+		operator bool() const
+		{
+			return classPtr;
+		}
+
 		ClassPtr(const ClassPtr& other)
 		{
 			this->classPtr = other.classPtr;
-			this->classPtr->addRef();
+			this->context = other.context;
+			if (classPtr)
+			{
+				this->classPtr->addRef();
+			}
 		}
 
 		~ClassPtr()
 		{
-			RuntimeClass::unref(classPtr);
+			if (context)
+			{
+				context->destruct(classPtr);
+			}
+			else
+			{
+				RuntimeClass::unref(classPtr);
+			}
 		}
 	};
 
@@ -197,6 +221,11 @@ namespace ds
 		const T& operator*() const
 		{
 			return *get();
+		}
+
+		operator bool() const
+		{
+			return classPtr;
 		}
 
 		ClassRef(const ClassRef& other) = default;

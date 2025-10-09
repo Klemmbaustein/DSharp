@@ -37,14 +37,14 @@ static void io_readLine(InterpretContext* context)
 
 static void io_file_destruct(InterpretContext* context)
 {
-	ClassPtr<io::File> thisPtr = context->popValue<RuntimeClass*>();
+	ClassPtr<io::File> thisPtr = context->popPtr<io::File>();
 	std::fclose(thisPtr->handle);
 }
 
 #if HAS_POPEN
 static void io_procFile_destruct(InterpretContext* context)
 {
-	ClassPtr<io::File> thisPtr = context->popValue<RuntimeClass*>();
+	ClassPtr<io::File> thisPtr = context->popPtr<io::File>();
 #if _WIN32
 	_pclose(thisPtr->handle);
 	#else

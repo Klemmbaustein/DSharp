@@ -46,6 +46,8 @@ namespace ds
 		parseVariableRedefinition = 3013,
 		/// E3014 No matching constructor
 		parseNoMatchingConstructor = 3014,
+		/// E3014 Await can only be used in async functions
+		parseInvalidAwait = 3015,
 		/// E4000 NoDiscard function return value discarded.
 		returnValueDiscarded = 4000,
 	};

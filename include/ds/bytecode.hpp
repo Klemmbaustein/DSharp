@@ -104,6 +104,8 @@ namespace ds
 		nullCheck,
 		getStructMember,
 		setStructMember,
+		suspend,
+		awaitTask,
 	};
 
 	/**

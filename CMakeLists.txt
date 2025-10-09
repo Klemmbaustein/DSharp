@@ -9,12 +9,6 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(ProgrammingLanguage)
 
-# Enable Hot Reload for MSVC compilers if supported.
-if(POLICY CMP0141)
-	cmake_policy(SET CMP0141 NEW)
-	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
-
 option(BUILD_WINAPI_MODULE "Include Windows API standard module" ON)
 option(WITH_LANGUAGE_SERVICE "Include LanguageService class and related functionality." ON)
 option(HAS_CPP_FORMAT "Has C++23 <format> library. Used for better compiler messages." ON)
@@ -62,3 +56,8 @@ if(HAS_FS_CURRENT_PATH)
 endif()
 
 target_include_directories(ProgrammingLanguage PUBLIC "include")
+
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	add_executable(TestInterpreter "src/main.cpp")
+	target_link_libraries(TestInterpreter PUBLIC ProgrammingLanguage)
+endif()

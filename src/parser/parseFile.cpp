@@ -30,6 +30,15 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 	if (currentLine.empty())
 		return false;
 
+	auto fn = scanFunction(currentLine, errors);
+
+	if (fn)
+	{
+		fn->addAttributes(currentAttributes);
+		currentAttributes.clear();
+		return true;
+	}
+
 	Token first = currentLine.get();
 
 	// Module declaration
@@ -62,14 +71,6 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 		currentAttributes.push_back(AttribInfo(attribTokens));
 		return true;
 	}
-
-	if (first == "fn")
-	{
-		scanFunction(currentLine, errors).addAttributes(currentAttributes);
-		currentAttributes.clear();
-		return true;
-	}
-
 	if (first == "class")
 	{
 		scanClass(currentLine, errors).addAttributes(currentAttributes);
@@ -89,13 +90,31 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 	return true;
 }
 
-ParsedFunction& ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext* errors)
+ParsedFunction* ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext* errors)
 {
+	bool isAsync = false;
+
+	auto next = currentLine.get();
+
+	while (next != "fn")
+	{
+		if (next == "async")
+		{
+			isAsync = true;
+			next = currentLine.get();
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
 	ParsedFunction& fn = this->functions.emplace_back();
 
 	fn.scanDeclaration(currentLine, stream, this, errors);
+	fn.isAsync = isAsync;
 
-	return fn;
+	return &fn;
 }
 
 ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* errors)

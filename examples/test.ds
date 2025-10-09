@@ -1,20 +1,19 @@
 using system
 
-fn useLambda(fn() callback)
+async fn other()
 {
-	callback.call()
+	await async::sleep()
 }
 
 [EntryPoint]
-fn test()
+async fn test() -> int
 {
-	string msg = "hi"
-	string msg2 = "world"
-
-	useLambda(fn() {
-		io::writeln(msg)
-		io::writeln(msg2)
-	})
-
-	return 0
+	int i = 0
+	while i < 10
+	{
+		await other()
+		io::writeInt(i)
+		i += 1
+	}
+	return i
 }

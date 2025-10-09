@@ -66,4 +66,44 @@ namespace ds
 		}
 	};
 
+	struct BinaryBufferRef
+	{
+		BinaryBufferRef(BinaryBuffer* buf, size_t streamPos)
+		{
+			this->buf = buf;
+			this->streamPos = streamPos;
+		}
+
+		BinaryBufferRef()
+		{
+
+		}
+
+		bool get(uint8_t* data, size_t size)
+		{
+			if (buf->buffer.size() < size + streamPos)
+				return false;
+
+			memcpy(data, &buf->buffer[streamPos], size);
+			streamPos += size;
+			return true;
+		}
+
+		template <typename T>
+		T getValue()
+		{
+			T Out = *(T*)&buf->buffer[streamPos];
+			streamPos += sizeof(T);
+			return Out;
+		}
+
+		bool empty() const
+		{
+			return streamPos >= buf->buffer.size();
+		}
+
+		BinaryBuffer* buf = nullptr;
+		size_t streamPos = 0;
+	};
+
 } // namespace ds

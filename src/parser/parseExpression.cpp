@@ -1,5 +1,6 @@
 #include <ds/parser/parseExpression.hpp>
 #include <ds/service/languageService.hpp>
+#include <ds/parser/types/taskType.hpp>
 
 using namespace ds;
 
@@ -198,8 +199,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			if (!r.valid)
 			{
 				errors->error(ErrorCode::parseInvalidType, value,
-					"The operator '" + value.string + "' does not accept the type '"
-					+ Type::toString(result.type) + "'");
+					"The operator '" + value.string + "' does not accept the type '" + Type::toString(result.type) + "'");
 			}
 			return r;
 		}
@@ -268,6 +268,26 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 
 		compiled.code.addBuffer(compiled.type->compileEndMove(scope));
 		return compiled;
+	}
+
+	if (value == "await")
+	{
+		if (!scope->scopeFunction->isAsync)
+		{
+			errors->error(ErrorCode::parseInvalidAwait, value, "Await can only be used in async functions");
+			return ExpressionResult();
+		}
+
+		auto expr = pushExpression(currentLine, errors, setExpression, hintType, scope);
+
+		auto taskType = dynamic_cast<TaskType*>(expr.type);
+
+		if (taskType)
+		{
+			return taskType->compileAwait(expr, scope->taskVariable->readExpression(scope), scope);
+		}
+		errors->error(ErrorCode::parseInvalidType, value, "Cannot await non task type: " + Type::toString(expr.type));
+		return ExpressionResult();
 	}
 
 	// if it's a variable, it's a variable (shocking)

@@ -13,7 +13,7 @@ using std::filesystem::current_path;
 
 static void fs_path_delete(InterpretContext* context)
 {
-	ClassPtr<fs::FilePath> path = context->popValue<RuntimeClass*>();
+	ClassPtr<fs::FilePath> path = context->popPtr<fs::FilePath>();
 	RuntimeClass::unref(path->pathString.classPtr);
 }
 

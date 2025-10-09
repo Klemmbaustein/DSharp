@@ -64,6 +64,10 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::indexString, "INDEX_STRING" },
 		{ BytecodeOp::setStringIndexCopy, "SET_STR_AT" },
 		{ BytecodeOp::nullCheck, "CHECK_NOT_NULL" },
+		{ BytecodeOp::getStructMember, "GET_STRUCT_MEMBER" },
+		{ BytecodeOp::setStructMember, "SET_STRUCT_MEMBER" },
+		{ BytecodeOp::suspend, "SUSPEND" },
+		{ BytecodeOp::awaitTask, "AWAIT_TASK" },
 	};
 
 	const char* op = operations[this->operation];
@@ -273,6 +277,33 @@ bytecodeOffset ds::BytecodeAllocClass::getArgsSize()
 std::string BytecodeAllocClass::toString()
 {
 	return "\tALLOC " + this->languageClass->name;
+}
+
+// ------------- //
+// Await         //
+// ------------- //
+
+ds::BytecodeAwait::BytecodeAwait(Size awaitSize, BytecodeJumpLabel* onFinished)
+{
+	this->operation = BytecodeOp::awaitTask;
+	this->target = onFinished;
+	this->awaitSize = awaitSize;
+}
+
+void ds::BytecodeAwait::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
+{
+	stream.addValue<Size>(this->awaitSize);
+	stream.addValue<bytecodeOffset>(this->target->offset);
+}
+
+bytecodeOffset ds::BytecodeAwait::getArgsSize()
+{
+	return sizeof(Size) + sizeof(bytecodeOffset);
+}
+
+std::string ds::BytecodeAwait::toString()
+{
+	return "\tAWAIT_TASK " + std::to_string(this->awaitSize) + " -> " + this->target->name;
 }
 
 void ds::BytecodeCompiler::printAssembly()

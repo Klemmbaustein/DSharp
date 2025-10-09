@@ -1,19 +1,18 @@
 #pragma once
 #include "bytecode.hpp"
 #include <array>
+#include <functional>
 #include "native/externalFunction.hpp"
 #include "runtimeString.hpp"
 
 namespace ds
 {
 	struct LanguageContext;
+	class LanguageRuntime;
 
 	class InterpretContext
 	{
 	public:
-		InterpretContext(LanguageContext* from);
-
-		void loadBytecode(BytecodeStream* code);
 
 		void run(bytecodeOffset position = 0);
 
@@ -27,6 +26,12 @@ namespace ds
 		std::string popString();
 		RuntimeStr popRuntimeString();
 		void pushRuntimeString(RuntimeStr str);
+
+		template<typename T>
+		ClassPtr<T> popPtr()
+		{
+			return ClassPtr<T>(popValue<RuntimeClass*>(), this);
+		}
 
 		template <typename T>
 		void pushValue(const T& value)
@@ -60,6 +65,19 @@ namespace ds
 			stackPos += size;
 		}
 
+		template<typename T>
+		T callVirtualMethod(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
+		{
+			auto entry = targetObject->vtable[vTableIndex];
+			if (!entry)
+			{
+				return T();
+			}
+			pushValue(targetObject);
+			virtualCall(entry);
+			return popValue<T>();
+		}
+
 		uint32_t getVarArgsCount()
 		{
 			return popValue<uint32_t>();
@@ -68,28 +86,59 @@ namespace ds
 		std::vector<DebugSection*> getStackTrace() const;
 
 		void virtualCall(RuntimeFunction target);
+		bool resumeSuspend();
 
 		[[noreturn]]
 		void runtimePanic(RuntimeStr message) const;
-		std::vector<ExternalFunctionPointer> externals;
-		std::vector<RuntimeFunction>* vTable = nullptr;
 
 		void destruct(RuntimeClass* classObject);
 
+		void copyFrom(InterpretContext* other);
+
+		LanguageRuntime* runtime = nullptr;
+		BinaryBufferRef code;
+		bool suspended = false;
+		bool canAwait = false;
+		bytecodeOffset suspendStackPos = 0;
+
 	private:
-		constexpr static size_t STACK_SIZE = 8000;
+
+		void runLoop(bytecodeOffset& baseCallStackPos);
+
+		constexpr static size_t STACK_SIZE = 4096;
+		constexpr static size_t VAR_STACK_SIZE = 4096;
 		constexpr static size_t CALL_STACK_SIZE = 512;
 		RuntimeStrRef popRuntimeStringRef();
 
-		LanguageContext* language = nullptr;
-
 		std::array<uint8_t, STACK_SIZE> stack = {};
-		std::array<uint8_t, STACK_SIZE> variableStack = {};
+		std::array<uint8_t, VAR_STACK_SIZE> variableStack = {};
 		std::array<bytecodeOffset, CALL_STACK_SIZE> callStack = {};
 		uint32_t stackPos = 0;
 		uint32_t variableStackPos = 0;
 		uint32_t callStackPos = 0;
+	};
+
+	class LanguageRuntime
+	{
+	public:
 		DebugInfo* debug = nullptr;
 		BinaryBuffer* bytecodeBuffer = nullptr;
+		std::vector<ExternalFunctionPointer> externals;
+		std::vector<RuntimeFunction>* vTable = nullptr;
+
+		LanguageContext* language = nullptr;
+
+		static void defaultCreateBackgroundThread(std::function<void()> f);
+		std::function<void(std::function<void()>)> createBackgroundThread = &defaultCreateBackgroundThread;
+
+		LanguageRuntime(LanguageContext* from);
+		void loadBytecode(BytecodeStream* code);
+
+		InterpretContext baseContext;
+
+		std::list<InterpretContext> asyncContexts;
+
+		void run(bytecodeOffset position = 0);
 	};
+
 } // namespace ds

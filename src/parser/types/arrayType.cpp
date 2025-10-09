@@ -7,7 +7,7 @@ using namespace ds;
 
 ds::ArrayType::ArrayType(Type* baseType)
 {
-	this->name = baseType->name + "[]";
+	this->name = baseType->getName() + "[]";
 	this->size = sizeof(Pointer);
 	this->vTableOffset = UINT32_MAX;
 	this->baseType = baseType;

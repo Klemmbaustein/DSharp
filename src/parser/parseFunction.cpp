@@ -3,6 +3,7 @@
 #include <ds/modules/system.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/parser/bytecode/compileBytecodeVirtual.hpp>
+#include <ds/parser/types/taskType.hpp>
 
 using namespace ds;
 
@@ -16,10 +17,16 @@ void ds::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorC
 	functionScope.scopeFile = file;
 	functionScope.returnThis = this->inClass && this->name == "new";
 
+	if (this->isAsync)
+	{
+		functionScope.addTask(static_cast<TaskType*>(this->returnType));
+	}
+
 	if (this->inClass)
 	{
 		functionScope.setClass(this->inClass, this->name != "delete");
 	}
+
 	// Read the arguments given to the function and add them as variables in the scope.
 	// They're added in reverse order because they're pushed onto the stack in this order.
 	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
@@ -129,6 +136,10 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 		}
 	}
 
+	if (isAsync)
+	{
+		this->returnType = TaskType::getInstance(this->returnType);
+	}
 	resolveAttributes(functionFile, errors);
 }
 

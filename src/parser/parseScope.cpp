@@ -8,6 +8,13 @@
 #include <ds/parser/parseExpression.hpp>
 using namespace ds;
 
+void ds::ParsedScope::returnCompletedTask(TaskType* taskType)
+{
+	this->code->addBuffer(taskVariable->readValue(this));
+	auto completed = taskType->compileCompleteTask();
+	this->code->addBuffer(completed.code);
+}
+
 std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& line, ParsedFile* file,
 	ErrorContext* errors, bool matchTypes)
 {
@@ -110,6 +117,7 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std:
 	conditionScope.breakTarget = breakTarget;
 	conditionScope.inClass = inClass;
 	conditionScope.continueTarget = continueTarget;
+	conditionScope.taskVariable = options.isLambda ? nullptr : this->taskVariable;
 	conditionScope.breakContinueDepth = breakContinueDepth;
 	conditionScope.depth = this->depth + 1;
 	conditionScope.isLambda = options.isLambda;
@@ -207,8 +215,9 @@ ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext
 	return result.first->second;
 }
 
-void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
+BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll)
 {
+	BytecodeBuffer code;
 	uint32_t size = 0;
 
 	// Find the variables to erase because erasing variables while iterating them at the same time is a bad idea
@@ -220,14 +229,18 @@ void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 		{
 			continue;
 		}
-		// Don't unref the this variable unless we are in a destructor
-		if (&i.second != thisVariable || scopeFunction && scopeFunction->name != "delete")
+
+		bool isDestructor = scopeFunction && scopeFunction->name == "delete";
+		bool varIsThis = &i.second == thisVariable;
+		bool shouldUnrefThis = !isDestructor && !returnThis;
+
+		if (dereferenceAll && (!varIsThis || shouldUnrefThis) && this->taskVariable != &i.second)
 		{
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
 			{
-				code->addBuffer(i.second.readValue(this));
-				code->addBuffer(unrefCode);
+				code.addBuffer(i.second.readValue(this));
+				code.addBuffer(unrefCode);
 			}
 
 			if (isEnd && &i.second != thisVariable)
@@ -247,24 +260,26 @@ void ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd)
 	// Also call the base (compiler generated) destructor if this is a destructor function
 	if (inClass && scopeFunction && scopeFunction->name == "delete")
 	{
-		code->addBuffer(thisVariable->readValue(this));
+		code.addBuffer(thisVariable->readValue(this));
 
 		if (inClass->baseDestructor.code.instructions.size())
 		{
-			code->addBuffer(inClass->baseDestructor.compileCall().code);
+			code.addBuffer(inClass->baseDestructor.compileCall().code);
 		}
 		else
 		{
-			code->addOperation(BytecodeOp::unrefClass);
+			code.addOperation(BytecodeOp::unrefClass);
 		}
 	}
 
 	if (size)
 	{
-		code->addNew<BytecodePopVariable>(size, !isEnd);
+		code.addNew<BytecodePopVariable>(size, !isEnd);
 
 		this->variableStackPosition -= size;
 	}
+
+	return code;
 }
 
 void ds::ParsedScope::setClass(ParsedClass* inClass, bool copy)
@@ -278,6 +293,13 @@ void ds::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 	pushVariableValue(inClass->thisType, false);
 	this->thisVariable = &addVariable(Token("this"), inClass->thisType, nullptr);
 	this->thisVariable->readOnly = true;
+}
+
+void ds::ParsedScope::addTask(TaskType* taskType)
+{
+	this->code->addBuffer(taskType->compileTask().code);
+	pushVariableValue(taskType, false);
+	this->taskVariable = &addVariable(Token(".task" + std::to_string(tempCounter++)), taskType, nullptr);
 }
 
 void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
@@ -306,19 +328,39 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 		return;
 	}
 
-	compileScopeExit(this->depth, true);
+	code->addBuffer(compileScopeExit(this->depth, true));
 	if (compileReturn)
 	{
+		Type* returnType = this->scopeFunction ? this->scopeFunction->returnType : nullptr;
 		if (returnThis)
 		{
 			code->addBuffer(thisVariable->readValue(this));
+			code->addOperation(BytecodeOp::ret);
+			return;
 		}
-		else if (this->scopeFunction && this->scopeFunction->returnType)
+		else if (this->taskVariable)
 		{
+			auto taskType = static_cast<TaskType*>(taskVariable->type);
+			returnType = taskType->baseType;
+			if (!returnType)
+			{
+				this->returnCompletedTask(taskType);
+				code->addOperation(BytecodeOp::ret);
+				return;
+			}
+
+		}
+		if (returnType)
+		{
+			// Function not ending in a return statement should abort if it ever reaches the end.
+			// You could write code in which the normal end of the function is unreachable and there's no nice way to detect this,
+			// so this seems like the best solution.
 			code->addNew<BytecodeCallNative>("system::err::abort");
 		}
-
-		code->addOperation(BytecodeOp::ret);
+		else
+		{
+			code->addOperation(BytecodeOp::ret);
+		}
 	}
 }
 
@@ -328,23 +370,28 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 
 	if (first == "return" && scopeFunction)
 	{
-		if (scopeFunction->returnType)
+		auto type = scopeFunction->returnType;
+		auto taskType = taskVariable ? static_cast<TaskType*>(taskVariable->type) : nullptr;
+		if (taskType)
+		{
+			type = taskType->baseType;
+		}
+		if (type)
 		{
 			if (line.empty())
 			{
 				errors->error(ErrorCode::parseUnknownExpressionType, first,
-					"Return statement doesn't return a value, but it must return '"
-					+ Type::toString(scopeFunction->returnType) + "'");
+					"Return statement doesn't return a value, but it must return '" + Type::toString(type) + "'");
 				return;
 			}
 
-			auto expr = Expression::pushExpression(line, errors, false, scopeFunction->returnType, this);
+			auto expr = Expression::pushExpression(line, errors, false, type, this);
 
 			if (!expr.valid)
 			{
 				return;
 			}
-			expr.compileToType(first, scopeFunction->returnType, this, errors);
+			expr.compileToType(first, type, this, errors);
 
 			this->code->addBuffer(expr.code);
 			if (expr.type)
@@ -352,7 +399,13 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 				this->code->addBuffer(expr.type->compileMove(this));
 			}
 		}
-		compileScopeExit(0, false);
+
+		if (taskType)
+		{
+			returnCompletedTask(taskType);
+		}
+
+		code->addBuffer(compileScopeExit(0, false));
 		this->code->addOperation(BytecodeOp::ret);
 		line.expectEndOfLine(errors);
 		return;
@@ -372,7 +425,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 	{
 		if (this->breakTarget)
 		{
-			this->compileScopeExit(breakContinueDepth, false);
+			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
 			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget.get());
 		}
 		return;
@@ -382,7 +435,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 	{
 		if (this->continueTarget)
 		{
-			this->compileScopeExit(breakContinueDepth, false);
+			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
 			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget.get());
 		}
 		return;
@@ -626,7 +679,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 	parseSubScope(file, errors, endLabel, continueLabel, this->depth + 1);
 
 	this->code->add(continueLabel);
-	compileScopeExit(this->depth, true);
+	code->addBuffer(compileScopeExit(this->depth, true));
 	// Increment the iterator
 	this->code->addBuffer(iterator.readValue(this));
 	this->code->pushInt(1);
@@ -638,7 +691,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 	this->code->add(endLabel);
 
 	this->depth -= 2;
-	compileScopeExit(this->depth + 1, true);
+	code->addBuffer(compileScopeExit(this->depth + 1, true));
 }
 
 BytecodeBuffer ds::ScopeVariable::readValue(ParsedScope* with) const

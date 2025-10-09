@@ -30,7 +30,7 @@ namespace ds
 
 		void scan(ErrorContext* errors);
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors);
-		ParsedFunction& scanFunction(TokenLine currentLine, ErrorContext* errors);
+		ParsedFunction* scanFunction(TokenLine currentLine, ErrorContext* errors);
 		ParsedClass& scanClass(TokenLine currentLine, ErrorContext* errors);
 		ParsedEnum& scanEnum(TokenLine currentLine, ErrorContext* errors);
 

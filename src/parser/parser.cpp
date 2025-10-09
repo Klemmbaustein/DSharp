@@ -110,18 +110,24 @@ BytecodeStream ds::ParseContext::compile()
 	}
 
 	BytecodeStream out;
-	this->compiler.compileTo(out, virtualTable, &errors);
-
-	generateReflectionMetadata(out);
-
-	if (!this->service)
+	if (!service)
 	{
-		this->compiler.printAssembly();
+		this->compiler.compileTo(out, virtualTable, &errors);
 	}
+
+	//if (!this->service)
+	//{
+	//	this->compiler.printAssembly();
+	//}
 
 	if (!errors.isOk())
 	{
 		return BytecodeStream();
+	}
+
+	if (!service)
+	{
+		generateReflectionMetadata(out);
 	}
 	return out;
 }

@@ -39,6 +39,7 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 
 	bool isVirtual = false;
 	bool isOverride = false;
+	bool isAsync = false;
 	std::vector<Token> modifiers;
 
 	auto next = currentLine.get();
@@ -70,6 +71,12 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 			next = currentLine.get();
 			continue;
 		}
+		if (next == "async")
+		{
+			isAsync = true;
+			next = currentLine.get();
+			continue;
+		}
 
 		break;
 	}
@@ -80,6 +87,7 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 		fn->functionModule = file->fileModule;
 		fn->functionIsVirtual = isVirtual;
 		fn->isOverride = isOverride;
+		fn->isAsync = isAsync;
 		fn->scanDeclaration(currentLine, classStream, file, errors);
 		fn->inClass = this;
 
@@ -152,7 +160,7 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 	{
 		baseDestructor.code.addBuffer(cleanupCode);
 
-		destructorScope.compileScopeExit(0, false);
+		cleanupCode.addBuffer(destructorScope.compileScopeExit(0, false));
 		baseDestructor.code.addOperation(BytecodeOp::ret);
 
 		auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
@@ -315,15 +323,6 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 
 	for (auto& i : this->methods)
 	{
-
-#ifdef WITH_LANGUAGE_SERVICE
-		if (context->service)
-		{
-			context->service->files[file->name]
-				.functions.push_back(ScannedFunction(i, i->name));
-		}
-#endif
-
 		if (i->name == "new")
 		{
 			constructors.push_back(i);
@@ -348,6 +347,14 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 	for (auto& m : this->methods)
 	{
 		m->resolveTypes(context, &context->errors);
+
+#ifdef WITH_LANGUAGE_SERVICE
+		if (context->service)
+		{
+			context->service->files[file->name]
+				.functions.push_back(ScannedFunction(m, m->name));
+		}
+#endif
 	}
 }
 
@@ -422,7 +429,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 	// Return a reference to this.
 	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
-	constructorScope.compileScopeExit(0, false);
+	code->addBuffer(constructorScope.compileScopeExit(0, false));
 	code->addOperation(BytecodeOp::ret);
 
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];

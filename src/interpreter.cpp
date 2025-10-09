@@ -2,23 +2,27 @@
 #include <ds/language.hpp>
 #include <ds/bytecode.hpp>
 #include <ds/class.hpp>
+#include <ds/modules/system.async.hpp>
 #include <print>
 #include <vector>
 #include <cstring>
 
-ds::InterpretContext::InterpretContext(LanguageContext* from)
+void ds::LanguageRuntime::defaultCreateBackgroundThread(std::function<void()> f)
 {
-	this->language = from;
+	std::thread(f).detach();
 }
 
-void ds::InterpretContext::loadBytecode(BytecodeStream* code)
+ds::LanguageRuntime::LanguageRuntime(LanguageContext* from)
+{
+	this->language = from;
+	baseContext.runtime = this;
+}
+
+void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 {
 	this->bytecodeBuffer = &code->code;
 	this->vTable = &code->virtualTable;
 	this->debug = &code->debug;
-	this->callStackPos = 0;
-	this->stackPos = 0;
-	this->variableStackPos = 0;
 
 	this->externals.clear();
 	this->externals.reserve(code->externalFunctions.size());
@@ -45,24 +49,36 @@ void ds::InterpretContext::loadBytecode(BytecodeStream* code)
 			std::printf("Could not find function: %s\n", i.c_str());
 		}
 	}
+
+	this->baseContext.code.buf = this->bytecodeBuffer;
+}
+
+void ds::LanguageRuntime::run(bytecodeOffset position)
+{
+	baseContext.run(position);
 }
 
 void ds::InterpretContext::run(bytecodeOffset position)
 {
+	bytecodeOffset baseCallStackPos = this->callStackPos;
+	this->code.streamPos = position;
+
+	runLoop(baseCallStackPos);
+}
+
+void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
+{
 	std::array<uint8_t, 255> argumentBuffer{};
 
-	bytecodeOffset baseCallStackPos = this->callStackPos;
-	bytecodeBuffer->streamPos = position;
-
-	while (!bytecodeBuffer->empty())
+	while (!code.empty())
 	{
-		auto op = bytecodeBuffer->getValue<BytecodeOp>();
+		auto op = code.getValue<BytecodeOp>();
 
-		uint8_t argsSize = bytecodeBuffer->getValue<uint8_t>();
+		uint8_t argsSize = code.getValue<uint8_t>();
 
 		if (argsSize)
 		{
-			bytecodeBuffer->get(argumentBuffer.data(), argsSize);
+			code.get(argumentBuffer.data(), argsSize);
 		}
 
 		switch (op)
@@ -80,14 +96,14 @@ void ds::InterpretContext::run(bytecodeOffset position)
 			break;
 		}
 		case ds::BytecodeOp::jump: {
-			bytecodeBuffer->streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+			code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
 			break;
 		}
 		case ds::BytecodeOp::jumpIfNot: {
 			Bool cond = popValue<Bool>();
 			if (!cond)
 			{
-				bytecodeBuffer->streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+				code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
 			}
 			break;
 		}
@@ -173,18 +189,51 @@ void ds::InterpretContext::run(bytecodeOffset position)
 			break;
 		}
 		case ds::BytecodeOp::call:
-			callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
-			bytecodeBuffer->streamPos = size_t(*(bytecodeOffset*)&argumentBuffer[0]);
+			callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+			code.streamPos = size_t(*(bytecodeOffset*)&argumentBuffer[0]);
 			break;
 		case ds::BytecodeOp::callExternal:
-			externals[*(Size*)&argumentBuffer[0]](this);
+			runtime->externals[*(Size*)&argumentBuffer[0]](this);
 			break;
+		case ds::BytecodeOp::awaitTask: {
+			ClassRef<modules::system::async::Task> task = popValue<RuntimeClass*>();
+			ClassRef<modules::system::async::Task> returnTask = popValue<RuntimeClass*>();
+			Size resultSize = *(Size*)&argumentBuffer[0];
+			Pointer newPos = Pointer(*(Size*)&argumentBuffer[sizeof(resultSize)]);
+			std::unique_lock l{ task->taskMutex };
+			if (task->completed)
+			{
+				modules::system::async::pushTaskResult(task.get(), resultSize, this);
+				code.streamPos = newPos;
+			}
+			else
+			{
+				if (canAwait)
+				{
+					suspended = true;
+					suspendStackPos = baseCallStackPos;
+					task->awaiter = this;
+					code.streamPos = newPos;
+					return;
+				}
+				auto& rt = this->runtime->asyncContexts.emplace_back();
+				rt.copyFrom(this);
+				rt.canAwait = true;
+				auto t = task.get();
+				t->awaiter = &rt;
+				rt.suspended = true;
+				rt.suspendStackPos = callStackPos;
+				rt.code.streamPos = newPos;
+				pushValue(returnTask);
+			}
+			break;
+		}
 		case ds::BytecodeOp::ret:
 			if (callStackPos == baseCallStackPos)
 			{
 				return;
 			}
-			bytecodeBuffer->streamPos = callStack[--callStackPos];
+			code.streamPos = callStack[--callStackPos];
 			break;
 		case ds::BytecodeOp::pushVariable: {
 			Size size = *(Size*)&argumentBuffer[0];
@@ -212,7 +261,7 @@ void ds::InterpretContext::run(bytecodeOffset position)
 			Size size = popValue<Size>();
 			Size typeId = *(Size*)&argumentBuffer[0];
 			bytecodeOffset vTableOffset = *(bytecodeOffset*)&argumentBuffer[sizeof(typeId)];
-			pushValue(RuntimeClass::allocateClass(size, vTableOffset != UINT32_MAX ? vTable->data() + vTableOffset : nullptr));
+			pushValue(RuntimeClass::allocateClass(size, vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr));
 			break;
 		}
 		case ds::BytecodeOp::classMember: {
@@ -260,8 +309,8 @@ void ds::InterpretContext::run(bytecodeOffset position)
 				}
 				else
 				{
-					callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
-					bytecodeBuffer->streamPos = destructor.codeOffset;
+					callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+					code.streamPos = destructor.codeOffset;
 				}
 			}
 
@@ -323,8 +372,8 @@ void ds::InterpretContext::run(bytecodeOffset position)
 			}
 			else
 			{
-				callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
-				bytecodeBuffer->streamPos = entry.codeOffset;
+				callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+				code.streamPos = entry.codeOffset;
 			}
 
 			break;
@@ -357,6 +406,11 @@ void ds::InterpretContext::run(bytecodeOffset position)
 			stackPos -= size;
 			break;
 		}
+		case ds::BytecodeOp::suspend: {
+			suspended = true;
+			suspendStackPos = baseCallStackPos;
+			return;
+		}
 		default:
 			abort();
 			break;
@@ -373,6 +427,19 @@ void ds::InterpretContext::destruct(RuntimeClass* classObject)
 		pushValue(classObject);
 		virtualCall(ptr);
 	}
+}
+
+void ds::InterpretContext::copyFrom(InterpretContext* other)
+{
+	memcpy(this->stack.data(), other->stack.data(), STACK_SIZE);
+	this->stackPos = other->stackPos;
+	this->variableStack = other->variableStack;
+	this->variableStackPos = other->variableStackPos;
+	memcpy(this->callStack.data(), other->callStack.data(), other->callStackPos);
+	this->callStackPos = other->callStackPos;
+
+	this->code = other->code;
+	this->runtime = other->runtime;
 }
 
 std::string ds::InterpretContext::popString()
@@ -399,10 +466,10 @@ ds::RuntimeStr ds::InterpretContext::popRuntimeString()
 std::vector<ds::DebugSection*> ds::InterpretContext::getStackTrace() const
 {
 	std::vector<DebugSection*> result;
-	result.push_back(this->debug->getSectionAt(uint32_t(bytecodeBuffer->streamPos)));
+	result.push_back(runtime->debug->getSectionAt(uint32_t(code.streamPos)));
 	for (int i = callStackPos - 1; i >= 0; i--)
 	{
-		result.push_back(this->debug->getSectionAt(callStack[i]));
+		result.push_back(runtime->debug->getSectionAt(callStack[i]));
 	}
 
 	return result;
@@ -421,10 +488,22 @@ void ds::InterpretContext::virtualCall(RuntimeFunction target)
 	}
 	else
 	{
-		callStack[callStackPos++] = bytecodeOffset(bytecodeBuffer->streamPos);
+		callStack[callStackPos++] = bytecodeOffset(code.streamPos);
 		run(target.codeOffset);
-		bytecodeBuffer->streamPos = callStack[--callStackPos];
+		code.streamPos = callStack[--callStackPos];
 	}
+}
+
+bool ds::InterpretContext::resumeSuspend()
+{
+	if (suspended)
+	{
+		bytecodeOffset pos = suspendStackPos;
+		suspended = false;
+		runLoop(pos);
+		return true;
+	}
+	return false;
 }
 
 void ds::InterpretContext::runtimePanic(RuntimeStr message) const

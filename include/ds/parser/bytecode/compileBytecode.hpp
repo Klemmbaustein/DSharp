@@ -110,6 +110,19 @@ namespace ds
 		BytecodeJumpLabel* target = nullptr;
 	};
 
+	class BytecodeAwait : public BytecodeInstruction
+	{
+	public:
+		BytecodeAwait(Size awaitSize, BytecodeJumpLabel* onFinished);
+
+		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
+		bytecodeOffset getArgsSize() override;
+		std::string toString() override;
+
+		Size awaitSize = 0;
+		BytecodeJumpLabel* target = nullptr;
+	};
+
 	using InstructionPtr = std::shared_ptr<BytecodeInstruction>;
 
 	struct BytecodeBuffer
