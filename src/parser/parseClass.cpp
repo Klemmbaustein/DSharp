@@ -160,7 +160,7 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 	{
 		baseDestructor.code.addBuffer(cleanupCode);
 
-		cleanupCode.addBuffer(destructorScope.compileScopeExit(0, false));
+		destructorScope.code->addBuffer(destructorScope.compileScopeExit(0, false));
 		baseDestructor.code.addOperation(BytecodeOp::ret);
 
 		auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];

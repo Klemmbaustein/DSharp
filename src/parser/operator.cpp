@@ -36,7 +36,7 @@ Operator ds::stringToUnaryOperator(std::string opString)
 	static std::map<std::string, Operator> operatorStrings = {
 		{ "-", Operator::unaryMinus },
 		{ "not", Operator::logicalNot },
-		{ "or", Operator::dereference },
+		{ "*", Operator::dereference },
 	};
 
 	auto found = operatorStrings.find(opString);

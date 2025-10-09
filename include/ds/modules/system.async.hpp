@@ -8,6 +8,10 @@ namespace ds::modules::system
 	{
 		NativeModule createModule();
 
+		struct Task;
+
+		using TaskCallback = void(*)(ClassRef<Task>, InterpretContext*, void*);
+
 		struct Task
 		{
 			Bool completed;
@@ -16,7 +20,7 @@ namespace ds::modules::system
 				InterpretContext* awaiter;
 				void* awaitNativeData;
 			};
-			void (*awaitNative)(void*);
+			TaskCallback awaitNative;
 			uint8_t* resultBuffer;
 			std::mutex taskMutex;
 		};
@@ -58,7 +62,7 @@ namespace ds::modules::system
 		RuntimeClass* completedTask();
 
 		template <typename T>
-		void completeTask(ClassRef<Task> task, T result)
+		void completeTask(ClassRef<Task> task, T result, InterpretContext* context)
 		{
 			{
 				std::unique_lock l{ task->taskMutex };
@@ -70,7 +74,7 @@ namespace ds::modules::system
 			}
 			if (task->awaitNative)
 			{
-				task->awaitNative(task->awaitNativeData);
+				task->awaitNative(task, context, task->awaitNativeData);
 			}
 			else if (task->awaiter)
 			{
@@ -78,7 +82,7 @@ namespace ds::modules::system
 			}
 		}
 
-		void completeTask(ClassRef<Task> task);
+		void completeTask(ClassRef<Task> task, InterpretContext* context);
 
 	} // namespace async
 } // namespace ds::modules::system

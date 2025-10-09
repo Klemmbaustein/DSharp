@@ -7,13 +7,41 @@
 #include <vector>
 #include <cstring>
 
+std::mutex threadsMutex;
+
+ds::LanguageRuntime::~LanguageRuntime()
+{
+	std::map<size_t, std::thread*> threadsCopy;
+	{
+		std::lock_guard l{ threadsMutex };
+		threadsCopy = this->backgroundThreads;
+	}
+	for (auto& [_, i] : threadsCopy)
+	{
+		i->join();
+	}
+}
+
 void ds::LanguageRuntime::defaultCreateBackgroundThread(std::function<void()> f)
 {
-	std::thread(f).detach();
+	static size_t id = 0;
+
+	size_t thisThreadId = id++;
+
+	std::lock_guard l{ threadsMutex };
+	auto t = new std::thread([=] {
+		f();
+
+		std::lock_guard l{ threadsMutex };
+		this->backgroundThreads.erase(thisThreadId);
+	});
+
+	backgroundThreads.insert({ thisThreadId, t });
 }
 
 ds::LanguageRuntime::LanguageRuntime(LanguageContext* from)
 {
+	createBackgroundThread = std::bind(&LanguageRuntime::defaultCreateBackgroundThread, this, std::placeholders::_1);
 	this->language = from;
 	baseContext.runtime = this;
 }
@@ -200,7 +228,6 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			ClassRef<modules::system::async::Task> returnTask = popValue<RuntimeClass*>();
 			Size resultSize = *(Size*)&argumentBuffer[0];
 			Pointer newPos = Pointer(*(Size*)&argumentBuffer[sizeof(resultSize)]);
-			std::unique_lock l{ task->taskMutex };
 			if (task->completed)
 			{
 				modules::system::async::pushTaskResult(task.get(), resultSize, this);
@@ -219,8 +246,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 				auto& rt = this->runtime->asyncContexts.emplace_back();
 				rt.copyFrom(this);
 				rt.canAwait = true;
-				auto t = task.get();
-				t->awaiter = &rt;
+				task->awaiter = &rt;
 				rt.suspended = true;
 				rt.suspendStackPos = callStackPos;
 				rt.code.streamPos = newPos;
@@ -228,6 +254,15 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			}
 			break;
 		}
+		case ds::BytecodeOp::returnAsync: {
+			ClassRef<modules::system::async::Task> task = popValue<RuntimeClass*>();
+			if (!task->awaiter && !task->awaitNative)
+			{
+				task.classPtr->addRef();
+			}
+			pushValue(task);
+		}
+			[[fallthrough]];
 		case ds::BytecodeOp::ret:
 			if (callStackPos == baseCallStackPos)
 			{

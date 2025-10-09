@@ -9,24 +9,21 @@
 using namespace ds;
 using namespace ds::modules::system::async;
 
+bool completed = false;
+
 static void awaitTask(LanguageRuntime* runtime)
 {
 	ClassPtr<Task> task = runtime->baseContext.popPtr<Task>();
 
 	if (!task->completed)
 	{
-		bool completed = false;
-
-		task->awaitNative = [](void* ptr) {
-			*reinterpret_cast<bool*>(ptr) = true;
+		task->awaitNative = [](ClassRef<Task> task, InterpretContext* context, void* ptr) {
+			std::println("task returned {}", getTaskResult<Int>(task.classPtr));
+			completed = true;
 		};
-		task->awaitNativeData = &completed;
-
-		while (!completed)
-		{
-			std::this_thread::yield();
-		}
+		return;
 	}
+	completed = true;
 	std::println("task returned {}", getTaskResult<Int>(task.classPtr));
 }
 
@@ -50,6 +47,11 @@ int main()
 	runtime->run();
 
 	awaitTask(runtime);
+
+	while (!completed)
+	{
+		std::this_thread::yield();
+	}
 
 	delete runtime;
 

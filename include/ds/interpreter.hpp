@@ -4,6 +4,9 @@
 #include <functional>
 #include "native/externalFunction.hpp"
 #include "runtimeString.hpp"
+#include <thread>
+#include <list>
+#include <map>
 
 namespace ds
 {
@@ -126,12 +129,17 @@ namespace ds
 		std::vector<ExternalFunctionPointer> externals;
 		std::vector<RuntimeFunction>* vTable = nullptr;
 
-		LanguageContext* language = nullptr;
-
-		static void defaultCreateBackgroundThread(std::function<void()> f);
-		std::function<void(std::function<void()>)> createBackgroundThread = &defaultCreateBackgroundThread;
-
 		LanguageRuntime(LanguageContext* from);
+		LanguageContext* language = nullptr;
+		LanguageRuntime(const LanguageRuntime& other) = delete;
+		~LanguageRuntime();
+
+		void defaultCreateBackgroundThread(std::function<void()> f);
+
+		// TODO: replace with some kind of thread pool interface
+		std::map<size_t, std::thread*> backgroundThreads;
+		std::function<void(std::function<void()>)> createBackgroundThread;
+
 		void loadBytecode(BytecodeStream* code);
 
 		InterpretContext baseContext;

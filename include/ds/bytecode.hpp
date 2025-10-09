@@ -106,6 +106,7 @@ namespace ds
 		setStructMember,
 		suspend,
 		awaitTask,
+		returnAsync,
 	};
 
 	/**
