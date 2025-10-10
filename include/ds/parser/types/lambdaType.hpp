@@ -1,10 +1,10 @@
 #pragma once
-#include "type.hpp"
+#include "classType.hpp"
 #include <ds/parser/parseScope.hpp>
 
 namespace ds
 {
-	class LambdaType : public Type
+	class LambdaType : public ClassType
 	{
 	public:
 		LambdaType()

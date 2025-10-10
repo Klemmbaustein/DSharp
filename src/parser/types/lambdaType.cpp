@@ -6,6 +6,14 @@ using namespace ds;
 ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with, Type* hintType)
 {
+	bool isAsync = false;
+
+	if (first == "async")
+	{
+		isAsync = true;
+		first = line.get();
+	}
+
 	if (first != "fn")
 	{
 		return ExpressionResult();
@@ -28,9 +36,12 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	}
 
 	auto& newFunction = with->scopeFile->functions.emplace_back();
+	newFunction.isAsync = isAsync;
 	newFunction.name = Token(with->scopeFunction->name.string + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
+
+	newFunction.resolveTypes(with->context, errors);
 
 	with->parseSubScope(with->scopeFile, errors, nullptr, nullptr, with->depth,
 		ParsedScope::ScopeOptions{
@@ -43,6 +54,8 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	ExpressionResult result;
 	result.valid = true;
 	result.type = FunctionType::getInstance(newFunction.returnType, {});
+
+	newFunction.registerFunction(with->context);
 
 	std::vector<ScopeVariable*> variables;
 

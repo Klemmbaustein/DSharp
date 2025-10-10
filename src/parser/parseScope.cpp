@@ -121,6 +121,13 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std:
 	conditionScope.breakContinueDepth = breakContinueDepth;
 	conditionScope.depth = this->depth + 1;
 	conditionScope.isLambda = options.isLambda;
+	conditionScope.functionDepth = options.isLambda ? conditionScope.depth : functionDepth;
+
+	if (conditionScope.isLambda && conditionScope.scopeFunction
+		&& conditionScope.scopeFunction->isAsync)
+	{
+		conditionScope.addTask(reinterpret_cast<TaskType*>(conditionScope.scopeFunction->returnType));
+	}
 
 	for (auto& i : this->variables)
 	{
@@ -300,6 +307,7 @@ void ds::ParsedScope::addTask(TaskType* taskType)
 	this->code->addBuffer(taskType->compileTask().code);
 	pushVariableValue(taskType, false);
 	this->taskVariable = &addVariable(Token(".task" + std::to_string(tempCounter++)), taskType, nullptr);
+	this->taskVariable->isInternal = true;
 }
 
 void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
@@ -311,6 +319,7 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 	{
 		pushVariableValue(LambdaType::getInstance(), true);
 		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance(), nullptr);
+		lambdaVariable->isInternal = true;
 	}
 
 	while (true)
@@ -329,7 +338,7 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 	}
 
 	code->addBuffer(compileScopeExit(this->depth, true));
-	if (compileReturn)
+	if (compileReturn || this->isLambda)
 	{
 		Type* returnType = this->scopeFunction ? this->scopeFunction->returnType : nullptr;
 		if (returnThis)

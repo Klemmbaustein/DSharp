@@ -68,6 +68,7 @@ namespace ds
 		std::shared_ptr<BytecodeJumpLabel> breakTarget = nullptr;
 		std::shared_ptr<BytecodeJumpLabel> continueTarget = nullptr;
 		size_t breakContinueDepth = 0;
+		size_t functionDepth = 0;
 
 		void setClass(ParsedClass* inClass, bool copy);
 		void addTask(TaskType* taskType);

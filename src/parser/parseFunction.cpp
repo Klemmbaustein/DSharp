@@ -37,6 +37,11 @@ void ds::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorC
 
 	functionScope.compile(context, file, errors);
 
+	registerFunction(context);
+}
+
+void ds::ParsedFunction::registerFunction(ParseContext* context)
+{
 	auto& bytecodeFunction = context->compiler.functions[getFullName()];
 	bytecodeFunction = functionCode;
 	bytecodeFunction.isEntryPoint = getAttribute<modules::system::EntryPointAttribute>();

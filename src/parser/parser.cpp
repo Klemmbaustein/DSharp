@@ -115,10 +115,10 @@ BytecodeStream ds::ParseContext::compile()
 		this->compiler.compileTo(out, virtualTable, &errors);
 	}
 
-	//if (!this->service)
-	//{
-	//	this->compiler.printAssembly();
-	//}
+	if (!this->service)
+	{
+		this->compiler.printAssembly();
+	}
 
 	if (!errors.isOk())
 	{

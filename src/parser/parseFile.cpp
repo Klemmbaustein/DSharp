@@ -193,6 +193,11 @@ void ds::ParsedFile::compile(ParseContext* context)
 
 	for (auto& fn : this->functions)
 	{
+		if (fn.isLambda)
+		{
+			continue;
+		}
+
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scanInfo)
 		{

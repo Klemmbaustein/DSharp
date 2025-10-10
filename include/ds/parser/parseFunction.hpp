@@ -29,6 +29,8 @@ namespace ds
 		std::string getFullName() const override;
 		std::string getShortName() const override;
 
+		void registerFunction(ParseContext* context);
+
 		void scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors);
 
 		TokenStream functionStream;

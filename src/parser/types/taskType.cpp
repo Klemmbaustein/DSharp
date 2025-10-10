@@ -33,7 +33,7 @@ ExpressionResult ds::TaskType::compileAwait(ExpressionResult taskExpr, Expressio
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("endAwait");
 
 	returnTaskExpr.code.addNew<BytecodeAwait>(Size(baseType ? baseType->size : 0), endLabel.get());
-	returnTaskExpr.code.addBuffer(with->compileScopeExit(0, false, false));
+	returnTaskExpr.code.addBuffer(with->compileScopeExit(with->functionDepth, false, false));
 	returnTaskExpr.code.addOperation(BytecodeOp::returnAsync);
 	returnTaskExpr.code.add(endLabel);
 
