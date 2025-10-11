@@ -119,6 +119,11 @@ ExpressionResult ds::IntType::compileToString(ExpressionResult thisValue, ErrorC
 	return result;
 }
 
+void ds::Type::applyName()
+{
+	this->id = typeIdFromName(getName());
+}
+
 ExpressionResult ds::Type::defaultValue()
 {
 	ExpressionResult result;
@@ -172,6 +177,16 @@ ExpressionResult ds::Type::compileIndex(ExpressionResult thisValue, ExpressionRe
 ExpressionResult ds::Type::compileToString(ExpressionResult thisValue, ErrorContext* errors, ParsedScope* with)
 {
 	return ExpressionResult();
+}
+
+ScannedType ds::Type::toScanned()
+{
+	auto name = this->getName();
+
+	return ScannedType{
+		.name = name,
+		.id = typeIdFromName(name),
+	};
 }
 
 std::string ds::Type::toString(Type* target)

@@ -105,6 +105,11 @@ void ds::NativeModule::initialize()
 	{
 		i->moduleName = this->name;
 	}
+
+	for (auto& i : this->types)
+	{
+		i->applyName();
+	}
 }
 
 Module ds::NativeModule::create() const

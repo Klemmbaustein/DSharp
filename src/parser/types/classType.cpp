@@ -61,6 +61,25 @@ std::string ds::NullableClassType::getName()
 {
 	return from->getName() + "?";
 }
+
+#ifdef WITH_LANGUAGE_SERVICE
+ScannedType ds::ClassType::toScanned()
+{
+	ScannedType out = Type::toScanned();
+
+	for (auto& i : this->members)
+	{
+		out.members.push_back(ScannedMember{
+			.memberTypeId = i.type ? i.type->id : 0,
+			.memberTypeName = Type::toString(i.type),
+			.name = i.name.string,
+			});
+	}
+
+	return out;
+}
+#endif
+
 bool ds::ClassType::isSubclassOf(ClassType* parent)
 {
 	for (ClassType* i : parents)
@@ -226,6 +245,7 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 	if (line.peek() == "(")
 	{
 		auto inBraces = line.getInBraces(errors);
+		auto bracesEnd = line.previous();
 
 		for (auto& [name, function] : this->methods)
 		{
@@ -255,7 +275,8 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 			if (with->context->service)
 			{
 				with->context->service->files[with->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, memberName));
+					.functions.push_back(ScannedFunction(function, memberName,
+						ScannedFunction::Kind::functionCall, bracesEnd.position));
 			}
 #endif
 
@@ -279,7 +300,8 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 #ifdef WITH_LANGUAGE_SERVICE
 		if (with->context->service)
 		{
-			with->context->service->files[with->scopeFile->name].variables.push_back(memberName);
+			with->context->service->files[with->scopeFile->name].variables
+				.push_back(ScannedVariable(&i, this, nullptr, memberName));
 		}
 #endif
 

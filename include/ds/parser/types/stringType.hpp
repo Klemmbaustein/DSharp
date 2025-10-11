@@ -11,6 +11,7 @@ namespace ds
 			this->name = "string";
 			this->size = sizeof(Pointer);
 			this->vTableOffset = UINT32_MAX;
+			applyName();
 		}
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,

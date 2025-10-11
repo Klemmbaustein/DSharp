@@ -46,6 +46,9 @@ namespace ds
 		std::vector<Function*> virtualTable;
 #ifdef WITH_LANGUAGE_SERVICE
 		LanguageService* service = nullptr;
+
+		void emitServiceTypes();
+		void emitServiceTypesForModule(Module* mod);
 #endif
 		std::vector<Type*> defaultTypes;
 

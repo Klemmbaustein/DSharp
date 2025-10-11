@@ -12,6 +12,11 @@ DebugInfo::~DebugInfo()
 
 DebugSection* ds::DebugInfo::getSectionAt(uint32_t offset)
 {
+	if (offset == SIZE_MAX)
+	{
+		return nullptr;
+	}
+
 	DebugSection* last = nullptr;
 
 	for (auto& i : sections)

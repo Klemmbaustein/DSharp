@@ -88,10 +88,12 @@ void ds::LanguageRuntime::run(bytecodeOffset position)
 
 void ds::InterpretContext::run(bytecodeOffset position)
 {
+	callStack[callStackPos++] = bytecodeOffset(code.streamPos);
 	bytecodeOffset baseCallStackPos = this->callStackPos;
 	this->code.streamPos = position;
 
 	runLoop(baseCallStackPos);
+	code.streamPos = callStack[--callStackPos];
 }
 
 void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
@@ -502,7 +504,7 @@ std::vector<ds::DebugSection*> ds::InterpretContext::getStackTrace() const
 {
 	std::vector<DebugSection*> result;
 	result.push_back(runtime->debug->getSectionAt(uint32_t(code.streamPos)));
-	for (int i = callStackPos - 1; i >= 0; i--)
+	for (uint32_t i = callStackPos - 1; i > 0; i--)
 	{
 		result.push_back(runtime->debug->getSectionAt(callStack[i]));
 	}
@@ -523,9 +525,7 @@ void ds::InterpretContext::virtualCall(RuntimeFunction target)
 	}
 	else
 	{
-		callStack[callStackPos++] = bytecodeOffset(code.streamPos);
 		run(target.codeOffset);
-		code.streamPos = callStack[--callStackPos];
 	}
 }
 

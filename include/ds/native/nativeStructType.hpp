@@ -1,23 +1,21 @@
 #pragma once
-#include <ds/parser/types/type.hpp>
+#include <ds/parser/types/classType.hpp>
 
 #define DS_CREATE_STRUCT(type) new ::ds::NativeStructType(sizeof(type), # type)
-#define LANG_STRUCT_MEMBER(x, type, name, memberType) x->members.emplace_back(# name, offsetof(type, name), memberType);
-#define DS_STRUCT_MEMBER_NAME(x, type, name, scriptName, memberType) x->members.emplace_back(#scriptName, offsetof(type, name), memberType);
+#define DS_STRUCT_MEMBER(x, type, name, memberType) x->members.emplace_back(# name, Size(offsetof(type, name)), memberType);
+#define DS_STRUCT_MEMBER_NAME(x, type, name, scriptName, memberType) x->members.emplace_back(#scriptName, Size(offsetof(type, name)), memberType);
 
 namespace ds
 {
-	struct NativeStructMember
-	{
-		std::string name;
-		size_t offset = 0;
-		Type* memberType = nullptr;
-	};
 
-	class NativeStructType : public Type
+	class NativeStructType : public ClassType
 	{
 	public:
 		NativeStructType(Size size, std::string name);
+
+		BytecodeBuffer compileUnref() override;
+		BytecodeBuffer compileMove(ParsedScope* with) override;
+		BytecodeBuffer compileEndMove(ParsedScope* with) override;
 
 		std::string getName() override;
 
@@ -31,9 +29,6 @@ namespace ds
 
 		void addConstructor(Function* newConstructor);
 
-		std::vector<NativeStructMember> members;
-		std::map<std::string, Function*> methods;
-		std::vector<Function*> constructors;
 		std::vector<std::pair<Operator, Function*>> operators;
 	};
 } // namespace ds

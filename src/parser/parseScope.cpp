@@ -51,8 +51,14 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 
 		if (!info.assignedValue.valid)
 		{
-			return {};
+			if (info.isVar || info.isConst)
+			{
+				return VariableInfo{
+					.isError = true
+				};
+			}
 		}
+		info.isError = true;
 
 		if (info.isVar || info.isConst)
 		{
@@ -75,16 +81,30 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 	{
 		errors->error(ErrorCode::parseVarMustHaveInitializer, info.equals,
 			"Expected a '=', got: '" + info.equals.string + "'");
-		return {};
+		return VariableInfo{
+			.isError = true
+		};
 	}
 	else if (info.isVar || info.isConst)
 	{
 		errors->error(ErrorCode::parseVarMustHaveInitializer, info.name,
 			"A variable declared with 'var' or 'const' must have an initializer.");
-		return {};
+		return VariableInfo{
+			.isError = true
+		};
 	}
 	else
 	{
+		if (!info.type->hasDefaultValue)
+		{
+			errors->error(ErrorCode::parseVarMustHaveInitializer, info.name, "The variable '"
+				+ info.name.string + "' must have an initializer because the type '"
+				+ Type::toString(info.type) + "' does not have a default value.");
+			return VariableInfo{
+				.isError = true
+			};
+		}
+
 		info.assignedValue = info.type->defaultValue();
 	}
 
@@ -93,17 +113,23 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 
 void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 {
-#ifdef WITH_LANGUAGE_SERVICE
-	if (in->context->service)
+	if (!type)
 	{
-		in->context->service->files[in->scopeFile->name].variables.push_back(this->name);
+		return;
 	}
-#endif
+
 	in->code->addBuffer(this->assignedValue.code);
 	in->pushVariableValue(type, true);
 
 	auto& newVariable = in->addVariable(this->name, type, errors);
 	newVariable.readOnly = isConst;
+#ifdef WITH_LANGUAGE_SERVICE
+	if (in->context->service)
+	{
+		in->context->service->files[in->scopeFile->name].variables
+			.push_back(ScannedVariable(&newVariable, this->name));
+	}
+#endif
 }
 
 void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
@@ -320,6 +346,7 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 		pushVariableValue(LambdaType::getInstance(), true);
 		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance(), nullptr);
 		lambdaVariable->isInternal = true;
+		this->scopeFunction->addArguments(*this, errors);
 	}
 
 	while (true)

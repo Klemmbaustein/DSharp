@@ -1,5 +1,6 @@
 #include <ds/parser/types/functionType.hpp>
 #include <ds/parser/parseScope.hpp>
+#include <ds/service/languageService.hpp>
 #include <ds/parser/types/builtinClassFunction.hpp>
 using namespace ds;
 
@@ -17,6 +18,7 @@ ds::FunctionType::FunctionType(Type* returnType, std::vector<Type*> arguments)
 
 	this->methods.insert({ "call",
 		new BuiltinClassFunction(args, returnType, "call", 1, this) });
+	applyName();
 }
 
 ExpressionResult ds::FunctionType::compileOperator(Operator operatorType, ExpressionResult& first,
@@ -30,31 +32,38 @@ ExpressionResult ds::FunctionType::compileValue(Token first, TokenLine& line,
 {
 	auto fn = with->scopeFile->getMethod(first.string);
 
-	if (fn)
+	if (!fn)
 	{
-		ExpressionResult result;
-
-		std::vector<Type*> args;
-
-		std::vector<FunctionArgument> fnArgs = fn->getArguments();
-
-		for (FunctionArgument& i : fnArgs)
-		{
-			args.push_back(i.type);
-		}
-
-		result.type = getInstance(fn->getReturnType(), args);
-		result.code = fn->compileCallable(errors, with, hintType);
-		if (result.code.instructions.empty())
-		{
-			return ExpressionResult();
-		}
-		result.code.addBuffer(compileEndMove(with));
-		result.valid = true;
-		return result;
+		return ExpressionResult();
 	}
 
-	return ExpressionResult();
+	#ifdef WITH_LANGUAGE_SERVICE
+	if (with->context->service)
+	{
+		with->context->service->files[with->scopeFile->name]
+			.functions.push_back(ScannedFunction(fn, first, ScannedFunction::Kind::functionReference));
+	}
+#endif
+
+	ExpressionResult result;
+
+	std::vector<FunctionArgument> fnArgs = fn->getArguments();
+	std::vector<Type*> args;
+
+	for (FunctionArgument& i : fnArgs)
+	{
+		args.push_back(i.type);
+	}
+
+	result.type = getInstance(fn->getReturnType(), args);
+	result.code = fn->compileCallable(errors, with, hintType);
+	if (result.code.instructions.empty())
+	{
+		return ExpressionResult();
+	}
+	result.code.addBuffer(compileEndMove(with));
+	result.valid = true;
+	return result;
 }
 
 FunctionType* ds::FunctionType::compileType(Token first, TokenLine& line, ErrorContext* errors,

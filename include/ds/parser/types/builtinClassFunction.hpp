@@ -65,7 +65,7 @@ namespace ds
 		}
 		std::string getFullName() const override
 		{
-			return name;
+			return thisClass ? (Type::toString(thisClass) + "." + name) : name;
 		}
 		std::string getShortName() const override
 		{

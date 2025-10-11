@@ -222,6 +222,8 @@ void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	thisType->name = name.string;
 	thisType->nullable->name = name.string + "?";
 	thisType->languageClass = this;
+	thisType->applyName();
+	thisType->nullable->applyName();
 	file->fileModule->moduleTypes.insert({ name.string, thisType });
 }
 
@@ -306,7 +308,8 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 #ifdef WITH_LANGUAGE_SERVICE
 		if (context->service)
 		{
-			context->service->files[file->name].variables.push_back(m.first);
+			context->service->files[file->name].variables
+				.push_back(ScannedVariable(&m.second, this->thisType, file, m.first));
 		}
 #endif
 
@@ -352,7 +355,7 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		if (context->service)
 		{
 			context->service->files[file->name]
-				.functions.push_back(ScannedFunction(m, m->name));
+				.functions.push_back(ScannedFunction(m, m->name, ScannedFunction::Kind::functionDefinition));
 		}
 #endif
 	}

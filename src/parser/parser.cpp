@@ -83,6 +83,7 @@ BytecodeStream ds::ParseContext::compile()
 	this->defaultTypes.push_back(NullType::getInstance());
 	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}));
 	this->defaultTypes.push_back(LambdaType::getInstance());
+	this->defaultTypes.push_back(TaskType::getInstance(nullptr));
 
 #ifdef WITH_LANGUAGE_SERVICE
 	if (this->service)
@@ -104,16 +105,23 @@ BytecodeStream ds::ParseContext::compile()
 		i.compile(this);
 	}
 
-	if (!errors.isOk())
-	{
-		return BytecodeStream();
-	}
-
 	BytecodeStream out;
+#ifdef WITH_LANGUAGE_SERVICE
 	if (!service)
+#endif
 	{
+		if (!errors.isOk())
+		{
+			return BytecodeStream();
+		}
 		this->compiler.compileTo(out, virtualTable, &errors);
 	}
+#ifdef WITH_LANGUAGE_SERVICE
+	else
+	{
+		emitServiceTypes();
+	}
+#endif
 
 	if (!this->service)
 	{
@@ -164,6 +172,30 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 		}
 	}
 }
+
+#ifdef WITH_LANGUAGE_SERVICE
+void ds::ParseContext::emitServiceTypes()
+{
+	for (auto& [name, module] : this->programModules)
+	{
+		emitServiceTypesForModule(&module);
+	}
+}
+
+void ds::ParseContext::emitServiceTypesForModule(Module* mod)
+{
+	for (auto& i : mod->moduleTypes)
+	{
+		auto t = i.second->toScanned();
+		this->service->types[t.id] = t;
+	}
+
+	for (auto& i : mod->submodules)
+	{
+		emitServiceTypesForModule(i.second);
+	}
+}
+#endif
 
 void ds::ParseContext::scanModules()
 {

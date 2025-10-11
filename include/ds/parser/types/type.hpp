@@ -3,6 +3,7 @@
 #include <ds/parser/expression.hpp>
 #include <ds/parser/error.hpp>
 #include <ds/languageTypes.hpp>
+#include <ds/service/scannedTypes.hpp>
 
 namespace ds
 {
@@ -14,6 +15,7 @@ namespace ds
 	{
 	public:
 		Token from;
+		TypeId id = 0;
 		uint32_t size = 0;
 		std::string name;
 		bool hasDefaultValue = true;
@@ -22,6 +24,10 @@ namespace ds
 		{
 			return this->name;
 		}
+
+		void applyName();
+		Type() = default;
+		Type(const Type& other) = delete;
 
 		virtual ~Type() = default;
 
@@ -60,6 +66,10 @@ namespace ds
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
 
+#ifdef WITH_LANGUAGE_SERVICE
+		virtual ScannedType toScanned();
+#endif
+
 		/**
 		 * @brief
 		 * Returns the name of the type, or <void> if the type is null.
@@ -79,6 +89,7 @@ namespace ds
 		{
 			this->name = "int";
 			this->size = sizeof(Int);
+			applyName();
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -110,6 +121,7 @@ namespace ds
 		{
 			this->name = "char";
 			this->size = sizeof(Char);
+			applyName();
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -139,6 +151,7 @@ namespace ds
 		{
 			this->name = "float";
 			this->size = sizeof(Float);
+			applyName();
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
@@ -170,6 +183,7 @@ namespace ds
 		{
 			this->name = "bool";
 			this->size = sizeof(Bool);
+			applyName();
 		}
 
 		virtual ExpressionResult compileOperator(Operator operatorType,

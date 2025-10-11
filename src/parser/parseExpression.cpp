@@ -227,12 +227,12 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		if (found != enumValue->values.end())
 		{
 			result.code.pushInt(found->second);
-#ifdef WITH_LANGUAGE_SERVICE
-			if (scope->context->service)
-			{
-				scope->context->service->files[scope->scopeFile->name].variables.push_back(value);
-			}
-#endif
+//#ifdef WITH_LANGUAGE_SERVICE
+//			if (scope->context->service)
+//			{
+//				scope->context->service->files[scope->scopeFile->name].variables.push_back(value);
+//			}
+//#endif
 			result.type = IntType::getInstance();
 			result.valid = true;
 		}
@@ -312,13 +312,14 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 
 			result.setCode->addBuffer(foundVariable->second.writeValue());
 		}
-
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scope->context->service)
 		{
-			scope->context->service->files[scope->scopeFile->name].variables.push_back(value);
+			scope->context->service->files[scope->scopeFile->name].variables
+				.push_back(ScannedVariable(&foundVariable->second, value));
 		}
 #endif
+
 
 		return result;
 	}
@@ -331,6 +332,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		if (function)
 		{
 			auto args = currentLine.getInBraces(errors);
+			auto argsEnd = currentLine.previous();
 
 			TokenLine argsLine;
 			argsLine.lineTokens = &args;
@@ -344,7 +346,8 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			if (scope->context->service)
 			{
 				scope->context->service->files[scope->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, value));
+					.functions.push_back(ScannedFunction(function, value,
+						ScannedFunction::Kind::functionCall, argsEnd.position));
 			}
 #endif
 
@@ -385,7 +388,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			return result;
 	}
 
-	errors->error(ErrorCode::parseUnknownExpressionType, value, "Unknown symbol: " + value.string);
+	errors->error(ErrorCode::parseUnknownExpressionType, value, "Unexpected '" + value.string + "'");
 	return ExpressionResult();
 }
 

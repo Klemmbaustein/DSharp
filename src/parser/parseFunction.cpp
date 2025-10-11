@@ -27,17 +27,29 @@ void ds::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorC
 		functionScope.setClass(this->inClass, this->name != "delete");
 	}
 
-	// Read the arguments given to the function and add them as variables in the scope.
-	// They're added in reverse order because they're pushed onto the stack in this order.
-	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
-	{
-		functionScope.pushVariableValue(it->type, false);
-		functionScope.addVariable(it->name, it->type, errors);
-	}
+	addArguments(functionScope, errors);
 
 	functionScope.compile(context, file, errors);
 
 	registerFunction(context);
+}
+
+void ds::ParsedFunction::addArguments(ParsedScope& scope, ErrorContext* errors)
+{
+	// Read the arguments given to the function and add them as variables in the scope.
+	// They're added in reverse order because they're pushed onto the stack in this order.
+	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
+	{
+		scope.pushVariableValue(it->type, false);
+		auto& var = scope.addVariable(it->name, it->type, errors);
+#ifdef WITH_LANGUAGE_SERVICE
+		if (scope.scopeFile->context->service)
+		{
+			scope.scopeFile->context->service->files[functionFile->name]
+				.variables.push_back(ScannedVariable(&var, it->name));
+		}
+#endif
+	}
 }
 
 void ds::ParsedFunction::registerFunction(ParseContext* context)
@@ -111,12 +123,6 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 			}
 
 			this->arguments.push_back(newArgument);
-#ifdef WITH_LANGUAGE_SERVICE
-			if (context->service)
-			{
-				context->service->files[functionFile->name].variables.push_back(newArgument.name);
-			}
-#endif
 
 			if (line.empty())
 				break;

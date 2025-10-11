@@ -36,7 +36,7 @@ namespace ds
 		}
 	};
 
-	struct FunctionDefinition
+	struct SymbolDefinition
 	{
 		ParsedFile* file = nullptr;
 		Token at;
@@ -82,7 +82,7 @@ namespace ds
 			return 0;
 		}
 
-		virtual std::optional<FunctionDefinition> getDefinition()
+		virtual std::optional<SymbolDefinition> getDefinition()
 		{
 			return {};
 		}

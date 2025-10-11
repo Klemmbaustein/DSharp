@@ -69,6 +69,10 @@ namespace ds
 		std::vector<Function*> constructors;
 		NullableClassType* nullable = nullptr;
 
+#ifdef WITH_LANGUAGE_SERVICE
+		virtual ScannedType toScanned();
+#endif
+
 		BytecodeBuffer compileUnref() override;
 		BytecodeBuffer compileMove(ParsedScope* with) override;
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;

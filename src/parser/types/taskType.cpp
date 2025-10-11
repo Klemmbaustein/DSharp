@@ -18,10 +18,16 @@ ds::TaskType::TaskType(Type* baseType)
 		.offset = offsetof(modules::system::async::Task, completed),
 		.type = BoolType::getInstance(),
 		});
+	applyName();
 }
 
 ExpressionResult ds::TaskType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
+{
+	return ExpressionResult();
+}
+
+ExpressionResult ds::TaskType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
 	return ExpressionResult();
 }

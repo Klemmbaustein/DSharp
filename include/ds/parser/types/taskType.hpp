@@ -12,6 +12,9 @@ namespace ds
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 
+		virtual ExpressionResult compileValue(Token first, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
+
 		static TaskType* getInstance(Type* baseType)
 		{
 			TaskType*& instance = taskTypes[baseType];

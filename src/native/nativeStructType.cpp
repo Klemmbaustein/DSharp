@@ -16,6 +16,20 @@ std::string ds::NativeStructType::getName()
 {
 	return this->name;
 }
+BytecodeBuffer ds::NativeStructType::compileUnref()
+{
+	return Type::compileUnref();
+}
+
+BytecodeBuffer ds::NativeStructType::compileMove(ParsedScope* with)
+{
+	return Type::compileMove(with);
+}
+
+BytecodeBuffer ds::NativeStructType::compileEndMove(ParsedScope* with)
+{
+	return Type::compileEndMove(with);
+}
 
 ExpressionResult ds::NativeStructType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
@@ -112,6 +126,7 @@ ExpressionResult ds::NativeStructType::compileCast(ExpressionResult value, Parse
 	return ExpressionResult();
 }
 
+
 ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
@@ -120,6 +135,8 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 	if (line.peek() == "(")
 	{
 		auto inBraces = line.getInBraces(errors);
+		auto argsEnd = line.previous();
+
 
 		for (auto& [name, function] : this->methods)
 		{
@@ -135,7 +152,6 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 			argsLine.lineTokens = &inBraces;
 
 			auto functionArgs = function->getArguments();
-
 			ExpressionResult callCode = Expression::parseFunctionArguments(next, functionArgs, argsLine,
 				errors, true, with);
 			callCode.code.addBuffer(value.code);
@@ -149,7 +165,8 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 			if (with->context->service)
 			{
 				with->context->service->files[with->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, next));
+					.functions.push_back(ScannedFunction(function, next,
+						ScannedFunction::Kind::functionCall, argsEnd.position));
 			}
 #endif
 
@@ -165,15 +182,24 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 
 	for (auto& i : this->members)
 	{
-		if (i.name == next.string)
+		if (i.name.string == next.string)
 		{
 			ExpressionResult result;
 			BinaryBuffer args;
-			args.addValue<Size>(i.memberType->size);
-			args.addValue<Size>(Size(this->size - i.offset - i.memberType->size));
+			args.addValue<Size>(i.type->size);
+			args.addValue<Size>(Size(this->size - i.offset - i.type->size));
 			args.addValue<Size>(this->size);
 			result.code = value.code;
 			result.code.addOperation(BytecodeOp::getStructMember, args);
+
+#ifdef WITH_LANGUAGE_SERVICE
+			if (with->context->service)
+			{
+				with->context->service->files[with->scopeFile->name].variables
+					.push_back(ScannedVariable(&i, this, nullptr, next));
+			}
+#endif
+
 
 			result.valid = true;
 			result.setCode = {};
@@ -184,7 +210,7 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 				result.setCode->addBuffer(*value.setCode);
 			}
 
-			result.type = i.memberType;
+			result.type = i.type;
 
 			return result;
 		}

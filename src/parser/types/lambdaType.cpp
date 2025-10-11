@@ -19,7 +19,7 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 		return ExpressionResult();
 	}
 
-	auto args = line.getInBraces(errors);
+	auto argTokens = line.getInBraces(errors);
 
 	if (line.expect("{", errors))
 	{
@@ -40,6 +40,9 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	newFunction.name = Token(with->scopeFunction->name.string + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
+	newFunction.functionFile = with->scopeFile;
+
+	newFunction.argumentTokens = argTokens;
 
 	newFunction.resolveTypes(with->context, errors);
 
@@ -53,7 +56,16 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 
 	ExpressionResult result;
 	result.valid = true;
-	result.type = FunctionType::getInstance(newFunction.returnType, {});
+
+	std::vector<FunctionArgument> fnArgs = newFunction.getArguments();
+	std::vector<Type*> args;
+
+	for (FunctionArgument& i : fnArgs)
+	{
+		args.push_back(i.type);
+	}
+
+	result.type = FunctionType::getInstance(newFunction.returnType, args);
 
 	newFunction.registerFunction(with->context);
 

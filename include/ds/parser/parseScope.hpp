@@ -31,6 +31,7 @@ namespace ds
 		Type* type = nullptr;
 		bool isConst = false;
 		bool isVar = false;
+		bool isError = false;
 
 		void create(ParsedScope* in, ErrorContext* errors) const;
 	};

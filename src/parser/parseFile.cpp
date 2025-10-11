@@ -201,7 +201,7 @@ void ds::ParsedFile::compile(ParseContext* context)
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scanInfo)
 		{
-			scanInfo->functions.push_back(ScannedFunction(&fn, fn.name));
+			scanInfo->functions.push_back(ScannedFunction(&fn, fn.name, ScannedFunction::Kind::functionDefinition));
 		}
 #endif
 		fn.compile(context, this, &context->errors);

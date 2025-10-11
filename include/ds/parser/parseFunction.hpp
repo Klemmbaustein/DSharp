@@ -33,6 +33,8 @@ namespace ds
 
 		void scanDeclaration(TokenLine currentLine, TokenStream& stream, ParsedFile* file, ErrorContext* errors);
 
+		void addArguments(ParsedScope& scope, ErrorContext* errors);
+
 		TokenStream functionStream;
 		std::vector<Token> returnTypeTokens;
 		std::vector<Token> argumentTokens;
@@ -50,9 +52,9 @@ namespace ds
 		}
 
 		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
-		std::optional<FunctionDefinition> getDefinition() override
+		std::optional<SymbolDefinition> getDefinition() override
 		{
-			return FunctionDefinition{
+			return SymbolDefinition{
 				.file = functionFile,
 				.at = name
 			};
