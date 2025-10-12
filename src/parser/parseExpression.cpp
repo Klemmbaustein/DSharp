@@ -250,7 +250,17 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 	{
 		Token className = currentLine.peek();
 
-		auto foundType = scope->scopeFile->getType(currentLine, errors);
+		Type* foundType = nullptr;
+
+		if (className == "(" && hintType)
+		{
+			foundType = hintType;
+			className = value;
+		}
+		else
+		{
+			foundType = scope->scopeFile->getType(currentLine, errors);
+		}
 
 		if (!foundType)
 		{

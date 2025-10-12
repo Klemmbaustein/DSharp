@@ -12,7 +12,6 @@ static void async_sleepAndReturn(InterpretContext* context)
 	ClassRef<Task> task = emptyTask();
 
 	context->runtime->createBackgroundThread([task, context] {
-
 		std::this_thread::sleep_for(milliseconds(250));
 
 		completeTask(task, context);
@@ -49,9 +48,12 @@ static void task_complete(InterpretContext* context)
 	{
 		task->resultBuffer = new uint8_t[size];
 		context->popBytes(task->resultBuffer, size);
+		completeTaskWithBuffer(task, size, context);
 	}
-
-	completeTask(task, context);
+	else
+	{
+		completeTask(task, context);
+	}
 
 	if (task->awaitNative || task->awaiter)
 	{
@@ -104,7 +106,24 @@ RuntimeClass* ds::modules::system::async::completedTask()
 	t->completed = true;
 	return t.classPtr;
 }
+void ds::modules::system::async::completeTaskWithBuffer(ClassRef<Task> task, size_t size, InterpretContext* context)
+{
+	{
+		std::unique_lock l{ task->taskMutex };
 
+		if (task->awaiter && size)
+			pushTaskResult(task.get(), size, task->awaiter);
+		task->completed = true;
+	}
+	if (task->awaitNative)
+	{
+		task->awaitNative(task, context, task->awaitNativeData);
+	}
+	else if (task->awaiter)
+	{
+		task->awaiter->resumeSuspend();
+	}
+}
 void ds::modules::system::async::completeTask(ClassRef<Task> task, InterpretContext* context)
 {
 	{

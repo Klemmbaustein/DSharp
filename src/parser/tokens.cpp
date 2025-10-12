@@ -466,6 +466,7 @@ std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* erro
 			if (depth == 0)
 			{
 				errors->error(ErrorCode::parseUnexpectedToken, next, "Unexpected ')'");
+				break;
 			}
 			depth--;
 		}

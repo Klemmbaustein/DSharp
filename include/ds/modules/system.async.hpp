@@ -10,7 +10,7 @@ namespace ds::modules::system
 
 		struct Task;
 
-		using TaskCallback = void(*)(ClassRef<Task>, InterpretContext*, void*);
+		using TaskCallback = void (*)(ClassRef<Task>, InterpretContext*, void*);
 
 		struct Task
 		{
@@ -53,7 +53,7 @@ namespace ds::modules::system
 			return t.classPtr;
 		}
 
-		template<typename T>
+		template <typename T>
 		T getTaskResult(ClassRef<Task> task)
 		{
 			return *reinterpret_cast<T*>(task->resultBuffer);
@@ -61,25 +61,13 @@ namespace ds::modules::system
 
 		RuntimeClass* completedTask();
 
+		void completeTaskWithBuffer(ClassRef<Task> task, size_t size, InterpretContext* context);
+
 		template <typename T>
 		void completeTask(ClassRef<Task> task, T result, InterpretContext* context)
 		{
-			{
-				std::unique_lock l{ task->taskMutex };
-				attachTaskResult(task, result);
-
-				if (task->awaiter)
-					pushTaskResult(task.get(), sizeof(T), task->awaiter);
-				task->completed = true;
-			}
-			if (task->awaitNative)
-			{
-				task->awaitNative(task, context, task->awaitNativeData);
-			}
-			else if (task->awaiter)
-			{
-				task->awaiter->resumeSuspend();
-			}
+			attachTaskResult(task, result);
+			completeTaskWithBuffer(task, sizeof(T), context);
 		}
 
 		void completeTask(ClassRef<Task> task, InterpretContext* context);

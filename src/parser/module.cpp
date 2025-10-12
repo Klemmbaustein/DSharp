@@ -69,7 +69,7 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 	}
 
 	// array
-	if (from.peek() == "[")
+	while (from.peek() == "[")
 	{
 		from.get();
 		from.get();

@@ -12,7 +12,28 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 		return ExpressionResult();
 	}
 
-	auto inList = line.getUntil("]", errors);
+	size_t depth = 1;
+	std::vector<Token> inList;
+
+	while (true)
+	{
+		auto next = line.get();
+		if (next == "]")
+		{
+			depth--;
+		}
+		else if (next == "[")
+		{
+			depth++;
+		}
+
+		if (depth == 0)
+		{
+			break;
+		}
+
+		inList.push_back(next);
+	}
 
 	TokenLine inListLine;
 	inListLine.lineTokens = &inList;

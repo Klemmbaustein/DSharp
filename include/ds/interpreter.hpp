@@ -69,6 +69,7 @@ namespace ds
 		}
 
 		template<typename T>
+		[[nodiscard]]
 		T callVirtualMethod(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
 		{
 			auto entry = targetObject->vtable[vTableIndex];
@@ -78,7 +79,20 @@ namespace ds
 			}
 			pushValue(targetObject);
 			virtualCall(entry);
+
 			return popValue<T>();
+		}
+
+		template <>
+		void callVirtualMethod(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
+		{
+			auto entry = targetObject->vtable[vTableIndex];
+			if (!entry)
+			{
+				return;
+			}
+			pushValue(targetObject);
+			virtualCall(entry);
 		}
 
 		uint32_t getVarArgsCount()
