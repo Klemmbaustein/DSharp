@@ -320,15 +320,19 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 			if (unrefCode.instructions.size())
 			{
 				result.setCode->addBuffer(result.code);
-				result.setCode->addOperation(BytecodeOp::classMember, args);
+				result.setCode->addOperation(
+					this->isPointerClass ? BytecodeOp::classMemberPtr : BytecodeOp::classMember,
+					args);
 				result.setCode->addBuffer(unrefCode);
 			}
 
 			result.setCode->addBuffer(result.code);
-			result.setCode->addOperation(BytecodeOp::setClassMember, args);
+			result.setCode->addOperation(
+				this->isPointerClass ? BytecodeOp::setClassMemberPtr : BytecodeOp::setClassMember,
+				args);
 		}
 
-		result.code.addOperation(BytecodeOp::classMember, args);
+		result.code.addOperation(this->isPointerClass ? BytecodeOp::classMemberPtr : BytecodeOp::classMember, args);
 
 		return result;
 	}

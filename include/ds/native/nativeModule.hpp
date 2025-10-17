@@ -74,7 +74,23 @@ namespace ds
 			cls->name = name;
 			cls->classSize = sizeof(TNative);
 			cls->vTableOffset = UINT32_MAX;
-			cls->parents = { derived };
+
+			if (derived)
+			{
+				cls->isPointerClass = derived->isPointerClass;
+				cls->parents = { derived };
+
+				for (auto& i : derived->members)
+				{
+					cls->members.push_back(i);
+				}
+
+				for (auto& i : derived->methods)
+				{
+					cls->methods.insert(i);
+				}
+			}
+
 			this->types.push_back(cls);
 			return cls;
 		}

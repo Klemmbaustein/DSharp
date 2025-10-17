@@ -61,6 +61,7 @@ namespace ds
 
 		size_t classSize = 0;
 		bytecodeOffset vTableOffset = 0;
+		bool isPointerClass = false;
 		Function* baseConstructor = nullptr;
 		Function* destructor = nullptr;
 		ParsedClass* languageClass = nullptr;

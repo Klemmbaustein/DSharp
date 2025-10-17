@@ -89,6 +89,12 @@ namespace ds
 		/// Pops a pointer of the class and a value from the stack and sets the value in the class
 		/// Arguments: 4 bytes offset, 4 bytes size
 		setClassMember,
+		/// Pops an offset, size and a pointer to the class from the stack,
+		/// pushes the given member of the class onto the stack
+		classMemberPtr,
+		/// Pops a pointer of the class and a value from the stack and sets the value in the class
+		/// Arguments: 4 bytes offset, 4 bytes size
+		setClassMemberPtr,
 		/// Pops a pointer of the class and a value from the stack and sets the value in the class.
 		/// Will push the pointer of the class again after the set operation
 		/// Arguments: 4 bytes offset, 4 bytes size

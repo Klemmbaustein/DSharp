@@ -1,4 +1,4 @@
-﻿# CMakeList.txt : CMake project for ProgrammingLanguage, include source and define
+﻿# CMakeList.txt : CMake project for DSharp, include source and define
 # project specific logic here.
 #
 cmake_minimum_required(VERSION 3.15)
@@ -7,7 +7,7 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(CMAKE_CXX_STANDARD 23)
 
 
-project(ProgrammingLanguage)
+project(DSharp)
 
 option(BUILD_WINAPI_MODULE "Include Windows API standard module" ON)
 option(WITH_LANGUAGE_SERVICE "Include LanguageService class and related functionality." ON)
@@ -28,36 +28,36 @@ file(
 )
 
 add_library(
-	ProgrammingLanguage
+	DSharp
 	${SRCS} ${HEADERS})
 
 if(BUILD_WINAPI_MODULE AND WIN32)
-	target_compile_definitions(ProgrammingLanguage PUBLIC WITH_WINAPI=1)
+	target_compile_definitions(DSharp PUBLIC WITH_WINAPI=1)
 endif()
 
 if(WITH_LANGUAGE_SERVICE)
-	target_compile_definitions(ProgrammingLanguage PUBLIC WITH_LANGUAGE_SERVICE=1)
+	target_compile_definitions(DSharp PUBLIC WITH_LANGUAGE_SERVICE=1)
 endif()
 
 if(HAS_CPP_FORMAT)
-	target_compile_definitions(ProgrammingLanguage PUBLIC HAS_CPP_FORMAT=1)
+	target_compile_definitions(DSharp PUBLIC HAS_CPP_FORMAT=1)
 endif()
 
 if(MODULE_FS)
-	target_compile_definitions(ProgrammingLanguage PUBLIC MODULE_FS=1)
+	target_compile_definitions(DSharp PUBLIC MODULE_FS=1)
 endif()
 
 if(HAS_POPEN)
-	target_compile_definitions(ProgrammingLanguage PUBLIC HAS_POPEN=1)
+	target_compile_definitions(DSharp PUBLIC HAS_POPEN=1)
 endif()
 
 if(HAS_FS_CURRENT_PATH)
-	target_compile_definitions(ProgrammingLanguage PUBLIC HAS_FS_CURRENT_PATH=1)
+	target_compile_definitions(DSharp PUBLIC HAS_FS_CURRENT_PATH=1)
 endif()
 
-target_include_directories(ProgrammingLanguage PUBLIC "include")
+target_include_directories(DSharp PUBLIC "include")
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	add_executable(TestInterpreter "src/main.cpp")
-	target_link_libraries(TestInterpreter PUBLIC ProgrammingLanguage)
+	target_link_libraries(TestInterpreter PUBLIC DSharp)
 endif()

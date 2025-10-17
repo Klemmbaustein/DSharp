@@ -315,6 +315,20 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			popBytes(ptr->getBody() + offset, size);
 			break;
 		}
+		case ds::BytecodeOp::classMemberPtr: {
+			Size size = popValue<Size>();
+			Size offset = popValue<Size>();
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			pushBytes(*(uint8_t**)ptr->getBody() + offset, size);
+			break;
+		}
+		case ds::BytecodeOp::setClassMemberPtr: {
+			Size size = popValue<Size>();
+			Size offset = popValue<Size>();
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			popBytes(*(uint8_t**)ptr->getBody() + offset, size);
+			break;
+		}
 		case ds::BytecodeOp::setClassMemberPushAgain: {
 			Size size = popValue<Size>();
 			Size offset = popValue<Size>();
