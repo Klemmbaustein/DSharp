@@ -329,13 +329,17 @@ void ds::BytecodeCompiler::printAssembly()
 
 void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors)
 {
-	bytecodeOffset bytecodePos = 0;
+	bytecodeOffset bytecodePos = stream.code.streamPos;
 
 	std::vector<BytecodeFunction*> orderedFunctions;
 
 	for (auto& i : this->functions)
 	{
 		i.second.name = i.first;
+		if (i.second.isPreCompiled)
+		{
+			continue;
+		}
 		if (i.second.isEntryPoint)
 		{
 			orderedFunctions.insert(orderedFunctions.begin(), &i.second);

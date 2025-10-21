@@ -29,7 +29,7 @@ void ds::LanguageRuntime::defaultCreateBackgroundThread(std::function<void()> f)
 	size_t thisThreadId = id++;
 
 	std::lock_guard l{ threadsMutex };
-	auto t = new std::thread([=] {
+	auto t = new std::thread([this, f, thisThreadId] {
 		f();
 
 		std::lock_guard l{ threadsMutex };

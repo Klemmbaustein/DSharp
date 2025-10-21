@@ -148,6 +148,7 @@ namespace ds
 	struct BytecodeFunction : BytecodeBuffer
 	{
 		bool isEntryPoint = false;
+		bool isPreCompiled = false;
 		std::string name;
 		bytecodeOffset offset = 0;
 	};

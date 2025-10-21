@@ -109,6 +109,8 @@ namespace ds
 		}
 	};
 
+	void FreePtr(InterpretContext* context, RuntimeClass* Ptr);
+
 	template <typename T>
 	struct ClassPtr
 	{
@@ -120,7 +122,6 @@ namespace ds
 
 		ClassPtr()
 		{
-
 		}
 
 		RuntimeClass* classPtr = nullptr;
@@ -167,7 +168,7 @@ namespace ds
 		{
 			if (context)
 			{
-				context->destruct(classPtr);
+				FreePtr(context, classPtr);
 			}
 			else
 			{

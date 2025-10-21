@@ -1,4 +1,5 @@
 #include <ds/class.hpp>
+#include <ds/interpreter.hpp>
 using namespace ds;
 
 RuntimeClass* ds::RuntimeClass::allocateClass(size_t bodySize, RuntimeFunction* vTable)
@@ -18,4 +19,9 @@ RuntimeClass* ds::RuntimeClass::allocateClass(size_t bodySize, RuntimeFunction* 
 	header->references = 1;
 
 	return header;
+}
+
+void ds::FreePtr(InterpretContext* context, RuntimeClass* Ptr)
+{
+	context->destruct(Ptr);
 }

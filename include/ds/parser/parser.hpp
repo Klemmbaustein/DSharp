@@ -29,6 +29,8 @@ namespace ds
 
 		BytecodeStream compile();
 
+		BytecodeStream initialCode;
+
 		struct ParsedVariable
 		{
 			Type* type;
@@ -52,7 +54,6 @@ namespace ds
 #endif
 		std::vector<Type*> defaultTypes;
 
-	private:
 		void scanModules();
 
 		std::map<std::string, Module> programModules;

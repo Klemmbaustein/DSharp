@@ -83,8 +83,7 @@ namespace ds
 			return popValue<T>();
 		}
 
-		template <>
-		void callVirtualMethod(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
+		void callVirtualMethodVoid(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
 		{
 			auto entry = targetObject->vtable[vTableIndex];
 			if (!entry)

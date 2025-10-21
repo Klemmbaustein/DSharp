@@ -75,7 +75,7 @@ namespace ds
 		virtual bool isVirtual() const
 		{
 			return false;
-		};
+		}
 
 		virtual bytecodeOffset getVirtualOffset() const
 		{

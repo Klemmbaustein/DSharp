@@ -105,7 +105,6 @@ BytecodeStream ds::ParseContext::compile()
 		i.compile(this);
 	}
 
-	BytecodeStream out;
 #ifdef WITH_LANGUAGE_SERVICE
 	if (!service)
 #endif
@@ -114,7 +113,7 @@ BytecodeStream ds::ParseContext::compile()
 		{
 			return BytecodeStream();
 		}
-		this->compiler.compileTo(out, virtualTable, &errors);
+		this->compiler.compileTo(initialCode, virtualTable, &errors);
 	}
 #ifdef WITH_LANGUAGE_SERVICE
 	else
@@ -135,9 +134,9 @@ BytecodeStream ds::ParseContext::compile()
 
 	if (!service)
 	{
-		generateReflectionMetadata(out);
+		generateReflectionMetadata(initialCode);
 	}
-	return out;
+	return initialCode;
 }
 
 void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
@@ -199,16 +198,15 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 
 void ds::ParseContext::scanModules()
 {
+	// Create global module
+	// TODO: Somehow clear out the functions for repeated scans
+	auto& globalModule = this->programModules.insert({ "", Module() }).first->second;
+
 	// Register all modules
 	for (ParsedFile& file : this->files)
 	{
 		this->errors.currentFile = file.name;
 		Module& mod = this->programModules[file.scopeName];
-		mod.submodules.clear();
-		mod.moduleAttributes.clear();
-		mod.moduleEnums.clear();
-		mod.moduleFunctions.clear();
-		mod.moduleTypes.clear();
 		mod.name = file.scopeName;
 		file.fileModule = &mod;
 
@@ -223,9 +221,6 @@ void ds::ParseContext::scanModules()
 			mod.moduleTypes.insert({ i->name, i });
 		}
 	}
-
-	// Create global module
-	auto& globalModule = this->programModules.insert({ "", Module() }).first->second;
 
 	for (auto& i : this->programModules)
 	{
