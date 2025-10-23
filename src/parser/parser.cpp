@@ -72,7 +72,6 @@ void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 
 BytecodeStream ds::ParseContext::compile()
 {
-	virtualTable.clear();
 	this->defaultTypes.clear();
 	this->defaultTypes.push_back(IntType::getInstance());
 	this->defaultTypes.push_back(FloatType::getInstance());

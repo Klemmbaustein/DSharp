@@ -139,7 +139,7 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 			if (!result.valid)
 			{
 				errors->error(ErrorCode::parseUnknowmMember, memberName,
-					"The type " + Type::toString(oldType) + " does not contain a member called '" +
+					"The type " + Type::toString(oldType) + " does not have a member called '" +
 						memberName.string + "'");
 			}
 			continue;
