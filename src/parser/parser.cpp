@@ -72,18 +72,6 @@ void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 
 BytecodeStream ds::ParseContext::compile()
 {
-	this->defaultTypes.clear();
-	this->defaultTypes.push_back(IntType::getInstance());
-	this->defaultTypes.push_back(FloatType::getInstance());
-	this->defaultTypes.push_back(BoolType::getInstance());
-	this->defaultTypes.push_back(StringType::getInstance());
-	this->defaultTypes.push_back(CharType::getInstance());
-	this->defaultTypes.push_back(ListType::getInstance());
-	this->defaultTypes.push_back(NullType::getInstance());
-	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}));
-	this->defaultTypes.push_back(LambdaType::getInstance());
-	this->defaultTypes.push_back(TaskType::getInstance(nullptr));
-
 #ifdef WITH_LANGUAGE_SERVICE
 	if (this->service)
 	{
@@ -91,7 +79,7 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	scanModules();
+	initializeModules();
 
 	if (!errors.isOk())
 	{
@@ -136,6 +124,23 @@ BytecodeStream ds::ParseContext::compile()
 		generateReflectionMetadata(initialCode);
 	}
 	return initialCode;
+}
+
+void ds::ParseContext::initializeModules()
+{
+	this->defaultTypes.clear();
+	this->defaultTypes.push_back(IntType::getInstance());
+	this->defaultTypes.push_back(FloatType::getInstance());
+	this->defaultTypes.push_back(BoolType::getInstance());
+	this->defaultTypes.push_back(StringType::getInstance());
+	this->defaultTypes.push_back(CharType::getInstance());
+	this->defaultTypes.push_back(ListType::getInstance());
+	this->defaultTypes.push_back(NullType::getInstance());
+	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}));
+	this->defaultTypes.push_back(LambdaType::getInstance());
+	this->defaultTypes.push_back(TaskType::getInstance(nullptr));
+
+	scanModules();
 }
 
 void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
@@ -219,6 +224,11 @@ void ds::ParseContext::scanModules()
 		{
 			mod.moduleTypes.insert({ i->name, i });
 		}
+	}
+
+	for (Type* i : this->defaultTypes)
+	{
+		globalModule.moduleTypes.insert({ i->name, i });
 	}
 
 	for (auto& i : this->programModules)

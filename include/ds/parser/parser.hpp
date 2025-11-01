@@ -28,6 +28,7 @@ namespace ds
 		void updateFile(const std::string& str, std::string fileName);
 
 		BytecodeStream compile();
+		void initializeModules();
 
 		BytecodeStream initialCode;
 
