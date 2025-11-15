@@ -169,14 +169,15 @@ ExpressionResult ds::Expression::compileOperatorBetween(ExpressionResult a, Expr
 		a = a.type->compileOperator(op, b, a, scope);
 		a.code.addOperation(BytecodeOp::boolNot);
 	}
-	else
+	else if (a.type)
 	{
 		a = a.type->compileOperator(op, a, b, scope);
 	}
 	if (!a.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
-			"The operator '" + opToken.string + "' does not accept types '" + Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
+			"The operator '" + opToken.string + "' does not accept types '"
+			+ Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
 	}
 	return a;
 }
@@ -199,7 +200,8 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			if (!r.valid)
 			{
 				errors->error(ErrorCode::parseInvalidType, value,
-					"The operator '" + value.string + "' does not accept the type '" + Type::toString(result.type) + "'");
+					"The operator '" + value.string
+					+ "' does not accept the type '" + Type::toString(result.type) + "'");
 			}
 			return r;
 		}

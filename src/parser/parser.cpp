@@ -200,6 +200,15 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 }
 #endif
 
+void ds::ParseContext::resetModules()
+{
+	for (ParsedFile& file : this->files)
+	{
+		this->errors.currentFile = file.name;
+		this->programModules[file.scopeName] = Module();
+	}
+}
+
 void ds::ParseContext::scanModules()
 {
 	// Create global module

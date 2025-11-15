@@ -56,6 +56,7 @@ namespace ds
 		std::vector<Type*> defaultTypes;
 
 		void scanModules();
+		void resetModules();
 
 		std::map<std::string, Module> programModules;
 		std::list<ParsedFile> files;

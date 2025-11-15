@@ -19,6 +19,7 @@ void ds::LanguageService::updateFile(const std::string& str, std::string fileNam
 
 void ds::LanguageService::commitChanges()
 {
+	this->parser->resetModules();
 	this->parser->errors.reset();
 	this->parser->compile();
 }
