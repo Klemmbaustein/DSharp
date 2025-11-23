@@ -121,7 +121,7 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 				break;
 			}
 
-			if (currentLine.expect("[", errors))
+			if (currentLine.expect("]", errors))
 			{
 				break;
 			}
@@ -176,8 +176,7 @@ ExpressionResult ds::Expression::compileOperatorBetween(ExpressionResult a, Expr
 	if (!a.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
-			"The operator '" + opToken.string + "' does not accept types '"
-			+ Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
+			"The operator '" + opToken.string + "' does not accept types '" + Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
 	}
 	return a;
 }
@@ -200,8 +199,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			if (!r.valid)
 			{
 				errors->error(ErrorCode::parseInvalidType, value,
-					"The operator '" + value.string
-					+ "' does not accept the type '" + Type::toString(result.type) + "'");
+					"The operator '" + value.string + "' does not accept the type '" + Type::toString(result.type) + "'");
 			}
 			return r;
 		}
@@ -229,12 +227,12 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		if (found != enumValue->values.end())
 		{
 			result.code.pushInt(found->second);
-//#ifdef WITH_LANGUAGE_SERVICE
-//			if (scope->context->service)
-//			{
-//				scope->context->service->files[scope->scopeFile->name].variables.push_back(value);
-//			}
-//#endif
+			// #ifdef WITH_LANGUAGE_SERVICE
+			//			if (scope->context->service)
+			//			{
+			//				scope->context->service->files[scope->scopeFile->name].variables.push_back(value);
+			//			}
+			// #endif
 			result.type = IntType::getInstance();
 			result.valid = true;
 		}
@@ -327,8 +325,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scope->context->service)
 		{
-			scope->context->service->files[scope->scopeFile->name].variables
-				.push_back(ScannedVariable(&foundVariable->second, value));
+			scope->context->service->files[scope->scopeFile->name].variables.push_back(ScannedVariable(&foundVariable->second, value));
 		}
 #endif
 

@@ -2,6 +2,7 @@
 #include "types/type.hpp"
 #include "expression.hpp"
 #include "attribute.hpp"
+#include "symbolDefinition.hpp"
 
 namespace ds
 {
@@ -34,12 +35,6 @@ namespace ds
 		{
 			return other.type->sameAs(this->type);
 		}
-	};
-
-	struct SymbolDefinition
-	{
-		ParsedFile* file = nullptr;
-		Token at;
 	};
 
 	/**

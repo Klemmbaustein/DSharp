@@ -3,7 +3,6 @@
 #include <functional>
 #include <ds/parser/parser.hpp>
 #include "scannedSymbols.hpp"
-#include "scannedTypes.hpp"
 
 namespace ds
 {
@@ -17,6 +16,11 @@ namespace ds
 		std::vector<Token> types;
 	};
 
+	struct AutoCompleteResult
+	{
+		std::string name;
+	};
+
 	class LanguageService
 	{
 	public:
@@ -26,6 +30,8 @@ namespace ds
 		void updateFile(const std::string& content, std::string name);
 
 		void commitChanges();
+
+		std::vector<AutoCompleteResult> completeAt(ScannedFile* f, size_t character, size_t line);
 
 		ParseContext* parser = nullptr;
 		std::map<std::string, ScannedFile> files;

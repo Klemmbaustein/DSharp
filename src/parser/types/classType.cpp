@@ -76,6 +76,11 @@ ScannedType ds::ClassType::toScanned()
 			});
 	}
 
+	for (auto& i : this->methods)
+	{
+		out.methods.push_back(ScannedFunction(i.second, Token(), ScannedFunction::Kind::classMember));
+	}
+
 	return out;
 }
 #endif

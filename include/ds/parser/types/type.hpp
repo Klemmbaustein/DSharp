@@ -3,7 +3,7 @@
 #include <ds/parser/expression.hpp>
 #include <ds/parser/error.hpp>
 #include <ds/languageTypes.hpp>
-#include <ds/service/scannedTypes.hpp>
+#include <ds/service/scannedSymbols.hpp>
 
 namespace ds
 {

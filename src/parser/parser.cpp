@@ -109,10 +109,10 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	//if (!this->service)
+	// if (!this->service)
 	//{
 	//	this->compiler.printAssembly();
-	//}
+	// }
 
 	if (!errors.isOk())
 	{
@@ -158,14 +158,15 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				if (reflectAttribute)
 				{
 					members.push_back(TypeMember{
-						.type = 0,
+						.type = m.second.type->id,
 						.name = m.second.name.string,
 						.offset = m.second.offset,
 					});
 				}
 			}
 
-			toStream.reflect.types[0] = TypeInfo{
+			toStream.reflect.types[cls.thisType->id] = TypeInfo{
+				.hash = cls.thisType->id,
 				.name = cls.classModule->name + "::" + cls.name.string,
 				.vTableOffset = cls.thisType->vTableOffset,
 				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,

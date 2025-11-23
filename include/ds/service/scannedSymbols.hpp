@@ -1,14 +1,23 @@
 #pragma once
-#include <ds/parser/parseScope.hpp>
-#include <ds/parser/parseClass.hpp>
+#include <ds/parser/tokens.hpp>
+#include <ds/parser/symbolDefinition.hpp>
+#include <optional>
+#include <ds/languageTypes.hpp>
 
 namespace ds
 {
+	class Function;
+	struct ScopeVariable;
+	struct ParsedClassMember;
+	struct ClassMember;
+	class ClassType;
+
 	struct ScannedFunction
 	{
 		Token at;
 		TokenPos argEnd;
 		std::string name;
+		std::string shortName;
 		std::optional<SymbolDefinition> definition;
 		std::string returnType;
 		TypeId returnTypeId = 0;
@@ -19,33 +28,12 @@ namespace ds
 			functionCall,
 			functionDefinition,
 			functionReference,
+			classMember,
 		};
 
 		Kind kind = Kind::functionCall;
 
-		ScannedFunction(Function* from, Token atToken, Kind kind, TokenPos argEnd = TokenPos())
-		{
-			this->at = atToken;
-			this->name = from->getFullName();
-			this->argEnd = argEnd;
-			auto functionArgs = from->getArguments();
-			this->arguments.reserve(functionArgs.size());
-
-			for (auto& i : functionArgs)
-			{
-				this->arguments.push_back({ Type::toString(i.type), i.name.string });
-			}
-
-			auto functionReturnType = from->getReturnType();
-
-			definition = from->getDefinition();
-
-			if (functionReturnType)
-			{
-				returnTypeId = functionReturnType->id;
-				this->returnType = functionReturnType->getName();
-			}
-		}
+		ScannedFunction(Function* from, Token atToken, Kind kind, TokenPos argEnd = TokenPos());
 	};
 
 	struct ScannedVariable
@@ -66,65 +54,29 @@ namespace ds
 
 		Kind kind = Kind::localVariable;
 
-		ScannedVariable(ScopeVariable* from, Token atToken)
-		{
-			this->at = atToken;
-			this->name = from->name.string;
+		ScannedVariable(ScopeVariable* from, Token atToken);
 
-			definition = SymbolDefinition{
-				.file = from->ownedBy->scopeFile,
-				.at = from->name,
-			};
+		ScannedVariable(ParsedClassMember* from, ClassType* inClass, ParsedFile* file, Token atToken);
 
-			kind = Kind::localVariable;
-			type = Type::toString(from->type);
-			if (from->type)
-			{
-				typeId = from->type->id;
-			}
-		}
-
-		ScannedVariable(ParsedClassMember* from, ClassType* inClass, ParsedFile* file, Token atToken)
-		{
-			this->at = atToken;
-			this->name = from->name.string;
-
-			if (this->defaultValue.size())
-			{
-				this->defaultValue.pop_back();
-			}
-
-			definition = SymbolDefinition{
-				.file = file,
-				.at = from->name,
-			};
-
-			this->inClass = inClass->languageClass->classModule->name + "::" + inClass->languageClass->name.string;
-			kind = Kind::classMember;
-			type = Type::toString(from->type);
-			if (from->type)
-			{
-				typeId = from->type->id;
-			}
-		}
-
-		ScannedVariable(ClassMember* from, ClassType* inClass, ParsedFile* file, Token atToken)
-		{
-			this->at = atToken;
-			this->name = from->name.string;
-
-			definition = SymbolDefinition{
-				.file = file,
-				.at = from->name,
-			};
-
-			this->inClass = Type::toString(inClass);
-			kind = Kind::classMember;
-			type = Type::toString(from->type);
-			if (from->type)
-			{
-				typeId = from->type->id;
-			}
-		}
+		ScannedVariable(ClassMember* from, ClassType* inClass, ParsedFile* file, Token atToken);
 	};
+
+	class ScannedMember
+	{
+	public:
+		TypeId memberTypeId;
+		std::string memberTypeName;
+		std::string name;
+	};
+
+	class ScannedType
+	{
+	public:
+		std::string name;
+		TypeId id = 0;
+
+		std::vector<ScannedMember> members;
+		std::vector<ScannedFunction> methods;
+	};
+
 }

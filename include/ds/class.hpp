@@ -8,8 +8,6 @@ namespace ds
 {
 	class InterpretContext;
 
-	using TypeId = Size;
-
 	/**
 	 * @brief
 	 * Runtime class instance header

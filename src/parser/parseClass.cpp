@@ -18,6 +18,7 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 	if (type)
 	{
 		Token name = currentLine.get();
+		name.checkIsName(errors);
 		Token equals = currentLine.get();
 
 		auto value = currentLine.getUntil("", errors);

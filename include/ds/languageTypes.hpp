@@ -17,6 +17,7 @@ namespace ds
 	using Pointer = size_t;
 	using Size = uint32_t;
 	using bytecodeOffset = uint32_t;
+	using TypeId = Size;
 
 	class InterpretContext;
 

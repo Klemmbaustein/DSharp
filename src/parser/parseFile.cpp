@@ -165,6 +165,7 @@ ParsedEnum& ds::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* errors
 {
 	ParsedEnum& newEnum = this->enums.emplace_back();
 	newEnum.name = currentLine.get();
+	newEnum.name.checkIsName(errors);
 
 	if (currentLine.expect("{", errors))
 	{
