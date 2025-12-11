@@ -67,18 +67,17 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 
 	if (typeToList == 0)
 	{
-		return {};
+		return completeScopeContents(f, character, line);
 	}
 
 	auto t = types.find(typeToList);
 
 	if (t == types.end())
 	{
-		return {};
+		return completeScopeContents(f, character, line);
 	}
 
 	std::vector<AutoCompleteResult> result;
-
 	for (auto& i : t->second.members)
 	{
 		result.push_back(AutoCompleteResult{
@@ -88,7 +87,7 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 	for (auto& i : t->second.methods)
 	{
 		result.push_back(AutoCompleteResult{
-			.name = i.name });
+			.name = i.shortName.empty() ? i.name : i.shortName });
 	}
 
 	std::sort(result.begin(), result.end(), [](const AutoCompleteResult& a, const AutoCompleteResult& b) {
@@ -97,5 +96,33 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 
 	return result;
 }
+std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(ScannedFile* f, size_t character, size_t line)
+{
+	std::vector<AutoCompleteResult> result;
 
+	ds::ScannedScope* innermostScope = nullptr;
+
+	for (auto& fn : f->scopes)
+	{
+		if (((fn.start.startPos > character && fn.start.line == line) || fn.start.line < line) &&
+			((fn.end.endPos < character && fn.start.line == line) || fn.end.line > line))
+		{
+			if (!innermostScope || fn.start.line > innermostScope->start.line ||
+				(fn.start.line == innermostScope->start.line && fn.start.startPos > innermostScope->start.startPos))
+			{
+				innermostScope = &fn;
+			}
+		}
+	}
+
+	if (innermostScope)
+	{
+		for (auto& i : innermostScope->localVariables)
+		{
+			result.push_back(AutoCompleteResult{ .name = i });
+		}
+	}
+
+	return result;
+}
 #endif

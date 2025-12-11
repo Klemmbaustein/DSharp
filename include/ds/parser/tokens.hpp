@@ -108,6 +108,9 @@ namespace ds
 		void getScope(TokenStream& addTo, ErrorContext* errors, size_t beginDepth = 1);
 		uint32_t character = 0, line = 0;
 
+		TokenPos first;
+		TokenPos last;
+
 	private:
 		std::vector<std::vector<Token>> lineTokens;
 		std::vector<Token>* currentLine = nullptr;
@@ -121,7 +124,7 @@ namespace ds
 
 		void addToken(const Token& target);
 
-		Token newToken();
+		Token newToken() const;
 
 		struct StreamPosition
 		{

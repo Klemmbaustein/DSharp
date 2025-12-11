@@ -86,6 +86,14 @@ void ds::NativeModule::addClassMethod(ClassType* type, NativeFunction function)
 	fn->className = type->name;
 }
 
+void ds::NativeModule::addStructMethod(ClassType* type, NativeFunction function)
+{
+	auto fn = addFunction(function);
+	type->methods.insert({ fn->name,
+		fn });
+	fn->className = type->name;
+}
+
 void ds::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId)
 {
 	auto fn = addFunction(function);

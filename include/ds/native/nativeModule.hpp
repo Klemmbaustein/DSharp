@@ -107,6 +107,7 @@ namespace ds
 
 		void addClassConstructor(ClassType* type, NativeFunction constructor);
 		void addClassMethod(ClassType* type, NativeFunction function);
+		void addStructMethod(ClassType* type, NativeFunction function);
 		void addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId);
 
 		void initialize();
