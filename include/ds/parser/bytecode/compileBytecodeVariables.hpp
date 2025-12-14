@@ -13,6 +13,7 @@ namespace ds
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
+		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
 
 		Type* variableType = nullptr;
 		std::string name;
@@ -47,6 +48,7 @@ namespace ds
 		BytecodePopVariable(uint32_t size, bool isScopeExit);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
+		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
 		bytecodeOffset getArgsSize() override;
 		std::string toString() override;
 

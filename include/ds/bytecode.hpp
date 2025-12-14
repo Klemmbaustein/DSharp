@@ -3,6 +3,7 @@
 #include "binaryBuffer.hpp"
 #include "debug.hpp"
 #include "reflection.hpp"
+#include "unwindInfo.hpp"
 
 namespace ds
 {
@@ -113,6 +114,7 @@ namespace ds
 		suspend,
 		awaitTask,
 		returnAsync,
+		unwind,
 	};
 
 	/**
@@ -127,6 +129,7 @@ namespace ds
 
 		DebugInfo debug;
 		ReflectInfo reflect;
+		UnwindInfo unwind;
 
 		std::vector<std::string> externalFunctions;
 		std::vector<RuntimeFunction> virtualTable;

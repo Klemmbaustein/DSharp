@@ -109,10 +109,10 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	// if (!this->service)
+	//if (!this->service)
 	//{
 	//	this->compiler.printAssembly();
-	// }
+	//}
 
 	if (!errors.isOk())
 	{

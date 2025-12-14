@@ -1,19 +1,39 @@
+using system::io
 using system
 
-async fn other()
+module helloWorld
+
+class c
 {
-	await async::sleep()
+	fn delete()
+	{
+		writeln("bye")
+	}
+}
+
+fn doUnwind()
+{
+	string s = "hi"
+
+	unwind
 }
 
 [EntryPoint]
-async fn test() -> int
+fn main()
 {
-	int i = 0
-	while i < 10
+	var i = new c()
+
+	var thing = fn()
 	{
-		await other()
-		io::writeInt(i)
-		i += 1
+		var b = i
+		writeln("unwind b")
 	}
-	return i
+
+	if true
+	{
+		thing.call()
+		doUnwind()
+	}
+
+	writeln("unwind aaa")
 }

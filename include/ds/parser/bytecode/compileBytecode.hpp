@@ -22,7 +22,8 @@ namespace ds
 		virtual void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) = 0;
 		virtual bytecodeOffset getArgsSize() = 0;
 		virtual std::string toString() { return ""; }
-		std::string toStringDefault(const BinaryBuffer& arguments);
+		virtual void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section);
+		std::string toStringDefault(const BinaryBuffer& arguments) const;
 	};
 
 	class BytecodeOperation : public BytecodeInstruction

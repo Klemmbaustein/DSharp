@@ -23,7 +23,11 @@ bytecodeOffset ds::BytecodeOperation::getArgsSize()
 	return bytecodeOffset(this->arguments.buffer.size());
 }
 
-std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments)
+void ds::BytecodeInstruction::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
+{
+}
+
+std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments) const
 {
 	static std::map<BytecodeOp, const char*> operations = {
 		{ BytecodeOp::push, "PUSH" },
@@ -68,6 +72,7 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::setStructMember, "SET_STRUCT_MEMBER" },
 		{ BytecodeOp::suspend, "SUSPEND" },
 		{ BytecodeOp::awaitTask, "AWAIT_TASK" },
+		{ BytecodeOp::unwind, "UNWIND" },
 	};
 
 	const char* op = operations[this->operation];
@@ -387,8 +392,11 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 			.name = code->name,
 		});
 
+		auto& s = stream.unwind.sections.emplace_back(code->offset);
+
 		for (auto& instr : code->instructions)
 		{
+			instr->addUnwindInfo(this, s);
 			if (instr->baseSize != 0)
 			{
 				argsBuffer.clear();

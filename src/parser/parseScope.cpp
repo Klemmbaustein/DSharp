@@ -1,5 +1,6 @@
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/bytecode/compileBytecodeVariables.hpp>
+#include <ds/parser/bytecode/compileBytecodeUnwind.hpp>
 #include <format>
 #include <list>
 #include <ds/parser/types/arrayType.hpp>
@@ -97,9 +98,7 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 	{
 		if (!info.type->hasDefaultValue)
 		{
-			errors->error(ErrorCode::parseVarMustHaveInitializer, info.name, "The variable '"
-				+ info.name.string + "' must have an initializer because the type '"
-				+ Type::toString(info.type) + "' does not have a default value.");
+			errors->error(ErrorCode::parseVarMustHaveInitializer, info.name, "The variable '" + info.name.string + "' must have an initializer because the type '" + Type::toString(info.type) + "' does not have a default value.");
 			return VariableInfo{
 				.isError = true
 			};
@@ -126,8 +125,7 @@ void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 #ifdef WITH_LANGUAGE_SERVICE
 	if (in->context->service)
 	{
-		in->context->service->files[in->scopeFile->name].variables
-			.push_back(ScannedVariable(&newVariable, this->name));
+		in->context->service->files[in->scopeFile->name].variables.push_back(ScannedVariable(&newVariable, this->name));
 	}
 #endif
 }
@@ -149,8 +147,7 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std:
 	conditionScope.isLambda = options.isLambda;
 	conditionScope.functionDepth = options.isLambda ? conditionScope.depth : functionDepth;
 
-	if (conditionScope.isLambda && conditionScope.scopeFunction
-		&& conditionScope.scopeFunction->isAsync)
+	if (conditionScope.isLambda && conditionScope.scopeFunction && conditionScope.scopeFunction->isAsync)
 	{
 		conditionScope.addTask(reinterpret_cast<TaskType*>(conditionScope.scopeFunction->returnType));
 	}
@@ -273,6 +270,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
 			{
+				code.addNew<BytecodeUnwindClass>(i.second.variableInstruction);
 				code.addBuffer(i.second.readValue(this));
 				code.addBuffer(unrefCode);
 			}
@@ -385,7 +383,6 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 				code->addOperation(BytecodeOp::ret);
 				return;
 			}
-
 		}
 		if (returnType)
 		{
@@ -464,7 +461,13 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		{
 			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
 			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget.get());
+			return;
 		}
+	}
+
+	if (first == "unwind")
+	{
+		this->code->addOperation(BytecodeOp::unwind);
 		return;
 	}
 
@@ -474,8 +477,8 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		{
 			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
 			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget.get());
+			return;
 		}
-		return;
 	}
 
 	if (first == "while")
@@ -576,7 +579,6 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		}
 		line.expectEndOfLine(errors);
 	}
-	return;
 }
 
 void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
