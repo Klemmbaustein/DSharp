@@ -578,6 +578,7 @@ void ds::TokenStream::addLine(TokenLine ln)
 
 void ds::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_t beginDepth)
 {
+	bool isFirst = addTo.lineTokens.empty();
 	size_t depth = beginDepth;
 	while (true)
 	{
@@ -590,6 +591,13 @@ void ds::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_t 
 				"'}'?");
 			return;
 		}
+
+		if (isFirst)
+		{
+			addTo.first = functionLine.peek().position;
+			isFirst = false;
+		}
+		addTo.last = functionLine.lineTokens->at(functionLine.lineTokens->size() - 1).position;
 
 		if (functionLine.contains("{"))
 		{
@@ -608,7 +616,7 @@ void ds::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_t 
 	}
 }
 
-Token ds::TokenStream::newToken()
+Token ds::TokenStream::newToken() const
 {
 	TokenPos p;
 

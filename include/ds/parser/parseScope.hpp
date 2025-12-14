@@ -92,7 +92,8 @@ namespace ds
 		std::optional<VariableInfo> parseVariableDefinition(TokenLine& line, ParsedFile* file, ErrorContext* errors, bool matchTypes = true);
 
 		void parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
-			std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options = ScopeOptions{
+			std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth,
+			ScopeOptions options = ScopeOptions{
 				.targetBuffer = nullptr,
 				.scopeTokens = nullptr,
 				.scopeFunction = nullptr,
@@ -100,6 +101,9 @@ namespace ds
 			});
 
 	private:
+#ifdef WITH_LANGUAGE_SERVICE
+		void serializeScope();
+#endif
 
 		uint32_t tempCounter = 0;
 	};

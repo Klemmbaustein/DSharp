@@ -79,4 +79,13 @@ namespace ds
 		std::vector<ScannedFunction> methods;
 	};
 
+	class ScannedScope
+	{
+	public:
+
+		TokenPos start;
+		TokenPos end;
+
+		std::vector<std::string> localVariables;
+	};
 }

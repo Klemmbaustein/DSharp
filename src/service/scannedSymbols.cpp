@@ -1,3 +1,4 @@
+#ifdef WITH_LANGUAGE_SERVICE
 #include <ds/service/scannedSymbols.hpp>
 #include <ds/parser/function.hpp>
 #include <ds/parser/parseScope.hpp>
@@ -88,3 +89,4 @@ ds::ScannedVariable::ScannedVariable(ClassMember* from, ClassType* inClass, Pars
 		typeId = from->type->id;
 	}
 }
+#endif

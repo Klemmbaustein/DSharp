@@ -172,6 +172,26 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std:
 	conditionScope.compile(this->context, file, errors);
 }
 
+#ifdef WITH_LANGUAGE_SERVICE
+void ds::ParsedScope::serializeScope()
+{
+	if (context->service)
+	{
+		auto s = ScannedScope(tokenStream->first, tokenStream->last);
+
+		for (auto& i : this->variables)
+		{
+			if (!i.second.isInternal)
+			{
+				s.localVariables.push_back(i.second.name.string);
+			}
+		}
+
+		context->service->files[scopeFile->name].scopes.push_back(s);
+	}
+}
+#endif
+
 BytecodeBuffer ds::ParsedScope::addTemporaryVariable(Type* type)
 {
 	BytecodeBuffer buffer;
@@ -362,6 +382,8 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 	{
 		return;
 	}
+
+	serializeScope();
 
 	code->addBuffer(compileScopeExit(this->depth, true));
 	if (compileReturn || this->isLambda)

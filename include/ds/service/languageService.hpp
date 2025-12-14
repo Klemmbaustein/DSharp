@@ -14,6 +14,8 @@ namespace ds
 		std::vector<ScannedFunction> functions;
 		std::vector<ScannedVariable> variables;
 		std::vector<Token> types;
+
+		std::vector<ScannedScope> scopes;
 	};
 
 	struct AutoCompleteResult
@@ -36,6 +38,9 @@ namespace ds
 		ParseContext* parser = nullptr;
 		std::map<std::string, ScannedFile> files;
 		std::map<TypeId, ScannedType> types;
+
+	private:
+		std::vector<AutoCompleteResult> completeScopeContents(ScannedFile* f, size_t character, size_t line);
 	};
 } // namespace ds
 #endif
