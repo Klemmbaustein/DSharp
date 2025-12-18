@@ -242,6 +242,14 @@ ExpressionResult ds::ClassType::compileCast(ExpressionResult value, ParsedScope*
 	return ExpressionResult();
 }
 
+void ds::ClassType::makePointerClass()
+{
+	for (auto& i : this->members)
+	{
+		i.isPointerMember = true;
+	}
+}
+
 ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine& line,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
@@ -326,18 +334,18 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 			{
 				result.setCode->addBuffer(result.code);
 				result.setCode->addOperation(
-					this->isPointerClass ? BytecodeOp::classMemberPtr : BytecodeOp::classMember,
+					i.isPointerMember ? BytecodeOp::classMemberPtr : BytecodeOp::classMember,
 					args);
 				result.setCode->addBuffer(unrefCode);
 			}
 
 			result.setCode->addBuffer(result.code);
 			result.setCode->addOperation(
-				this->isPointerClass ? BytecodeOp::setClassMemberPtr : BytecodeOp::setClassMember,
+				i.isPointerMember ? BytecodeOp::setClassMemberPtr : BytecodeOp::setClassMember,
 				args);
 		}
 
-		result.code.addOperation(this->isPointerClass ? BytecodeOp::classMemberPtr : BytecodeOp::classMember, args);
+		result.code.addOperation(i.isPointerMember ? BytecodeOp::classMemberPtr : BytecodeOp::classMember, args);
 
 		return result;
 	}

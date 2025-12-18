@@ -77,7 +77,6 @@ namespace ds
 
 			if (derived)
 			{
-				cls->isPointerClass = derived->isPointerClass;
 				cls->parents = { derived };
 
 				for (auto& i : derived->members)

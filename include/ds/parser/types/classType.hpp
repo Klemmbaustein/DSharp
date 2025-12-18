@@ -11,6 +11,8 @@ namespace ds
 		Token name;
 		uint32_t offset = 0;
 		Type* type = nullptr;
+
+		bool isPointerMember = false;
 	};
 
 	class ClassType;
@@ -61,7 +63,9 @@ namespace ds
 
 		size_t classSize = 0;
 		bytecodeOffset vTableOffset = 0;
-		bool isPointerClass = false;
+
+		void makePointerClass();
+
 		Function* baseConstructor = nullptr;
 		Function* destructor = nullptr;
 		ParsedClass* languageClass = nullptr;

@@ -52,11 +52,6 @@ ds::ScannedVariable::ScannedVariable(ParsedClassMember* from, ClassType* inClass
 	this->at = atToken;
 	this->name = from->name.string;
 
-	if (this->defaultValue.size())
-	{
-		this->defaultValue.pop_back();
-	}
-
 	definition = SymbolDefinition{
 		.file = file,
 		.at = from->name,
