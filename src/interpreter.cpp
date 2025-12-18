@@ -51,6 +51,7 @@ void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 	this->bytecodeBuffer = &code->code;
 	this->vTable = &code->virtualTable;
 	this->debug = &code->debug;
+	this->unwindBuffer = code->unwind;
 
 	this->externals.clear();
 	this->externals.reserve(code->externalFunctions.size());
@@ -93,7 +94,62 @@ void ds::InterpretContext::run(bytecodeOffset position)
 	this->code.streamPos = position;
 
 	runLoop(baseCallStackPos);
-	code.streamPos = callStack[--callStackPos];
+	if (callStackPos)
+	{
+		code.streamPos = callStack[--callStackPos];
+	}
+}
+
+void ds::InterpretContext::doUnwind()
+{
+	auto& buffer = runtime->unwindBuffer;
+
+	callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+
+	for (uint32_t i = callStackPos - 1; i > 0; i--)
+	{
+		bytecodeOffset codePos = callStack[i];
+
+		auto tbl = buffer.getSectionAt(codePos);
+
+		if (!tbl)
+		{
+			std::cerr << "No unwind info for " << codePos << std::endl;
+			continue;
+		}
+
+		for (auto p : tbl->parts)
+		{
+			if (p.offset < codePos)
+			{
+				continue;
+			}
+			switch (p.op)
+			{
+			case UnwindOp::popClass: {
+				if (p.start > codePos)
+				{
+					break;
+				}
+				ds::RuntimeClass* c;
+				memcpy(&c, &variableStack[variableStackPos - p.size], sizeof(ds::RuntimeClass*));
+				destruct(c);
+				break;
+			}
+			case UnwindOp::popBytes: {
+				this->variableStackPos -= p.size;
+				break;
+			}
+			case UnwindOp::pushBytes: {
+				this->variableStackPos += p.size;
+				break;
+			}
+			default:
+				break;
+			}
+		}
+	}
+	callStackPos = 0;
 }
 
 void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
@@ -462,6 +518,10 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			suspendStackPos = baseCallStackPos;
 			return;
 		}
+		case ds::BytecodeOp::unwind: {
+			doUnwind();
+			return;
+		}
 		default:
 			abort();
 			break;
@@ -555,7 +615,7 @@ bool ds::InterpretContext::resumeSuspend()
 	return false;
 }
 
-void ds::InterpretContext::runtimePanic(RuntimeStr message) const
+void ds::InterpretContext::runtimePanic(RuntimeStr message)
 {
 	auto stack = getStackTrace();
 	std::printf("%s\n", message.ptr());
@@ -571,7 +631,7 @@ void ds::InterpretContext::runtimePanic(RuntimeStr message) const
 			std::printf("\t<unknown stack frame>\n");
 		}
 	}
-	abort();
+	doUnwind();
 }
 
 ds::RuntimeStrRef ds::InterpretContext::popRuntimeStringRef()

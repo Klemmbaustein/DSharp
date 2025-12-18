@@ -1,12 +1,13 @@
 #pragma once
 #include "bytecode.hpp"
-#include <array>
-#include <functional>
 #include "native/externalFunction.hpp"
 #include "runtimeString.hpp"
-#include <thread>
+#include "unwindInfo.hpp"
+#include <array>
+#include <functional>
 #include <list>
 #include <map>
+#include <thread>
 
 namespace ds
 {
@@ -104,8 +105,7 @@ namespace ds
 		void virtualCall(RuntimeFunction target);
 		bool resumeSuspend();
 
-		[[noreturn]]
-		void runtimePanic(RuntimeStr message) const;
+		void runtimePanic(RuntimeStr message);
 
 		void destruct(RuntimeClass* classObject);
 
@@ -116,6 +116,8 @@ namespace ds
 		bool suspended = false;
 		bool canAwait = false;
 		bytecodeOffset suspendStackPos = 0;
+
+		void doUnwind();
 
 	private:
 
@@ -139,6 +141,7 @@ namespace ds
 	public:
 		DebugInfo* debug = nullptr;
 		BinaryBuffer* bytecodeBuffer = nullptr;
+		UnwindInfo unwindBuffer;
 		std::vector<ExternalFunctionPointer> externals;
 		std::vector<RuntimeFunction>* vTable = nullptr;
 
