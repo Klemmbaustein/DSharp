@@ -27,11 +27,24 @@ void ds::LanguageService::commitChanges()
 	this->parser->compile();
 }
 
-std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, size_t character, size_t line)
+std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, size_t character, size_t line,
+	CompletionType type)
 {
+	if (type == CompletionType::variables)
+	{
+		return completeScopeContents(f, character, line);
+	}
 	ScannedFunction* foundFunction = nullptr;
 	ScannedVariable* found = nullptr;
 	size_t nearestLine = 0;
+
+	auto listScopeContents = [&]() -> std::vector<AutoCompleteResult> {
+		if (type == CompletionType::member)
+		{
+			return {};
+		}
+		return completeScopeContents(f, character, line);
+	};
 
 	for (auto& i : f->variables)
 	{
@@ -67,14 +80,14 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 
 	if (typeToList == 0)
 	{
-		return completeScopeContents(f, character, line);
+		return listScopeContents();
 	}
 
 	auto t = types.find(typeToList);
 
 	if (t == types.end())
 	{
-		return completeScopeContents(f, character, line);
+		return listScopeContents();
 	}
 
 	std::vector<AutoCompleteResult> result;

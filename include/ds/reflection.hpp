@@ -23,12 +23,15 @@ namespace ds
 		size_t bodySize = 0;
 
 		std::vector<TypeMember> members;
+		std::vector<TypeId> superClasses;
 
 		RuntimeClass* create(InterpretContext* context) const;
 	};
 
 	struct ReflectInfo
 	{
+		bool isSubclassOf(TypeId toCheck, TypeId superClass) const;
+
 		std::map<TypeId, TypeInfo> types;
 	};
 }

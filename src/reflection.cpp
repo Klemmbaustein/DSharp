@@ -13,3 +13,25 @@ RuntimeClass* TypeInfo::create(InterpretContext* context) const
 
 	return context->popValue<RuntimeClass*>();
 }
+
+bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const
+{
+	auto t = this->types.find(toCheck);
+
+	if (t != this->types.end())
+	{
+		for (auto& i : t->second.superClasses)
+		{
+			if (i == superClass)
+			{
+				return true;
+			}
+			else if (isSubclassOf(i, superClass))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}

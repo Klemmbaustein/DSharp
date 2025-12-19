@@ -34,6 +34,18 @@ std::string ds::NativeFunction::getShortName() const
 	return this->name;
 }
 
+Type* ds::NativeModule::getType(const std::string& name)
+{
+	for (auto& i : this->types)
+	{
+		if (i->name == name)
+		{
+			return i;
+		}
+	}
+	return nullptr;
+}
+
 std::string NativeFunction::getFullName() const
 {
 	if (this->className.empty())

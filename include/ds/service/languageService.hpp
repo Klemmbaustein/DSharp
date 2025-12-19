@@ -23,6 +23,13 @@ namespace ds
 		std::string name;
 	};
 
+	enum class CompletionType
+	{
+		member,
+		variables,
+		all,
+	};
+
 	class LanguageService
 	{
 	public:
@@ -33,7 +40,8 @@ namespace ds
 
 		void commitChanges();
 
-		std::vector<AutoCompleteResult> completeAt(ScannedFile* f, size_t character, size_t line);
+		std::vector<AutoCompleteResult> completeAt(ScannedFile* f, size_t character, size_t line,
+			CompletionType type);
 
 		ParseContext* parser = nullptr;
 		std::map<std::string, ScannedFile> files;

@@ -67,6 +67,8 @@ namespace ds
 		std::vector<Type*> types;
 		std::vector<EnumType*> enums;
 
+		Type* getType(const std::string& name);
+
 		template<typename TNative>
 		ClassType* createClass(std::string name, ClassType* derived = nullptr)
 		{

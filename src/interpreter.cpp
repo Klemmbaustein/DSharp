@@ -490,6 +490,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			if (!ptr)
 			{
 				runtimePanic(RuntimeStr("Attempted to use null reference"));
+				return;
 			}
 			pushValue(ptr);
 			break;

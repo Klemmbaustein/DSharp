@@ -165,6 +165,13 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				}
 			}
 
+			std::vector<TypeId> superClasses;
+
+			for (auto& super : cls.thisType->parents)
+			{
+				superClasses.push_back(super->id);
+			}
+
 			toStream.reflect.types[cls.thisType->id] = TypeInfo{
 				.hash = cls.thisType->id,
 				.name = cls.classModule->name + "::" + cls.name.string,
@@ -172,6 +179,7 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,
 				.bodySize = cls.thisType->classSize,
 				.members = members,
+				.superClasses = superClasses,
 			};
 		}
 	}
