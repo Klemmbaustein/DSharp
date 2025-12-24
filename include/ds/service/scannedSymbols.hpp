@@ -29,6 +29,7 @@ namespace ds
 			functionDefinition,
 			functionReference,
 			classMember,
+			constructor,
 		};
 
 		Kind kind = Kind::functionCall;
@@ -45,6 +46,7 @@ namespace ds
 		std::string type;
 		std::string inClass;
 		TypeId typeId = 0;
+		bool isThis = false;
 
 		enum class Kind
 		{

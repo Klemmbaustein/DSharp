@@ -16,6 +16,7 @@ namespace ds
 		Type* type = nullptr;
 		bool readOnly = false;
 		bool isInternal = false;
+		bool isThis = false;
 		mutable uint32_t lambdaOffset = 0;
 
 		BytecodeBuffer readValue(ParsedScope* with) const;

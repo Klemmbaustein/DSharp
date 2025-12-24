@@ -3,13 +3,16 @@
 #include <ds/parser/function.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/parseClass.hpp>
+#include <cassert>
 
 ds::ScannedFunction::ScannedFunction(Function* from, Token atToken, Kind kind, TokenPos argEnd)
 {
 	this->at = atToken;
+
 	this->name = from->getFullName();
 	this->name = from->getShortName();
 	this->argEnd = argEnd;
+	this->kind = kind;
 	auto functionArgs = from->getArguments();
 	this->arguments.reserve(functionArgs.size());
 
@@ -33,6 +36,7 @@ ds::ScannedVariable::ScannedVariable(ScopeVariable* from, Token atToken)
 {
 	this->at = atToken;
 	this->name = from->name.string;
+	this->isThis = from->isThis;
 
 	definition = SymbolDefinition{
 		.file = from->ownedBy->scopeFile,

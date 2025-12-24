@@ -126,13 +126,15 @@ void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 #ifdef WITH_LANGUAGE_SERVICE
 	if (in->context->service)
 	{
-		in->context->service->files[in->scopeFile->name].variables.push_back(ScannedVariable(&newVariable, this->name));
+		in->context->service->files[in->scopeFile->name].variables.push_back(
+			ScannedVariable(&newVariable, this->name));
 	}
 #endif
 }
 
-void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
-	std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth, ScopeOptions options)
+void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
+	std::shared_ptr<BytecodeJumpLabel> breakTarget, std::shared_ptr<BytecodeJumpLabel> continueTarget,
+	size_t breakContinueDepth, ScopeOptions options)
 {
 	// Create a sub scope that optionally takes in the ScopeOptions
 	ParsedScope conditionScope;
@@ -187,8 +189,7 @@ void ds::ParsedScope::serializeScope()
 				s.localVariables.push_back(ScannedScopeVariable{
 					.name = i.second.name.string,
 					.type = i.second.type->id,
-					.isThis = this->inClass && i.second.name == "this"
-					});
+					.isThis = this->inClass && i.second.name == "this" });
 			}
 		}
 
@@ -350,6 +351,7 @@ void ds::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 	pushVariableValue(inClass->thisType, false);
 	this->thisVariable = &addVariable(Token("this"), inClass->thisType, nullptr);
 	this->thisVariable->readOnly = true;
+	this->thisVariable->isThis = true;
 }
 
 void ds::ParsedScope::addTask(TaskType* taskType)

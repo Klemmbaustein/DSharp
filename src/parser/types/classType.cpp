@@ -184,6 +184,8 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	ExpressionResult result;
 
 	auto constructorArgs = line.getInBraces(errors);
+	auto argsEnd = line.previous();
+
 	TokenLine argsLine;
 	argsLine.lineTokens = &constructorArgs;
 
@@ -209,6 +211,15 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 				continue;
 			}
 
+#ifdef WITH_LANGUAGE_SERVICE
+			if (with->context->service)
+			{
+				with->context->service->files[with->scopeFile->name]
+					.functions.push_back(ScannedFunction(i, first,
+						ScannedFunction::Kind::constructor, argsEnd.position));
+			}
+#endif
+
 			result.code.addBuffer(constructor.code);
 
 			result.code.pushInt(Size(this->classSize));
@@ -224,6 +235,8 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 			return ExpressionResult();
 		}
 	}
+
+
 	result.type = this;
 	result.valid = true;
 

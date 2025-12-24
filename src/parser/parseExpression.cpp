@@ -325,7 +325,8 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scope->context->service)
 		{
-			scope->context->service->files[scope->scopeFile->name].variables.push_back(ScannedVariable(&foundVariable->second, value));
+			scope->context->service->files[scope->scopeFile->name].variables.push_back(
+				ScannedVariable(&foundVariable->second, value));
 		}
 #endif
 
