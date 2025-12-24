@@ -13,15 +13,23 @@ ds::LanguageService::LanguageService(LanguageContext* context)
 void ds::LanguageService::addString(const std::string& content, std::string name)
 {
 	this->parser->addString(content, name);
+	hasChanges = true;
 }
 
 void ds::LanguageService::updateFile(const std::string& str, std::string fileName)
 {
+	this->files.erase(fileName);
 	this->parser->updateFile(str, fileName);
+	hasChanges = true;
 }
 
 void ds::LanguageService::commitChanges()
 {
+	if (!hasChanges)
+	{
+		return;
+	}
+	hasChanges = false;
 	this->parser->resetModules();
 	this->parser->errors.reset();
 	this->parser->compile();
@@ -30,20 +38,12 @@ void ds::LanguageService::commitChanges()
 std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, size_t character, size_t line,
 	CompletionType type)
 {
-	if (type == CompletionType::variables)
-	{
-		return completeScopeContents(f, character, line);
-	}
 	ScannedFunction* foundFunction = nullptr;
 	ScannedVariable* found = nullptr;
 	size_t nearestLine = 0;
 
 	auto listScopeContents = [&]() -> std::vector<AutoCompleteResult> {
-		if (type == CompletionType::member)
-		{
-			return {};
-		}
-		return completeScopeContents(f, character, line);
+		return completeScopeContents(f, character, line, type);
 	};
 
 	for (auto& i : f->variables)
@@ -58,12 +58,22 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 
 	for (auto& i : f->functions)
 	{
-		if (i.at.position.line == line && i.argEnd.endPos <= character &&
-			i.at.position.startPos <= character && nearestLine < i.argEnd.endPos)
+		if (i.at.position.line == line)
 		{
-			nearestLine = i.argEnd.endPos;
-			found = nullptr;
-			foundFunction = &i;
+			if (i.argEnd.endPos <= character &&
+				i.at.position.startPos <= character && nearestLine < i.argEnd.endPos)
+			{
+				nearestLine = i.argEnd.endPos;
+				found = nullptr;
+				foundFunction = &i;
+			}
+			if (i.argEnd.endPos >= character &&
+				i.at.position.startPos <= character && nearestLine < i.argEnd.startPos)
+			{
+				nearestLine = i.argEnd.endPos;
+				found = nullptr;
+				foundFunction = nullptr;
+			}
 		}
 	}
 
@@ -90,26 +100,11 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 		return listScopeContents();
 	}
 
-	std::vector<AutoCompleteResult> result;
-	for (auto& i : t->second.members)
-	{
-		result.push_back(AutoCompleteResult{
-			.name = i.name });
-	}
 
-	for (auto& i : t->second.methods)
-	{
-		result.push_back(AutoCompleteResult{
-			.name = i.shortName.empty() ? i.name : i.shortName });
-	}
-
-	std::sort(result.begin(), result.end(), [](const AutoCompleteResult& a, const AutoCompleteResult& b) {
-		return a.name < b.name;
-	});
-
-	return result;
+	return completeType(&t->second, type);
 }
-std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(ScannedFile* f, size_t character, size_t line)
+std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(ScannedFile* f,
+	size_t character, size_t line, CompletionType options)
 {
 	std::vector<AutoCompleteResult> result;
 
@@ -128,13 +123,56 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(Scann
 		}
 	}
 
-	if (innermostScope)
+	if (innermostScope && includes(options, CompletionType::variable))
 	{
 		for (auto& i : innermostScope->localVariables)
 		{
-			result.push_back(AutoCompleteResult{ .name = i });
+			if (i.isThis)
+			{
+				auto t = types.find(i.type);
+				if (t != types.end())
+				{
+					auto found = completeType(&t->second, options);
+					for (auto& i : found)
+					{
+						result.push_back(i);
+					}
+				}
+			}
+
+			result.push_back(AutoCompleteResult{ .name = i.name,
+				.type = CompletionType::variable });
 		}
 	}
+
+	return result;
+}
+std::vector<AutoCompleteResult> ds::LanguageService::completeType(ScannedType* type, CompletionType options)
+{
+	std::vector<AutoCompleteResult> result;
+	if (includes(options, CompletionType::member))
+	{
+		for (auto& i : type->members)
+		{
+			result.push_back(AutoCompleteResult{
+				.name = i.name,
+				.type = CompletionType::member });
+		}
+	}
+
+	if (includes(options, CompletionType::method))
+	{
+		for (auto& i : type->methods)
+		{
+			result.push_back(AutoCompleteResult{
+				.name = i.shortName.empty() ? i.name : i.shortName,
+				.type = CompletionType::method });
+		}
+	}
+
+	std::sort(result.begin(), result.end(), [](const AutoCompleteResult& a, const AutoCompleteResult& b) {
+		return a.name < b.name;
+	});
 
 	return result;
 }

@@ -138,6 +138,8 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 
 	size_t bracketDepth = 0;
 
+	bool inComment = false;
+
 	while (true)
 	{
 		char newChar = getNextChar(stream);
@@ -149,6 +151,7 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 		{
 			this->character = 0;
 			this->line++;
+			inComment = false;
 			if (bracketDepth == 0)
 			{
 				addToken(currentWord);
@@ -167,6 +170,11 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 				currentWord = newToken();
 				continue;
 			}
+		}
+
+		if (inComment)
+		{
+			continue;
 		}
 
 		if (newChar == '"')
@@ -188,6 +196,11 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 			continue;
 		}
 
+		if (newChar == '/' && tryReadWord(stream, "//", 1))
+		{
+			inComment = true;
+			continue;
+		}
 		bool foundSpecial = false;
 		for (auto& i : specialWords)
 		{
@@ -207,7 +220,6 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 		}
 		if (foundSpecial)
 			continue;
-
 
 		if (specialChars.find(newChar) != specialChars.end() || (newChar == '.' && !isNumber(currentWord.string, false)))
 		{

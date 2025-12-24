@@ -61,6 +61,10 @@ void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 	{
 		if (i.name == fileName)
 		{
+			i.classes.clear();
+			i.functions.clear();
+			i.enums.clear();
+
 			i.stream = TokenStream();
 			i.stream.fromString(str, fileName, &errors);
 			i.context = this;
@@ -72,13 +76,6 @@ void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 
 BytecodeStream ds::ParseContext::compile()
 {
-#ifdef WITH_LANGUAGE_SERVICE
-	if (this->service)
-	{
-		this->service->files.clear();
-	}
-#endif
-
 	initializeModules();
 
 	if (!errors.isOk())
@@ -109,10 +106,10 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	//if (!this->service)
+	// if (!this->service)
 	//{
 	//	this->compiler.printAssembly();
-	//}
+	// }
 
 	if (!errors.isOk())
 	{
@@ -198,8 +195,13 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 {
 	for (auto& i : mod->moduleTypes)
 	{
+		if (this->service->types.find(i.second->id) != this->service->types.end())
+		{
+			continue;
+		}
+
 		auto t = i.second->toScanned();
-		this->service->types[t.id] = t;
+		this->service->types.insert({ t.id, t });
 	}
 
 	for (auto& i : mod->submodules)
@@ -215,6 +217,11 @@ void ds::ParseContext::resetModules()
 	{
 		this->errors.currentFile = file.name;
 		this->programModules[file.scopeName] = Module();
+
+		for (auto& i : file.classes)
+		{
+			i.scanned = false;
+		}
 	}
 }
 

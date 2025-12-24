@@ -96,6 +96,10 @@ namespace ds
 
 	struct TokenStream
 	{
+		void reset()
+		{
+			currentStreamLine = 0;
+		}
 		void fromFile(std::string path, ErrorContext* errors);
 		void fromStream(std::istream& stream, std::string name, ErrorContext* errors);
 		void fromString(std::string stringData, std::string path, ErrorContext* errors);

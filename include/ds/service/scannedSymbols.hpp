@@ -79,6 +79,13 @@ namespace ds
 		std::vector<ScannedFunction> methods;
 	};
 
+	struct ScannedScopeVariable
+	{
+		std::string name;
+		TypeId type = 0;
+		bool isThis = false;
+	};
+
 	class ScannedScope
 	{
 	public:
@@ -86,6 +93,6 @@ namespace ds
 		TokenPos start;
 		TokenPos end;
 
-		std::vector<std::string> localVariables;
+		std::vector<ScannedScopeVariable> localVariables;
 	};
 }

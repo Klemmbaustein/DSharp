@@ -100,7 +100,8 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 		{
 			if (fn->returnTypeTokens.size())
 			{
-				errors->error(ErrorCode::parseInvalidType, fn->returnTypeTokens[0], "The delete function cannot have a return value.");
+				errors->error(ErrorCode::parseInvalidType, fn->returnTypeTokens[0],
+					"The delete function cannot have a return value.");
 			}
 			this->usedDestructor = fn;
 		}
@@ -199,7 +200,8 @@ std::string ds::ClassLifetimeFunction::getShortName() const
 
 std::string ds::ClassLifetimeFunction::getFullName() const
 {
-	return this->parent->classModule->name + "::" + this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
+	return this->parent->classModule->name + "::" +
+		   this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
 }
 
 bool ds::ClassLifetimeFunction::discardable() const
@@ -309,8 +311,8 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 #ifdef WITH_LANGUAGE_SERVICE
 		if (context->service)
 		{
-			context->service->files[file->name].variables
-				.push_back(ScannedVariable(&m.second, this->thisType, file, m.first));
+			context->service->files[file->name].variables.push_back(
+				ScannedVariable(&m.second, this->thisType, file, m.first));
 		}
 #endif
 
@@ -501,6 +503,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
+	this->classStream.reset();
 	this->usedDestructor = &baseDestructor;
 	std::vector<AttribInfo> currentAttributes;
 	while (scanLine(currentAttributes, errors, file))

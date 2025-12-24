@@ -18,16 +18,22 @@ namespace ds
 		std::vector<ScannedScope> scopes;
 	};
 
+	enum class CompletionType
+	{
+		variable     = 0b000001,
+		member       = 0b000010,
+		function     = 0b000100,
+		method       = 0b001000,
+		type         = 0b010000,
+		keyword      = 0b100000,
+		classMembers = 0b001010,
+		all = 0xff
+	};
+
 	struct AutoCompleteResult
 	{
 		std::string name;
-	};
-
-	enum class CompletionType
-	{
-		member,
-		variables,
-		all,
+		CompletionType type = CompletionType::variable;
 	};
 
 	class LanguageService
@@ -48,7 +54,18 @@ namespace ds
 		std::map<TypeId, ScannedType> types;
 
 	private:
-		std::vector<AutoCompleteResult> completeScopeContents(ScannedFile* f, size_t character, size_t line);
+
+		static bool includes(CompletionType a, CompletionType includes)
+		{
+			return (int(a) & int(includes)) != 0;
+		}
+
+		bool hasChanges = false;
+
+		std::vector<AutoCompleteResult> completeType(ScannedType* type, CompletionType options);
+
+		std::vector<AutoCompleteResult> completeScopeContents(ScannedFile* f, size_t character,
+			size_t line, CompletionType options);
 	};
 } // namespace ds
 #endif

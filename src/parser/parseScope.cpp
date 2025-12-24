@@ -98,7 +98,8 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 	{
 		if (!info.type->hasDefaultValue)
 		{
-			errors->error(ErrorCode::parseVarMustHaveInitializer, info.name, "The variable '" + info.name.string + "' must have an initializer because the type '" + Type::toString(info.type) + "' does not have a default value.");
+			errors->error(ErrorCode::parseVarMustHaveInitializer, info.name,
+				"The variable '" + info.name.string + "' must have an initializer because the type '" + Type::toString(info.type) + "' does not have a default value.");
 			return VariableInfo{
 				.isError = true
 			};
@@ -183,7 +184,11 @@ void ds::ParsedScope::serializeScope()
 		{
 			if (!i.second.isInternal)
 			{
-				s.localVariables.push_back(i.second.name.string);
+				s.localVariables.push_back(ScannedScopeVariable{
+					.name = i.second.name.string,
+					.type = i.second.type->id,
+					.isThis = this->inClass && i.second.name == "this"
+					});
 			}
 		}
 
