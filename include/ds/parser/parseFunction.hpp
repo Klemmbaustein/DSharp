@@ -52,13 +52,7 @@ namespace ds
 		}
 
 		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
-		std::optional<SymbolDefinition> getDefinition() override
-		{
-			return SymbolDefinition{
-				.file = functionFile,
-				.at = name
-			};
-		}
+		std::optional<SymbolDefinition> getDefinition() override;
 
 		virtual bytecodeOffset getVirtualOffset() const
 		{

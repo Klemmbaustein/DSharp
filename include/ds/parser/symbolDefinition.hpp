@@ -7,7 +7,7 @@ namespace ds
 
 	struct SymbolDefinition
 	{
-		ParsedFile* file = nullptr;
+		std::string file;
 		Token at;
 	};
 } // namespace ds

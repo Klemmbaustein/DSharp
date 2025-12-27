@@ -51,6 +51,13 @@ void ds::ParsedFunction::addArguments(ParsedScope& scope, ErrorContext* errors)
 #endif
 	}
 }
+std::optional<SymbolDefinition> ds::ParsedFunction::getDefinition()
+{
+	return SymbolDefinition{
+		.file = functionFile->name,
+		.at = name
+	};
+}
 
 void ds::ParsedFunction::registerFunction(ParseContext* context)
 {

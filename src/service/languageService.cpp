@@ -8,6 +8,7 @@ ds::LanguageService::LanguageService(LanguageContext* context)
 {
 	this->parser = new ParseContext(context);
 	this->parser->service = this;
+	this->language = context;
 }
 
 void ds::LanguageService::addString(const std::string& content, std::string name)
@@ -30,8 +31,9 @@ void ds::LanguageService::commitChanges()
 		return;
 	}
 	hasChanges = false;
-	this->parser->resetModules();
+	this->parser->resetModules(language);
 	this->parser->errors.reset();
+	this->types.clear();
 	this->parser->compile();
 }
 
@@ -167,6 +169,16 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeType(ScannedType* t
 			result.push_back(AutoCompleteResult{
 				.name = i.shortName.empty() ? i.name : i.shortName,
 				.type = CompletionType::method });
+		}
+	}
+
+	if (includes(options, CompletionType::keyword))
+	{
+		for (auto& i : this->scopeKeywords)
+		{
+			result.push_back(AutoCompleteResult{
+				.name = i,
+				.type = CompletionType::keyword });
 		}
 	}
 

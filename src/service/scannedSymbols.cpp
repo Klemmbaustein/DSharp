@@ -3,7 +3,6 @@
 #include <ds/parser/function.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/parseClass.hpp>
-#include <cassert>
 
 ds::ScannedFunction::ScannedFunction(Function* from, Token atToken, Kind kind, TokenPos argEnd)
 {
@@ -39,7 +38,7 @@ ds::ScannedVariable::ScannedVariable(ScopeVariable* from, Token atToken)
 	this->isThis = from->isThis;
 
 	definition = SymbolDefinition{
-		.file = from->ownedBy->scopeFile,
+		.file = from->ownedBy->scopeFile->name,
 		.at = from->name,
 	};
 
@@ -57,7 +56,7 @@ ds::ScannedVariable::ScannedVariable(ParsedClassMember* from, ClassType* inClass
 	this->name = from->name.string;
 
 	definition = SymbolDefinition{
-		.file = file,
+		.file = file ? file->name : "",
 		.at = from->name,
 	};
 
@@ -76,7 +75,7 @@ ds::ScannedVariable::ScannedVariable(ClassMember* from, ClassType* inClass, Pars
 	this->name = from->name.string;
 
 	definition = SymbolDefinition{
-		.file = file,
+		.file = file ? file->name : "",
 		.at = from->name,
 	};
 

@@ -29,8 +29,6 @@ namespace ds
 
 		std::string getName() override;
 
-		bool isSubclassOf(ClassType* parent);
-
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,

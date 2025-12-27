@@ -12,23 +12,7 @@ using namespace ds;
 
 ds::ParseContext::ParseContext(LanguageContext* context)
 {
-	for (auto& [name, module] : context->languageModules)
-	{
-		this->programModules.insert({ name, module->create() });
-	}
-
-	for (auto& i : this->programModules)
-	{
-		std::string moduleName = i.first + "::";
-
-		for (auto& m : this->programModules)
-		{
-			if (m.first.substr(0, moduleName.size()) == moduleName)
-			{
-				i.second.submodules.insert({ m.first, &m.second });
-			}
-		}
-	}
+	resetModules(context);
 }
 
 ds::ParseContext::~ParseContext()
@@ -211,16 +195,33 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 }
 #endif
 
-void ds::ParseContext::resetModules()
+void ds::ParseContext::resetModules(LanguageContext* context)
 {
 	for (ParsedFile& file : this->files)
 	{
-		this->errors.currentFile = file.name;
-		this->programModules[file.scopeName] = Module();
-
 		for (auto& i : file.classes)
 		{
 			i.scanned = false;
+		}
+	}
+
+	this->programModules.clear();
+
+	for (auto& [name, module] : context->languageModules)
+	{
+		this->programModules.insert({ name, module->create() });
+	}
+
+	for (auto& i : this->programModules)
+	{
+		std::string moduleName = i.first + "::";
+
+		for (auto& m : this->programModules)
+		{
+			if (m.first.substr(0, moduleName.size()) == moduleName)
+			{
+				i.second.submodules.insert({ m.first, &m.second });
+			}
 		}
 	}
 }
@@ -229,7 +230,8 @@ void ds::ParseContext::scanModules()
 {
 	// Create global module
 	// TODO: Somehow clear out the functions for repeated scans
-	auto& globalModule = this->programModules.insert({ "", Module() }).first->second;
+	auto& globalModule = this->programModules[""];
+	globalModule = {};
 
 	// Register all modules
 	for (ParsedFile& file : this->files)
@@ -244,6 +246,10 @@ void ds::ParseContext::scanModules()
 			mod.moduleFunctions.insert({ function.name.string, &function });
 			function.functionModule = &mod;
 		}
+
+#ifdef WITH_LANGUAGE_SERVICE
+		// Add the modules to the service.
+#endif
 
 		for (Type* i : this->defaultTypes)
 		{

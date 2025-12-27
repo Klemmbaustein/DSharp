@@ -503,6 +503,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
+	this->methods.clear();
 	this->classStream.reset();
 	this->usedDestructor = &baseDestructor;
 	std::vector<AttribInfo> currentAttributes;

@@ -327,7 +327,7 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 		if (with->context->service)
 		{
 			with->context->service->files[with->scopeFile->name].variables
-				.push_back(ScannedVariable(&i, this, nullptr, memberName));
+				.push_back(ScannedVariable(&i, this, with->scopeFile, memberName));
 		}
 #endif
 

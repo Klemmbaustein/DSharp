@@ -41,6 +41,19 @@ namespace ds
 	public:
 		LanguageService(LanguageContext* context);
 
+		std::vector<std::string> scopeKeywords = {
+			"return",
+			"if",
+			"else",
+			"for",
+			"continue",
+			"while",
+			"break",
+			"throw",
+			"const",
+			"var",
+		};
+
 		void addString(const std::string& content, std::string name);
 		void updateFile(const std::string& content, std::string name);
 
@@ -61,6 +74,7 @@ namespace ds
 		}
 
 		bool hasChanges = false;
+		LanguageContext* language = nullptr;
 
 		std::vector<AutoCompleteResult> completeType(ScannedType* type, CompletionType options);
 
