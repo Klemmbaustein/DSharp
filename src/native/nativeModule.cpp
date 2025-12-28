@@ -54,9 +54,17 @@ std::string NativeFunction::getFullName() const
 	}
 	return this->moduleName + "::" + this->className + "." + this->name;
 }
+
 bool ds::NativeFunction::discardable() const
 {
 	return true;
+}
+
+ds::TypeId ds::NativeModule::addAttribute(Attribute* attrib)
+{
+	attrib->moduleName = this->name;
+	this->attributes.push_back(attrib);
+	return attrib->getType();
 }
 
 BytecodeBuffer ds::NativeFunction::compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const
@@ -118,10 +126,6 @@ void ds::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction fun
 void ds::NativeModule::initialize()
 {
 	for (auto& i : this->functions)
-	{
-		i->moduleName = this->name;
-	}
-	for (auto& i : this->attributes)
 	{
 		i->moduleName = this->name;
 	}

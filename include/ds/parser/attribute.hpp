@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <set>
+#include <map>
+#include <ds/typeId.hpp>
 #include "tokens.hpp"
 
 namespace ds
@@ -18,6 +21,11 @@ namespace ds
 	public:
 		std::string name;
 		std::string moduleName;
+
+		std::set<std::string> attributeParameters;
+
+		TypeId getType() const;
+
 		virtual ~Attribute() = default;
 	};
 
@@ -38,20 +46,25 @@ namespace ds
 				this->attributeTokens = attributeTokens;
 			}
 			std::vector<Token> attributeTokens;
+			std::map<Token, Token> parameters;
+			std::vector<std::string> parametersToString() const;
+
 			Attribute* attribute = nullptr;
 		};
 		void addAttributes(const std::vector<AttribInfo>& newAttributes);
 
 		void resolveAttributes(ParsedFile* file, ErrorContext* errors);
 
+		void clearAttributes();
+
 		template<typename T>
-		Attribute* getAttribute() const
+		const AttribInfo* getAttribute() const
 		{
 			for (auto& i : attributes)
 			{
 				if (dynamic_cast<T*>(i.attribute))
 				{
-					return i.attribute;
+					return &i;
 				}
 			}
 			return nullptr;

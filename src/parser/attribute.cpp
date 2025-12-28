@@ -2,6 +2,8 @@
 #include <ds/parser/error.hpp>
 #include <ds/parser/parser.hpp>
 
+using namespace ds;
+
 void ds::Attributable::addAttributes(const std::vector<AttribInfo>& newAttributes)
 {
 	for (auto& i : newAttributes)
@@ -23,6 +25,51 @@ void ds::Attributable::resolveAttributes(ParsedFile* file, ErrorContext* errors)
 		{
 			errors->error(ErrorCode::parseUnknownSymbol, line.lineTokens->at(0),
 				"Unknown attribute '" + line.lineTokens->at(0).string + "'");
+			continue;
+		}
+
+		while (!line.empty())
+		{
+			Token name = line.get();
+			name.checkIsName(errors);
+
+			if (i.attribute->attributeParameters.find(name.string) == i.attribute->attributeParameters.end())
+			{
+				errors->error(ErrorCode::parseUnknownSymbol, name,
+					"Unknown attribute parameter '" + name.string + "'");
+			}
+
+			if (line.expect("=", errors))
+			{
+				break;
+			}
+
+			Token value = line.get();
+
+			i.parameters.insert({ name, value });
 		}
 	}
+}
+
+std::vector<std::string> ds::Attributable::AttribInfo::parametersToString() const
+{
+	std::vector<std::string> result;
+
+	for (std::pair<Token, Token> i : this->parameters)
+	{
+		i.second.unquoteString();
+		result.push_back(i.first.string + "=" + i.second.string);
+	}
+
+	return result;
+}
+
+void ds::Attributable::clearAttributes()
+{
+	this->attributes.clear();
+}
+
+TypeId ds::Attribute::getType() const
+{
+	return typeIdFromName(this->moduleName + "::" + this->name);
 }

@@ -4,13 +4,19 @@
 #include <vector>
 #include "class.hpp"
 #include "typeId.hpp"
+#include <optional>
 
 namespace ds
 {
 	struct TypeMember
 	{
 		TypeId type = 0;
+		TypeId attributeType = 0;
 		std::string name;
+		std::vector<std::string> parameterData;
+
+		std::optional<std::string> getParameterValue(const std::string& name) const;
+
 		bytecodeOffset offset = 0;
 	};
 

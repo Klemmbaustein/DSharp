@@ -285,9 +285,9 @@ ds::NativeModule ds::modules::system::createModule()
 		IntType::getInstance(),
 		"compareString", &string_compare));
 
-	out.attributes.push_back(new EntryPointAttribute());
-	out.attributes.push_back(new DiscardAttribute());
-	out.attributes.push_back(new ReflectAttribute());
+	out.addAttribute(new EntryPointAttribute());
+	out.addAttribute(new DiscardAttribute());
+	out.addAttribute(new ReflectAttribute());
 
 	return out;
 }

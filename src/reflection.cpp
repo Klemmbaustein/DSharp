@@ -12,6 +12,21 @@ RuntimeClass* TypeInfo::create(InterpretContext* context) const
 	context->run(this->constructor);
 
 	return context->popValue<RuntimeClass*>();
+
+}
+std::optional<std::string> ds::TypeMember::getParameterValue(const std::string& name) const
+{
+	for (auto& i : this->parameterData)
+	{
+		size_t equals = i.find_first_of('=');
+
+		if (i.substr(0, equals) == name)
+		{
+			return i.substr(equals + 1);
+		}
+	}
+
+	return {};
 }
 
 bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const

@@ -60,6 +60,8 @@ namespace ds
 
 		void merge(const Token& other);
 
+		bool unquoteString();
+
 		bool operator<(const Token& other) const
 		{
 			return this->string < other.string;

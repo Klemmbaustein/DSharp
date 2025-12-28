@@ -59,17 +59,12 @@ namespace ds
 	{
 		std::string name;
 
-		std::vector<NativeFunction*> functions;
-
 		NativeFunction* addFunction(NativeFunction function);
 
-		std::vector<Attribute*> attributes;
-		std::vector<Type*> types;
-		std::vector<EnumType*> enums;
 
 		Type* getType(const std::string& name);
 
-		template<typename TNative>
+		template <typename TNative>
 		ClassType* createClass(std::string name, ClassType* derived = nullptr)
 		{
 			auto cls = new ClassType();
@@ -100,19 +95,37 @@ namespace ds
 
 		void addEnumIntValue(EnumType* type, std::string name, int value);
 
-		template<typename T>
+		template <typename T>
 		void addEnumValue(EnumType* type, std::string name, T value)
 		{
 			addEnumIntValue(type, name, int(value));
 		}
+
+		ds::TypeId addAttribute(Attribute* attrib);
 
 		void addClassConstructor(ClassType* type, NativeFunction constructor);
 		void addClassMethod(ClassType* type, NativeFunction function);
 		void addStructMethod(ClassType* type, NativeFunction function);
 		void addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId);
 
+		void addType(Type* newType)
+		{
+			this->types.push_back(newType);
+		}
+
 		void initialize();
 
 		Module create() const;
+
+		const std::vector<NativeFunction*>& getFunctions() const
+		{
+			return this->functions;
+		}
+
+	private:
+		std::vector<NativeFunction*> functions;
+		std::vector<Attribute*> attributes;
+		std::vector<Type*> types;
+		std::vector<EnumType*> enums;
 	};
 } // namespace ds

@@ -138,9 +138,11 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 
 				if (reflectAttribute)
 				{
-					members.push_back(TypeMember{
+					members.push_back(TypeMember {
 						.type = m.second.type->id,
+						.attributeType = reflectAttribute->attribute->getType(),
 						.name = m.second.name.string,
+						.parameterData = reflectAttribute->parametersToString(),
 						.offset = m.second.offset,
 					});
 				}

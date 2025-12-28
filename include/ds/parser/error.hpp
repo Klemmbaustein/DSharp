@@ -31,7 +31,7 @@ namespace ds
 		/// E3006 unknown module.
 		parseUnknownModule = 3006,
 		/// E3007 unknown member.
-		parseUnknowmMember = 3007,
+		parseUnknownMember = 3007,
 		/// E3008 this value cannot be written to.
 		parseReadOnlyValue = 3008,
 		/// E3009 variable declared with "var" must have an initializer.

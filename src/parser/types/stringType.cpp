@@ -35,13 +35,12 @@ ExpressionResult ds::StringType::compileValue(Token first, TokenLine& line,
 		return compileFormatString(first, line, errors, with);
 	}
 
-	if (first.string.size() < 2 || first.string[0] != '"' || first.string[first.string.size() - 1] != '"')
+	if (first.unquoteString())
 	{
-		return ExpressionResult();
-	}
+		return compileStringValue(first.string, with);
 
-	std::string content = first.string.substr(1, first.string.size() - 2);
-	return compileStringValue(content, with);
+	}
+	return ExpressionResult();
 }
 
 ExpressionResult ds::StringType::compileCast(ExpressionResult value, ParsedScope* with)
@@ -189,18 +188,8 @@ ExpressionResult ds::StringType::compileFormatString(Token first, TokenLine& lin
 	return result;
 }
 
-bool replace(std::string& str, const std::string& from, const std::string& to)
-{
-	size_t start_pos = str.find(from);
-	if (start_pos == std::string::npos)
-		return false;
-	str.replace(start_pos, from.length(), to);
-	return true;
-}
 ExpressionResult ds::StringType::compileStringValue(std::string str, ParsedScope* with)
 {
-	replace(str, "\\n", "\n");
-
 	ExpressionResult result;
 
 	// Include the null terminator as well

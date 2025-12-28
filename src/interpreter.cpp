@@ -63,7 +63,7 @@ void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 		std::string second = i.substr(lastColon + 1);
 
 		bool found = false;
-		for (auto& fn : this->language->languageModules[first]->functions)
+		for (auto& fn : this->language->languageModules[first]->getFunctions())
 		{
 			if (fn->getFullName() == i)
 			{

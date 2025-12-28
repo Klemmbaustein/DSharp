@@ -101,6 +101,25 @@ void ds::Token::checkIsName(ErrorContext* errors) const
 	}
 }
 
+static bool replace(std::string& str, const std::string& from, const std::string& to)
+{
+	size_t start_pos = str.find(from);
+	if (start_pos == std::string::npos)
+		return false;
+	str.replace(start_pos, from.length(), to);
+	return true;
+}
+bool ds::Token::unquoteString()
+{
+	if (string.size() < 2 || string[0] != '"' || string[string.size() - 1] != '"')
+	{
+		return false;
+	}
+	string = string.substr(1, string.size() - 2);
+	replace(string, "\\n", "\n");
+	return true;
+}
+
 void ds::TokenStream::fromFile(std::string path, ErrorContext* errors)
 {
 	std::ifstream file = std::ifstream(path);
