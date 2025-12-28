@@ -112,6 +112,8 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 {
 	TokenLine line;
 
+	this->arguments.clear();
+
 	if (!argumentTokens.empty())
 	{
 		line.lineTokens = &argumentTokens;
