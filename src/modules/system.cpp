@@ -182,6 +182,10 @@ static void map_remove(InterpretContext* context)
 	context->popBytes(buffer.data(), key.typeSize);
 
 	map->remove(buffer.data(), key, context);
+	if (map->keyIsClassType)
+	{
+		context->destruct(MapData::getClass(buffer.data()));
+	}
 
 	return;
 }
@@ -224,31 +228,41 @@ MapData::Node*& ds::modules::system::MapData::getNode(uint8_t* key, GenericData 
 
 void ds::modules::system::MapData::remove(uint8_t* key, GenericData keyType, InterpretContext* context)
 {
-	MapData::Node*& node = getNode(key, keyType, context);
-	if (keyIsClassType)
-	{
-		context->destruct(MapData::getClass(key));
-	}
+	Node*& node = getNode(key, keyType, context);
 
 	if (node)
 	{
+		Node* oldNode = node;
+		if (keyIsClassType)
+		{
+			context->destruct(MapData::getClass(node->key));
+		}
+		if (valueIsClassType)
+		{
+			context->destruct(MapData::getClass(node->value));
+		}
 		if (!node->a)
 		{
 			node = node->b;
+			delete oldNode;
 			return;
 		}
 		if (!node->b)
 		{
 			node = node->a;
+			delete oldNode;
 			return;
 		}
 
-		MapData::Node*& minimumNode = getMinimumNode(node->b);
+		Node*& minimumNode = getMinimumNode(node->b);
 
 		node->key = minimumNode->key;
 		node->value = minimumNode->value;
 
+		oldNode = minimumNode;
+
 		minimumNode = minimumNode->b;
+		delete oldNode;
 	}
 	else
 	{
@@ -317,6 +331,8 @@ void ds::modules::system::MapData::deleteNode(Node* target, InterpretContext* co
 		context->destruct(MapData::getClass(target->value));
 	}
 	delete[] target->value;
+
+	delete target;
 }
 
 int ds::modules::system::MapData::compare(uint8_t* a, uint8_t* b, GenericData type, InterpretContext* context,
