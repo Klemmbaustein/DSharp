@@ -28,7 +28,6 @@ namespace ds
 
 		Token()
 		{
-
 		}
 
 		Token(std::string str, TokenPos pos)
@@ -72,8 +71,8 @@ namespace ds
 
 	struct TokenLine
 	{
-		Token peek();
-		Token get();
+		const Token& peek();
+		const Token& get();
 		bool expect(std::string token, ErrorContext* errors);
 		bool empty() const;
 
@@ -82,7 +81,7 @@ namespace ds
 
 		bool contains(std::string token) const;
 
-		Token previous();
+		const Token& previous();
 
 		size_t savePosition() const;
 

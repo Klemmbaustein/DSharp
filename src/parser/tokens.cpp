@@ -51,6 +51,8 @@ namespace ds
 		'\n',
 	};
 
+	static Token EMPTY_TOKEN = Token();
+
 } // namespace ds
 
 using namespace ds;
@@ -220,28 +222,30 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 			inComment = true;
 			continue;
 		}
-		bool foundSpecial = false;
-		for (auto& i : specialWords)
+
+		if (specialChars.find(newChar) != specialChars.end() ||
+			(newChar == '.' && !isNumber(currentWord.string, false)))
 		{
-			if (i[0] == newChar && tryReadWord(stream, i, 1))
+			bool foundSpecial = false;
+			for (auto& i : specialWords)
 			{
-				addToken(currentWord);
-				currentWord = newToken();
-				currentWord.addStr(i);
-				currentWord.position.startPos -= uint32_t(i.size());
-				currentWord.position.endPos -= uint32_t(i.size());
-				addToken(currentWord);
+				if (i[0] == newChar && tryReadWord(stream, i, 1))
+				{
+					addToken(currentWord);
+					currentWord = newToken();
+					currentWord.addStr(i);
+					currentWord.position.startPos -= uint32_t(i.size());
+					currentWord.position.endPos -= uint32_t(i.size());
+					addToken(currentWord);
 
-				currentWord = newToken();
-				foundSpecial = true;
-				break;
+					currentWord = newToken();
+					foundSpecial = true;
+					break;
+				}
 			}
-		}
-		if (foundSpecial)
-			continue;
+			if (foundSpecial)
+				continue;
 
-		if (specialChars.find(newChar) != specialChars.end() || (newChar == '.' && !isNumber(currentWord.string, false)))
-		{
 			if (newChar == '[' || newChar == '(')
 			{
 				bracketDepth++;
@@ -388,24 +392,24 @@ void ds::TokenStream::addToken(const Token& target)
 	}
 }
 
-Token ds::TokenLine::peek()
+const Token& ds::TokenLine::peek()
 {
 	if (this->empty())
-		return Token();
+		return EMPTY_TOKEN;
 	return this->lineTokens->at(this->position);
 }
 
-Token ds::TokenLine::get()
+const Token& ds::TokenLine::get()
 {
 	if (this->empty())
-		return Token();
+		return EMPTY_TOKEN;
 
 	return this->lineTokens->at(this->position++);
 }
 
 bool ds::TokenLine::expect(std::string token, ErrorContext* errors)
 {
-	auto next = get();
+	const Token& next = get();
 
 	if (next.string.empty())
 	{
@@ -435,11 +439,11 @@ std::vector<Token> ds::TokenLine::getInBraces(ErrorContext* errors)
 
 	size_t depth = 0;
 
-	auto first = peek();
+	const Token& first = peek();
 
 	do
 	{
-		auto next = get();
+		const Token& next = get();
 
 		if (next.empty())
 		{
@@ -484,11 +488,9 @@ std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* erro
 
 	size_t depth = 0;
 	size_t scopeDepth = 0;
-	Token next;
-
-	do
+	while (true)
 	{
-		next = peek();
+		const Token& next = peek();
 
 		if (next == "(")
 		{
@@ -540,8 +542,7 @@ std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* erro
 		}
 
 		result.push_back(next);
-
-	} while (!next.empty());
+	}
 
 	get();
 	return result;
@@ -559,9 +560,11 @@ bool ds::TokenLine::contains(std::string token) const
 	return false;
 }
 
-Token ds::TokenLine::previous()
+const Token& ds::TokenLine::previous()
 {
-	return this->lineTokens && this->lineTokens->size() ? this->lineTokens->at(this->position - 1) : Token();
+	return this->lineTokens && this->lineTokens->size()
+	           ? this->lineTokens->at(this->position - 1)
+	           : EMPTY_TOKEN;
 }
 
 size_t ds::TokenLine::savePosition() const
@@ -590,7 +593,8 @@ TokenLine ds::TokenStream::next(ErrorContext* errors)
 	}
 	return TokenLine{
 		.lineTokens = &this->lineTokens.at(currentStreamLine++)
-	}.postProcessTokens(errors);
+	}
+	    .postProcessTokens(errors);
 }
 
 TokenLine ds::TokenStream::peek(ErrorContext* errors)
@@ -601,7 +605,8 @@ TokenLine ds::TokenStream::peek(ErrorContext* errors)
 	}
 	return TokenLine{
 		.lineTokens = &this->lineTokens[currentStreamLine]
-	}.postProcessTokens(errors);
+	}
+	    .postProcessTokens(errors);
 }
 
 void ds::TokenStream::addLine(TokenLine ln)

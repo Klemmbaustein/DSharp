@@ -119,6 +119,8 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
+
+		constexpr static TypeId INT_ID = typeIdFromName("int");
 	};
 
 	class CharType : public PrimitiveType
@@ -169,6 +171,7 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
+		constexpr static TypeId FLOAT_ID = typeIdFromName("float");
 	};
 
 	class BoolType : public PrimitiveType

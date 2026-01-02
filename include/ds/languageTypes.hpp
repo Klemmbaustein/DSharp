@@ -14,7 +14,7 @@ namespace ds
 
 	using Int = int32_t;
 	using Float = float;
-	using Pointer = size_t;
+	using Pointer = uintptr_t;
 	using Size = uint32_t;
 	using bytecodeOffset = uint32_t;
 	using TypeId = Size;

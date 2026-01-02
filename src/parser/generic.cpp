@@ -83,6 +83,10 @@ BytecodeBuffer ds::compileGenericArguments(std::vector<Type*> types)
 	{
 		result.pushInt(types[i]->id);
 		result.pushInt(types[i]->size);
+
+		BinaryBuffer buf;
+		buf.addValue(dynamic_cast<ClassType*>(types[i]) ? true : false);
+		result.addOperation(BytecodeOp::push, buf);
 	}
 
 	return result;
@@ -108,7 +112,8 @@ GenericParseData ds::getGenericFunctionData(ds::Function* fn, TokenLine& line, E
 	GenericParseData outData;
 
 	outData.code = compileGenericArguments(args);
-	outData.returnType = convertGenericType(fn->getReturnType(), args, true, line.previous(), errors, with->context->registry);
+	outData.returnType = convertGenericType(fn->getReturnType(), args, true,
+		line.previous(), errors, with->context->registry);
 
 	return outData;
 }

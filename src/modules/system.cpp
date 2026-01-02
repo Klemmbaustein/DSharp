@@ -49,7 +49,7 @@ static void string_compare(InterpretContext* context)
 	auto second = context->popRuntimeString();
 	auto first = context->popRuntimeString();
 
-	auto cmp = std::strcmp(second.ptr(), first.ptr());
+	Int cmp = std::strcmp(second.ptr(), first.ptr());
 
 	context->pushValue(cmp);
 }
@@ -86,7 +86,9 @@ static void array_delete(InterpretContext* context)
 
 static void map_delete(InterpretContext* context)
 {
-	ClassPtr<ArrayData> array = context->popPtr<ArrayData>();
+	ClassPtr<MapData> map = context->popPtr<MapData>();
+
+	map->deleteNode(map->rootNode, context);
 }
 
 static RuntimeFunction mapVTable = RuntimeFunction{
@@ -95,9 +97,15 @@ static RuntimeFunction mapVTable = RuntimeFunction{
 
 static void map_new(InterpretContext* context)
 {
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+
 	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
 	map.classPtr->vtable = &mapVTable;
 	map->comparator = nullptr;
+	map->rootNode = nullptr;
+	map->keyIsClassType = key.isClassType;
+	map->valueIsClassType = value.isClassType;
 	context->pushValue(map);
 }
 
@@ -108,6 +116,228 @@ static void map_insert(InterpretContext* context)
 	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
 
 	std::vector<uint8_t> buffer;
+	buffer.resize(value.typeSize + key.typeSize);
+
+	uint8_t* keyPtr = buffer.data() + value.typeSize;
+	uint8_t* valuePtr = buffer.data();
+
+	context->popBytes(valuePtr, value.typeSize);
+	context->popBytes(keyPtr, key.typeSize);
+
+	map->insert(keyPtr, key, valuePtr, value, context);
+	if (map->keyIsClassType)
+	{
+		context->destruct(MapData::getClass(keyPtr));
+	}
+	if (map->valueIsClassType)
+	{
+		context->destruct(MapData::getClass(valuePtr));
+	}
+
+	return;
+}
+
+static void map_at(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
+
+	std::vector<uint8_t> buffer;
+	buffer.resize(key.typeSize);
+
+	context->popBytes(buffer.data(), key.typeSize);
+
+	MapData::Node*& node = map->getNode(buffer.data(), key, context);
+
+	if (node)
+	{
+		if (map->valueIsClassType)
+		{
+			MapData::getClass(node->value)->addRef();
+		}
+		context->pushBytes(node->value, value.typeSize);
+	}
+	else
+	{
+		context->runtimePanic(RuntimeStr("Map.at failed. No such key."));
+	}
+	if (map->keyIsClassType)
+	{
+		context->destruct(MapData::getClass(buffer.data()));
+	}
+
+	return;
+}
+
+static void map_remove(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
+
+	std::vector<uint8_t> buffer;
+	buffer.resize(key.typeSize);
+
+	context->popBytes(buffer.data(), key.typeSize);
+
+	MapData::Node*& node = map->getNode(buffer.data(), key, context);
+	if (map->keyIsClassType)
+	{
+		context->destruct(MapData::getClass(buffer.data()));
+	}
+
+	if (node)
+	{
+		auto oldA = node->a;
+	}
+	else
+	{
+		context->runtimePanic(RuntimeStr("Map.remove failed. No such key."));
+	}
+
+	return;
+}
+
+MapData::Node*& ds::modules::system::MapData::getNode(uint8_t* key, GenericData keyType, InterpretContext* context)
+{
+	Node** currentNode = &rootNode;
+
+	while (*currentNode)
+	{
+		Node* n = *currentNode;
+		int compareResult = compare(key, n->key, keyType, context, comparator);
+		if (compareResult > 0)
+		{
+			currentNode = &n->a;
+		}
+		if (compareResult > 0)
+		{
+			currentNode = &n->b;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return *currentNode;
+}
+
+void ds::modules::system::MapData::insert(uint8_t* key, GenericData keyType, uint8_t* value,
+	GenericData valueSize, InterpretContext* context)
+{
+	Node*& found = getNode(key, keyType, context);
+
+	if (found)
+	{
+		if (keyType.isClassType)
+		{
+			context->destruct(getClass(found->value));
+		}
+	}
+	else
+	{
+		found = new Node();
+
+		found->key = new uint8_t[keyType.typeSize];
+		memcpy(found->key, key, keyType.typeSize);
+
+		if (keyIsClassType)
+		{
+			getClass(found->key)->addRef();
+		}
+	}
+
+	found->value = new uint8_t[valueSize.typeSize];
+	memcpy(found->value, value, valueSize.typeSize);
+
+	if (valueIsClassType)
+	{
+		getClass(found->value)->addRef();
+	}
+
+	return;
+}
+
+RuntimeClass* ds::modules::system::MapData::getClass(uint8_t* atPtr)
+{
+	return *reinterpret_cast<RuntimeClass**>(atPtr);
+}
+
+void ds::modules::system::MapData::deleteNode(Node* target, InterpretContext* context)
+{
+	if (!target)
+	{
+		return;
+	}
+
+	deleteNode(target->a, context);
+	deleteNode(target->b, context);
+
+	if (keyIsClassType)
+	{
+		context->destruct(MapData::getClass(target->key));
+	}
+	delete[] target->key;
+	if (valueIsClassType)
+	{
+		context->destruct(MapData::getClass(target->value));
+	}
+	delete[] target->value;
+}
+
+int ds::modules::system::MapData::compare(uint8_t* a, uint8_t* b, GenericData type, InterpretContext* context,
+	RuntimeClass* comparator)
+{
+	if (type.id == StringType::STRING_ID)
+	{
+		context->pushBytes(b, type.typeSize);
+		getClass(b)->addRef();
+		context->pushBytes(a, type.typeSize);
+		getClass(a)->addRef();
+
+		string_compare(context);
+
+		return context->popValue<Int>();
+	}
+
+	if (lessThan(a, b, type, context, comparator))
+	{
+		return -1;
+	}
+	else if (lessThan(b, a, type, context, comparator))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+bool ds::modules::system::MapData::lessThan(uint8_t* a, uint8_t* b, GenericData type, InterpretContext* context,
+	RuntimeClass* comparator)
+{
+	if (comparator)
+	{
+		context->pushBytes(b, type.typeSize);
+		context->pushBytes(a, type.typeSize);
+		context->virtualCall(comparator->vtable[1]);
+		return context->popValue<Bool>();
+	}
+
+	switch (type.id)
+	{
+	case IntType::INT_ID:
+		return *(Int*)(a) < *(Int*)(b);
+	case FloatType::FLOAT_ID:
+		return *(Float*)(a) < *(Float*)(b);
+	}
+
+	if (type.isClassType)
+	{
+		return *(Pointer*)(a) < *(Pointer*)(b);
+	}
+
+	return 0;
 }
 
 static void array_new(InterpretContext* context)
@@ -338,6 +568,16 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 		NativeFunction(
 			{ FunctionArgument(firstGeneric, "key"), FunctionArgument(secondGeneric, "value") },
 			nullptr, "insert", &map_insert));
+
+	out.addClassMethod(mapType,
+		NativeFunction(
+			{ FunctionArgument(firstGeneric, "key") },
+			secondGeneric, "at", &map_at));
+
+	out.addClassMethod(mapType,
+		NativeFunction(
+			{ FunctionArgument(firstGeneric, "key") },
+			nullptr, "remove", &map_remove));
 
 	return out;
 }

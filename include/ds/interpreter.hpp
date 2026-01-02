@@ -155,6 +155,7 @@ namespace ds
 		// TODO: replace with some kind of thread pool interface
 		std::map<size_t, std::thread*> backgroundThreads;
 		std::function<void(std::function<void()>)> createBackgroundThread;
+		std::function<void(const char*)> writeError;
 
 		void loadBytecode(BytecodeStream* code);
 

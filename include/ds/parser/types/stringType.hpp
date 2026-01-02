@@ -27,6 +27,8 @@ namespace ds
 		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 			ErrorContext* errors, ParsedScope* with) override;
 
+		static constexpr TypeId STRING_ID = typeIdFromName("string");
+
 	private:
 		ExpressionResult compileFormatString(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with);

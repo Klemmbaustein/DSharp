@@ -240,6 +240,7 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 
 			result.code.pushInt(Size(this->classSize));
 			result.code.add(std::make_shared<BytecodeAllocClass>(this));
+			result.code.addBuffer(getClassGenericCode());
 			result.code.addBuffer(i->compileCall().code);
 			found = true;
 			break;

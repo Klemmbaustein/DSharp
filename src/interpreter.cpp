@@ -150,6 +150,7 @@ void ds::InterpretContext::doUnwind()
 		}
 	}
 	callStackPos = 0;
+	code.streamPos = SIZE_MAX;
 }
 
 void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
@@ -618,20 +619,32 @@ bool ds::InterpretContext::resumeSuspend()
 
 void ds::InterpretContext::runtimePanic(RuntimeStr message)
 {
-	auto stack = getStackTrace();
-	std::printf("%s\n", message.ptr());
+	std::vector<DebugSection*> stack = getStackTrace();
+
+	std::string errorString = message.ptr();
+	errorString.push_back('\n');
 
 	for (DebugSection* i : stack)
 	{
 		if (i)
 		{
-			std::printf("\t%s()\n", i->name.c_str());
+			errorString += "\t" + i->name + "()\n";
 		}
 		else
 		{
-			std::printf("\t<unknown stack frame>\n");
+			errorString += "\t<unknown stack frame>\n";
 		}
 	}
+
+	if (runtime->writeError)
+	{
+		runtime->writeError(errorString.c_str());
+	}
+	else
+	{
+		std::printf("%s", errorString.c_str());
+	}
+
 	doUnwind();
 }
 

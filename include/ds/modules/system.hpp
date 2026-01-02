@@ -1,5 +1,6 @@
 #pragma once
 #include <ds/native/nativeModule.hpp>
+#include <ds/native/nativeGeneric.hpp>
 #include <ds/parser/attribute.hpp>
 #include <cstring>
 
@@ -97,9 +98,32 @@ namespace ds::modules
 		public:
 			class Node
 			{
+			public:
+				Node* a = nullptr;
+				Node* b = nullptr;
+				uint8_t* key = nullptr;
+				uint8_t* value = nullptr;
 			};
 
+			void insert(uint8_t* key, GenericData keyType, uint8_t* value, GenericData valueSize,
+				InterpretContext* context);
+
+			Node*& getNode(uint8_t* key, GenericData keyType, InterpretContext* context);
+
+			static int compare(uint8_t* a, uint8_t* b, GenericData type, InterpretContext* context,
+				RuntimeClass* comparator);
+
+			static bool lessThan(uint8_t* a, uint8_t* b, GenericData type, InterpretContext* context,
+				RuntimeClass* comparator);
+
+			void deleteNode(Node* target, InterpretContext* context);
+
+			static RuntimeClass* getClass(uint8_t* atPtr);
+
 			RuntimeClass* comparator;
+			Node* rootNode = nullptr;
+			bool keyIsClassType = false;
+			bool valueIsClassType = false;
 		};
 
 		RuntimeClass* createArrayObject();

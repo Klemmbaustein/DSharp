@@ -13,7 +13,7 @@ UnwindSection* ds::UnwindInfo::getSectionAt(uint32_t offset)
 
 	for (auto& i : sections)
 	{
-		if (i.offset > offset)
+		if (i.offset >= offset)
 		{
 			return last;
 		}

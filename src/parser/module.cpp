@@ -141,15 +141,25 @@ Module* ds::Module::checkForSubmodule(std::string& name)
 {
 	for (auto& [modName, module] : this->submodules)
 	{
-		std::string moduleName = this->name.empty() ? modName : modName.substr(this->name.size() + 2);
-
-		moduleName.append("::");
-
-		if (name.substr(0, moduleName.size()) == moduleName)
+		if (module.relativeName.size() > name.size())
 		{
-			name = name.substr(moduleName.size());
-			return module;
+			continue;
+		}
+
+		if (name.rfind(module.relativeName, 0) == 0)
+		{
+			name = name.substr(module.relativeName.size());
+			return module.module;
 		}
 	}
 	return nullptr;
+}
+
+void ds::Module::addModule(const std::string& name, Module* module)
+{
+	auto& data = submodules[name];
+
+	data.relativeName = this->name.empty() ? name : name.substr(this->name.size() + 2);
+	data.relativeName.append("::");
+	data.module = module;
 }

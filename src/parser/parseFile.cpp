@@ -147,7 +147,7 @@ ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* erro
 	}
 	else
 	{
-		auto found = currentLine.get();
+		auto& found = currentLine.get();
 
 		if (found != "{" && !found.empty())
 		{

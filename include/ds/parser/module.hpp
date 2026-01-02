@@ -19,7 +19,15 @@ namespace ds
 		std::map<std::string, Attribute*> moduleAttributes;
 		std::map<std::string, EnumType*> moduleEnums;
 
-		std::map<std::string, Module*> submodules;
+		struct SubmoduleData
+		{
+			std::string relativeName;
+			Module* module = nullptr;
+		};
+
+		std::map<std::string, SubmoduleData> submodules;
+
+		void addModule(const std::string& name, Module* module);
 
 		Function* getMethod(Token name, TokenLine& from, ErrorContext* errors);
 		Type* getType(Token name, TokenLine& from, ErrorContext* errors, ParsedFile* file, ParseContext* context);

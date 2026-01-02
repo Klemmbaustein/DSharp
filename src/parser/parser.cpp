@@ -194,7 +194,7 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 
 	for (auto& i : mod->submodules)
 	{
-		emitServiceTypesForModule(i.second);
+		emitServiceTypesForModule(i.second.module);
 	}
 }
 #endif
@@ -224,7 +224,7 @@ void ds::ParseContext::resetModules(LanguageContext* context)
 		{
 			if (m.first.substr(0, moduleName.size()) == moduleName)
 			{
-				i.second.submodules.insert({ m.first, &m.second });
+				i.second.addModule(m.first, &m.second);
 			}
 		}
 	}
@@ -270,7 +270,7 @@ void ds::ParseContext::scanModules()
 	{
 		if (i.second.name != globalModule.name)
 		{
-			globalModule.submodules.insert({ i.first, &i.second });
+			globalModule.addModule(i.first, &i.second);
 		}
 	}
 

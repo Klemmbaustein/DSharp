@@ -49,6 +49,7 @@ namespace ds
 
 		TypeId id = 0;
 		Size typeSize = 0;
+		Bool isClassType = false;
 	};
 
 } // namespace ds
