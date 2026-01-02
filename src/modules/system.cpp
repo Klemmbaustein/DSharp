@@ -149,6 +149,10 @@ static void map_at(InterpretContext* context)
 	context->popBytes(buffer.data(), key.typeSize);
 
 	MapData::Node*& node = map->getNode(buffer.data(), key, context);
+	if (map->keyIsClassType)
+	{
+		context->destruct(MapData::getClass(buffer.data()));
+	}
 
 	if (node)
 	{
@@ -161,10 +165,6 @@ static void map_at(InterpretContext* context)
 	else
 	{
 		context->runtimePanic(RuntimeStr("Map.at failed. No such key."));
-	}
-	if (map->keyIsClassType)
-	{
-		context->destruct(MapData::getClass(buffer.data()));
 	}
 
 	return;
@@ -181,22 +181,20 @@ static void map_remove(InterpretContext* context)
 
 	context->popBytes(buffer.data(), key.typeSize);
 
-	MapData::Node*& node = map->getNode(buffer.data(), key, context);
-	if (map->keyIsClassType)
-	{
-		context->destruct(MapData::getClass(buffer.data()));
-	}
-
-	if (node)
-	{
-		auto oldA = node->a;
-	}
-	else
-	{
-		context->runtimePanic(RuntimeStr("Map.remove failed. No such key."));
-	}
+	map->remove(buffer.data(), key, context);
 
 	return;
+}
+
+MapData::Node*& ds::modules::system::MapData::getMinimumNode(Node*& at)
+{
+	Node** found = &at;
+	while ((*found)->a)
+	{
+		found = &(*found)->a;
+	}
+
+	return *found;
 }
 
 MapData::Node*& ds::modules::system::MapData::getNode(uint8_t* key, GenericData keyType, InterpretContext* context)
@@ -211,7 +209,7 @@ MapData::Node*& ds::modules::system::MapData::getNode(uint8_t* key, GenericData 
 		{
 			currentNode = &n->a;
 		}
-		if (compareResult > 0)
+		else if (compareResult < 0)
 		{
 			currentNode = &n->b;
 		}
@@ -222,6 +220,40 @@ MapData::Node*& ds::modules::system::MapData::getNode(uint8_t* key, GenericData 
 	}
 
 	return *currentNode;
+}
+
+void ds::modules::system::MapData::remove(uint8_t* key, GenericData keyType, InterpretContext* context)
+{
+	MapData::Node*& node = getNode(key, keyType, context);
+	if (keyIsClassType)
+	{
+		context->destruct(MapData::getClass(key));
+	}
+
+	if (node)
+	{
+		if (!node->a)
+		{
+			node = node->b;
+			return;
+		}
+		if (!node->b)
+		{
+			node = node->a;
+			return;
+		}
+
+		MapData::Node*& minimumNode = getMinimumNode(node->b);
+
+		node->key = minimumNode->key;
+		node->value = minimumNode->value;
+
+		minimumNode = minimumNode->b;
+	}
+	else
+	{
+		context->runtimePanic(RuntimeStr("Map.remove failed. No such key."));
+	}
 }
 
 void ds::modules::system::MapData::insert(uint8_t* key, GenericData keyType, uint8_t* value,

@@ -108,7 +108,10 @@ namespace ds::modules
 			void insert(uint8_t* key, GenericData keyType, uint8_t* value, GenericData valueSize,
 				InterpretContext* context);
 
+			void remove(uint8_t* key, GenericData keyType, InterpretContext* context);
+
 			Node*& getNode(uint8_t* key, GenericData keyType, InterpretContext* context);
+			Node*& getMinimumNode(Node*& at);
 
 			static int compare(uint8_t* a, uint8_t* b, GenericData type, InterpretContext* context,
 				RuntimeClass* comparator);
