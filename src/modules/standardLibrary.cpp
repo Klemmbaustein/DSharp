@@ -9,16 +9,16 @@
 
 void ds::modules::registerStandardLibrary(LanguageContext* context)
 {
-	context->addNativeModule(system::createModule());
-	context->addNativeModule(system::async::createModule());
-	context->addNativeModule(system::io::createModule());
+	context->addNativeModule(system::createModule(context));
+	context->addNativeModule(system::async::createModule(context));
+	context->addNativeModule(system::io::createModule(context));
 	context->addNativeModule(system::err::createModule());
-	context->addNativeModule(system::math::createModule());
+	context->addNativeModule(system::math::createModule(context));
 
 #if MODULE_FS
-	context->addNativeModule(system::fs::createModule());
+	context->addNativeModule(system::fs::createModule(context));
 #endif
 #if WITH_WINAPI
-	context->addNativeModule(system::win32::createModule());
+	context->addNativeModule(system::win32::createModule(context));
 #endif
 }

@@ -30,7 +30,7 @@ ExpressionResult ds::FunctionType::compileOperator(Operator operatorType, Expres
 ExpressionResult ds::FunctionType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
-	auto fn = with->scopeFile->getMethod(first.string);
+	auto fn = with->scopeFile->getMethod(first, line, errors);
 
 	if (!fn)
 	{
@@ -55,7 +55,7 @@ ExpressionResult ds::FunctionType::compileValue(Token first, TokenLine& line,
 		args.push_back(i.type);
 	}
 
-	result.type = getInstance(fn->getReturnType(), args);
+	result.type = getInstance(fn->getReturnType(), args, with->context->registry);
 	result.code = fn->compileCallable(errors, with, hintType);
 	if (result.code.instructions.empty())
 	{
@@ -104,12 +104,12 @@ FunctionType* ds::FunctionType::compileType(Token first, TokenLine& line, ErrorC
 
 	if (next != "->")
 	{
-		return getInstance(nullptr, types);
+		return getInstance(nullptr, types, file->context->registry);
 	}
 
 	line.get();
 
-	return getInstance(file->getType(line, errors), types);
+	return getInstance(file->getType(line, errors), types, file->context->registry);
 }
 
 ExpressionResult ds::FunctionType::compileCast(ExpressionResult value, ParsedScope* with)
@@ -133,9 +133,13 @@ std::string ds::FunctionType::getFunctionTypeName(Type* returnType, const std::v
 {
 	std::string result = "fn(";
 
-	for (auto& i : arguments)
+	for (size_t i = 0; i < arguments.size(); i++)
 	{
-		result.append(Type::toString(i));
+		result.append(Type::toString(arguments[i]));
+		if (i != arguments.size() - 1)
+		{
+			result.append(", ");
+		}
 	}
 
 	if (returnType)

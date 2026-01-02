@@ -17,17 +17,5 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileOperator(Operator operatorType,
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
-
-		static ListType* getInstance()
-		{
-			if (!instance)
-			{
-				instance = new ListType();
-			}
-			return instance;
-		}
-
-	private:
-		static inline ListType* instance = nullptr;
 	};
 } // namespace ds

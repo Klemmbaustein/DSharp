@@ -1,6 +1,6 @@
 #include <ds/modules/system.async.hpp>
 #include <ds/parser/types/taskType.hpp>
-#include <print>
+#include <ds/language.hpp>
 #include <thread>
 
 using namespace ds;
@@ -63,12 +63,12 @@ static void task_complete(InterpretContext* context)
 	context->pushValue(task);
 }
 
-NativeModule ds::modules::system::async::createModule()
+NativeModule ds::modules::system::async::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system::async";
 
-	out.addFunction(NativeFunction({}, TaskType::getInstance(nullptr), "sleep", &async_sleepAndReturn));
+	out.addFunction(NativeFunction({}, TaskType::getInstance(nullptr, &to->registry), "sleep", &async_sleepAndReturn));
 
 	out.addFunction(NativeFunction({}, nullptr, "task.newEmpty", &task_newEmpty));
 

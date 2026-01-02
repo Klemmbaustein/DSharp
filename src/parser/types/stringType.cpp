@@ -51,7 +51,7 @@ ExpressionResult ds::StringType::compileCast(ExpressionResult value, ParsedScope
 ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
-	if (!indexValue.type->sameAs(IntType::getInstance()))
+	if (!with->context->registry->ifTypeIs<IntType>(indexValue.type))
 	{
 		return ExpressionResult();
 	}
@@ -94,7 +94,7 @@ ExpressionResult ds::StringType::compileEqualsTo(ExpressionResult first, Express
 
 	first.code.addOperation(BytecodeOp::equals);
 	first.valid = true;
-	first.type = BoolType::getInstance();
+	first.type = with->context->registry->getEntry<BoolType>();
 	return first;
 }
 
@@ -268,7 +268,7 @@ ExpressionResult ds::StringType::compileMember(ExpressionResult value, TokenLine
 		// string length size (sizeof uint32_t bytes)
 		result.code.pushInt(sizeof(uint32_t));
 		result.code.addOperation(BytecodeOp::classMember);
-		result.type = IntType::getInstance();
+		result.type = with->context->registry->getEntry<IntType>();
 		result.valid = true;
 		return result;
 	}

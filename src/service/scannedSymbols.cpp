@@ -27,7 +27,24 @@ ds::ScannedFunction::ScannedFunction(Function* from, Token atToken, Kind kind, T
 	if (functionReturnType)
 	{
 		returnTypeId = functionReturnType->id;
-		this->returnType = functionReturnType->getName();
+		returnType = Type::toString(functionReturnType);
+	}
+}
+
+ds::ScannedFunction::ScannedFunction(Function* from, const GenericParseData* generic, Token atToken, Kind kind, TokenPos argEnd)
+	: ScannedFunction(from, atToken, kind, argEnd)
+{
+	arguments.clear();
+	for (auto& i : generic->args)
+	{
+		this->arguments.push_back({ Type::toString(i.type), i.name.string });
+	}
+
+	auto functionReturnType = generic->returnType;
+	if (functionReturnType)
+	{
+		returnTypeId = functionReturnType->id;
+		returnType = Type::toString(functionReturnType);
 	}
 }
 

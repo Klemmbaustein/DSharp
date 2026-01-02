@@ -435,13 +435,15 @@ std::vector<Token> ds::TokenLine::getInBraces(ErrorContext* errors)
 
 	size_t depth = 0;
 
+	auto first = peek();
+
 	do
 	{
 		auto next = get();
 
 		if (next.empty())
 		{
-			errors->error(ErrorCode::parseUnexpectedToken, previous(), "Expected a ')'");
+			errors->error(ErrorCode::parseUnexpectedToken, first, "No matching ')' found");
 			break;
 		}
 

@@ -12,6 +12,7 @@ namespace ds
 		uint32_t offset = 0;
 		Type* type = nullptr;
 
+		bool isConst = false;
 		bool isPointerMember = false;
 	};
 
@@ -41,6 +42,13 @@ namespace ds
 			ErrorContext* errors, ParsedScope* with) override;
 
 		BytecodeBuffer compileNullCheck() const;
+
+		virtual std::vector<GenericArgument> getGenericArguments() override;
+
+		std::vector<Type*> getGenericTypes() override;
+
+		Type* instantiateGeneric(std::vector<Type*> types, Token at, ErrorContext* with,
+			TypeRegistry* registry) override;
 	};
 
 	class ClassType : public Type
@@ -91,6 +99,12 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
+
+	private:
+
+		BytecodeBuffer getClassGenericCode();
+		ExpressionResult compileMethod(Token memberName, ExpressionResult value, TokenLine& line,
+			ErrorContext* errors, ParsedScope* with);
 	};
 
 	class NullType : public Type
@@ -103,8 +117,10 @@ namespace ds
 		}
 
 		// Inherited via Type
-		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
-		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType) override;
+		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
+			ExpressionResult& second, ParsedScope* with) override;
+		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors,
+			ParsedScope* with, Type* hintType) override;
 		ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 
 		static NullType* getInstance()

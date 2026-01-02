@@ -17,8 +17,6 @@ namespace ds
 		BytecodeBuffer compileMove(ParsedScope* with) override;
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;
 
-		std::string getName() override;
-
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,

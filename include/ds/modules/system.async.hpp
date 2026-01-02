@@ -6,7 +6,7 @@ namespace ds::modules::system
 {
 	namespace async
 	{
-		NativeModule createModule();
+		NativeModule createModule(LanguageContext* to);
 
 		struct Task;
 

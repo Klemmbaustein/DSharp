@@ -8,14 +8,18 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
 	ExpressionResult result;
-	auto floatValue = second.type ? dynamic_cast<FloatType*>(second.type) : nullptr;
-	if (floatValue)
+	FloatType* floatValue = nullptr;
+	if (with->context->registry->ifTypeIs<FloatType>(second.type, floatValue))
 	{
 		ExpressionResult firstCopy = first;
 		firstCopy.type = second.type;
 		firstCopy.code.addOperation(BytecodeOp::intToFloat);
 		result.type = firstCopy.type;
 		return firstCopy.type->compileOperator(operatorType, firstCopy, second, with);
+	}
+	else if (!with->context->registry->ifTypeIs<IntType>(second.type))
+	{
+		return ExpressionResult();
 	}
 
 	if (operatorType != Operator::less)
@@ -48,7 +52,7 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 	case ds::Operator::less:
 	case ds::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterInt);
-		result.type = BoolType::getInstance();
+		result.type = with->context->registry->getEntry<BoolType>();
 		break;
 	case ds::Operator::unaryMinus:
 		result.code.addOperation(BytecodeOp::negativeInt);
@@ -81,20 +85,27 @@ ExpressionResult ds::IntType::compileValue(Token first, TokenLine& line,
 		return ExpressionResult();
 	}
 
-	int32_t number = std::stoi(first.string);
-
-	if (isNegative)
+	try
 	{
-		number = -number;
-	}
+		int32_t number = std::stoi(first.string);
+		if (isNegative)
+		{
+			number = -number;
+		}
 
-	ExpressionResult result;
-	BinaryBuffer valueBuffer;
-	valueBuffer.addValue(number);
-	result.code.addOperation(BytecodeOp::push, valueBuffer);
-	result.valid = true;
-	result.type = this;
-	return result;
+		ExpressionResult result;
+		BinaryBuffer valueBuffer;
+		valueBuffer.addValue(number);
+		result.code.addOperation(BytecodeOp::push, valueBuffer);
+		result.valid = true;
+		result.type = this;
+		return result;
+	}
+	catch (std::exception& e)
+	{
+		errors->error(ErrorCode::parseInvalidType, first, e.what());
+	}
+	return ExpressionResult();
 }
 
 ExpressionResult ds::IntType::compileCast(ExpressionResult value, ParsedScope* with)
@@ -115,7 +126,7 @@ ExpressionResult ds::IntType::compileToString(ExpressionResult thisValue, ErrorC
 	ExpressionResult result = thisValue;
 	result.code.addNew<BytecodeCallNative>("system::int.toString");
 	result.valid = true;
-	result.type = StringType::getInstance();
+	result.type = with->context->registry->getEntry<StringType>();
 	return result;
 }
 
@@ -157,7 +168,7 @@ ExpressionResult ds::Type::compileEqualsTo(ExpressionResult first, ExpressionRes
 
 	ExpressionResult result;
 	result.valid = true;
-	result.type = BoolType::getInstance();
+	result.type = with->context->registry->getEntry<BoolType>();
 
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
@@ -191,12 +202,41 @@ ScannedType ds::Type::toScanned()
 
 std::string ds::Type::toString(Type* target)
 {
+	if (target && target->isGeneric)
+	{
+		auto args = target->getGenericTypes();
+		std::string outName = target->getName();
+
+		if (args.size())
+		{
+			outName.push_back('<');
+			for (size_t i = 0; i < args.size(); i++)
+			{
+				outName.append(Type::toString(args[i]));
+
+				if (i != args.size() - 1)
+				{
+					outName.append(", ");
+				}
+			}
+			outName.push_back('>');
+		}
+
+		return outName;
+	}
+
 	return target ? target->getName() : "<void>";
 }
 
 ExpressionResult ds::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {
+	if (second.type && !with->context->registry->ifTypeIs<FloatType>(second.type) &&
+		!with->context->registry->ifTypeIs<IntType>(second.type))
+	{
+		return ExpressionResult();
+	}
+
 
 	ExpressionResult result;
 
@@ -238,7 +278,7 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 	case ds::Operator::less:
 	case ds::Operator::greater:
 		result.code.addOperation(BytecodeOp::greaterFloat);
-		result.type = BoolType::getInstance();
+		result.type = with->context->registry->getEntry<BoolType>();
 		break;
 
 	case ds::Operator::unaryMinus:
@@ -307,7 +347,7 @@ ExpressionResult ds::FloatType::compileToString(ExpressionResult thisValue, Erro
 	ExpressionResult result = thisValue;
 	result.code.addNew<BytecodeCallNative>("system::float.toString");
 	result.valid = true;
-	result.type = StringType::getInstance();
+	result.type = with->context->registry->getEntry<StringType>();
 	return result;
 }
 

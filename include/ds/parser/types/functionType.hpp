@@ -25,21 +25,31 @@ namespace ds
 		static FunctionType* compileType(Token first, TokenLine& line, ErrorContext* errors,
 			ParsedFile* file);
 
-		static FunctionType* getInstance(Type* returnType, std::vector<Type*> arguments)
+		std::vector<Type*> getGenericTypes() override
 		{
-			FunctionType*& instance = functionTypes[getFunctionTypeName(returnType, arguments)];
-			if (!instance)
-			{
-				instance = new FunctionType(returnType, arguments);
-			}
-			return instance;
+			std::vector outTypes = arguments;
+			outTypes.push_back(returnType);
+			return outTypes;
+		}
+
+		static FunctionType* getInstance(Type* returnType, std::vector<Type*> arguments, TypeRegistry* registry)
+		{
+			std::vector inArgs = arguments;
+			inArgs.push_back(returnType);
+			return registry->getClassGenericEntry<FunctionType>(inArgs, [&] {
+				return new FunctionType(returnType, arguments);
+			});
+		}
+
+		Type* instantiateGeneric(std::vector<Type*> types, Token at, ErrorContext* with, TypeRegistry* registry) override
+		{
+			auto lastArg = types[types.size() - 1];
+			types.pop_back();
+			return getInstance(lastArg, types, registry);
 		}
 
 		Type* baseType;
 
 		static std::string getFunctionTypeName(Type* returnType, const std::vector<Type*>& arguments);
-
-	private:
-		static inline std::map<std::string, FunctionType*> functionTypes;
 	};
 } // namespace ds

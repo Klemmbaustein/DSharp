@@ -4,6 +4,8 @@
 
 namespace ds
 {
+	struct ParseContext;
+
 	class ArrayType : public ClassType
 	{
 	public:
@@ -19,7 +21,7 @@ namespace ds
 		ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 
-		ExpressionResult getLength(BytecodeBuffer thisValue);
+		ExpressionResult getLength(BytecodeBuffer thisValue, ParseContext* context);
 
 		static ArrayType* getInstance(Type* baseType)
 		{

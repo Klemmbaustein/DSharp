@@ -364,6 +364,10 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 			instr->offset = bytecodePos;
 			if (instr->baseSize > 0)
 			{
+				if (instr->getArgsSize() > 255)
+				{
+					abort();
+				}
 				bytecodePos +=
 					/* operation */ sizeof(BytecodeOp) + /* arguments size */ sizeof(uint8_t) +
 					/* arguments */ instr->getArgsSize();

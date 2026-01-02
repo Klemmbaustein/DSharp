@@ -23,7 +23,8 @@ namespace ds
 
 		void loadAvailableTypes(ParseContext* context);
 
-		Function* getMethod(std::string name);
+		Function* getMethod(TokenLine& from, ErrorContext* errors);
+		Function* getMethod(Token name, TokenLine& from, ErrorContext* errors);
 		Type* getType(TokenLine& from, ErrorContext* errors);
 		Attribute* getAttribute(TokenLine& from);
 		std::pair<EnumType*, std::string> getEnum(TokenLine& from);

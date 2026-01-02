@@ -11,6 +11,7 @@ namespace ds
 	struct ParsedClassMember;
 	struct ClassMember;
 	class ClassType;
+	struct GenericParseData;
 
 	struct ScannedFunction
 	{
@@ -35,6 +36,7 @@ namespace ds
 		Kind kind = Kind::functionCall;
 
 		ScannedFunction(Function* from, Token atToken, Kind kind, TokenPos argEnd = TokenPos());
+		ScannedFunction(Function* from, const GenericParseData* generic, Token atToken, Kind kind, TokenPos argEnd = TokenPos());
 	};
 
 	struct ScannedVariable

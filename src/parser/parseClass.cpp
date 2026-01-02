@@ -201,7 +201,7 @@ std::string ds::ClassLifetimeFunction::getShortName() const
 std::string ds::ClassLifetimeFunction::getFullName() const
 {
 	return this->parent->classModule->name + "::" +
-		   this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
+	       this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
 }
 
 bool ds::ClassLifetimeFunction::discardable() const

@@ -13,10 +13,12 @@ using namespace ds;
 ds::ParseContext::ParseContext(LanguageContext* context)
 {
 	resetModules(context);
+	this->registry = new TypeRegistry(context->registry);
 }
 
 ds::ParseContext::~ParseContext()
 {
+	delete this->registry;
 }
 
 void ds::ParseContext::addFile(std::string filePath)
@@ -91,7 +93,7 @@ BytecodeStream ds::ParseContext::compile()
 #endif
 
 	// if (!this->service)
-	//{
+	// {
 	//	this->compiler.printAssembly();
 	// }
 
@@ -110,16 +112,16 @@ BytecodeStream ds::ParseContext::compile()
 void ds::ParseContext::initializeModules()
 {
 	this->defaultTypes.clear();
-	this->defaultTypes.push_back(IntType::getInstance());
-	this->defaultTypes.push_back(FloatType::getInstance());
-	this->defaultTypes.push_back(BoolType::getInstance());
-	this->defaultTypes.push_back(StringType::getInstance());
-	this->defaultTypes.push_back(CharType::getInstance());
-	this->defaultTypes.push_back(ListType::getInstance());
+	this->defaultTypes.push_back(registry->getEntry<IntType>());
+	this->defaultTypes.push_back(registry->getEntry<FloatType>());
+	this->defaultTypes.push_back(registry->getEntry<BoolType>());
+	this->defaultTypes.push_back(registry->getEntry<StringType>());
+	this->defaultTypes.push_back(registry->getEntry<CharType>());
+	this->defaultTypes.push_back(registry->getEntry<ListType>());
 	this->defaultTypes.push_back(NullType::getInstance());
-	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}));
-	this->defaultTypes.push_back(LambdaType::getInstance());
-	this->defaultTypes.push_back(TaskType::getInstance(nullptr));
+	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}, registry));
+	this->defaultTypes.push_back(registry->getEntry<LambdaType>());
+	this->defaultTypes.push_back(TaskType::getInstance(nullptr, registry));
 
 	scanModules();
 }
@@ -138,7 +140,7 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 
 				if (reflectAttribute)
 				{
-					members.push_back(TypeMember {
+					members.push_back(TypeMember{
 						.type = m.second.type->id,
 						.attributeType = reflectAttribute->attribute->getType(),
 						.name = m.second.name.string,

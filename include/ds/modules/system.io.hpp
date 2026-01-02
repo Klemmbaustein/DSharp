@@ -16,7 +16,7 @@ namespace ds::modules::system
 		 *
 		 * @see ds::modules::createStandardLibrary
 		 */
-		NativeModule createModule();
+		NativeModule createModule(LanguageContext* to);
 
 		class File
 		{

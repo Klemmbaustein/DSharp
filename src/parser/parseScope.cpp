@@ -99,7 +99,8 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 		if (!info.type->hasDefaultValue)
 		{
 			errors->error(ErrorCode::parseVarMustHaveInitializer, info.name,
-				"The variable '" + info.name.string + "' must have an initializer because the type '" + Type::toString(info.type) + "' does not have a default value.");
+				"The variable '" + info.name.string + "' must have an initializer because the type '" +
+					Type::toString(info.type) + "' does not have a default value.");
 			return VariableInfo{
 				.isError = true
 			};
@@ -517,10 +518,12 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		TokenLine conditionTokens;
 		conditionTokens.lineTokens = &conditionLine;
 
+		auto boolType = context->registry->getEntry<BoolType>();
+
 		auto condition = Expression::pushExpression(conditionTokens, errors, false,
-			BoolType::getInstance(), this);
+			boolType, this);
 		conditionTokens.expectEndOfLine(errors);
-		condition.compileToType(first, BoolType::getInstance(), this, errors);
+		condition.compileToType(first, boolType, this, errors);
 
 		auto beginLabel = std::make_shared<BytecodeJumpLabel>("while_begin");
 		this->code->add(beginLabel);
@@ -708,7 +711,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 	auto& iterated = addVariable(Token(".for_iterated" + std::to_string(tempCounter++)), arrayType, errors);
 
 	// The iterator is an int that stores the current index of the array
-	auto iterType = IntType::getInstance();
+	auto iterType = context->registry->getEntry<IntType>();
 	this->code->addBuffer(iterType->defaultValue().code);
 	pushVariableValue(iterType, true);
 	auto& iterator = addVariable(Token(".for_iterator" + std::to_string(tempCounter++)), iterType, errors);
@@ -721,7 +724,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 	// The end of the loop, when
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("for_end");
-	this->code->addBuffer(arrayType->getLength(iterated.readValue(this)).code);
+	this->code->addBuffer(arrayType->getLength(iterated.readValue(this), context).code);
 	this->code->addBuffer(iterator.readValue(this));
 	this->code->addOperation(BytecodeOp::greaterInt);
 

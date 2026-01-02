@@ -1,4 +1,5 @@
 #include <ds/modules/system.math.hpp>
+#include <ds/language.hpp>
 #include <cmath>
 
 using namespace ds;
@@ -60,13 +61,13 @@ static void math_max(InterpretContext* context)
 	context->pushValue<T>(val > max ? max : val);
 }
 
-NativeModule ds::modules::system::math::createModule()
+NativeModule ds::modules::system::math::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system::math";
 
-	auto floatInst = FloatType::getInstance();
-	auto intInst = IntType::getInstance();
+	auto floatInst = to->registry.getEntry<FloatType>();
+	auto intInst = to->registry.getEntry<IntType>();
 
 	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
 		floatInst, "sin", &math_sin));

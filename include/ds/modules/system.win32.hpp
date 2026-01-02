@@ -17,7 +17,7 @@ namespace ds::modules::system
 		 *
 		 * @see ds::modules::createStandardLibrary
 		 */
-		NativeModule createModule();
+		NativeModule createModule(LanguageContext* to);
 	} // namespace win32
 } // namespace ds::modules::system
 #endif

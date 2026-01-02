@@ -6,20 +6,20 @@
 #include <ds/parser/parser.hpp>
 using namespace ds;
 
-Function* ds::Module::getMethod(std::string name)
+Function* ds::Module::getMethod(Token name, TokenLine& from, ErrorContext* errors)
 {
-	auto foundFunction = this->moduleFunctions.find(name);
+	auto foundFunction = this->moduleFunctions.find(name.string);
 
 	if (foundFunction != this->moduleFunctions.end())
 	{
 		return foundFunction->second;
 	}
 
-	Module* foundModule = checkForSubmodule(name);
+	Module* foundModule = checkForSubmodule(name.string);
 
 	if (foundModule)
 	{
-		return foundModule->getMethod(name);
+		return foundModule->getMethod(name.string, from, errors);
 	}
 
 	return nullptr;
@@ -56,6 +56,18 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 #endif
 
 		found = foundType->second;
+
+		if (found->isGeneric)
+		{
+			auto args = found->getGenericArguments();
+
+			auto types = parseGenericArguments(args, from, errors, file);
+
+			if (checkGenericArguments(args, types, name, errors))
+			{
+				found = found->instantiateGeneric(types, name, errors, context->registry);
+			}
+		}
 	}
 
 	if (from.peek() == "?")
@@ -72,7 +84,7 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 	while (from.peek() == "[")
 	{
 		from.get();
-		from.get();
+		from.expect("]", errors);
 		found = ArrayType::getInstance(found);
 	}
 

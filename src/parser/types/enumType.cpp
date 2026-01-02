@@ -1,4 +1,5 @@
 #include <ds/parser/types/enumType.hpp>
+#include <ds/parser/parseScope.hpp>
 using namespace ds;
 
 ExpressionResult ds::EnumType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
@@ -14,9 +15,11 @@ ExpressionResult EnumType::compileValue(Token first, TokenLine& line,
 
 ExpressionResult ds::EnumType::compileCast(ExpressionResult value, ParsedScope* with)
 {
-	if (value.type->sameAs(IntType::getInstance()))
+	IntType* intType = nullptr;
+
+	if (with->context->registry->ifTypeIs<IntType>(value.type, intType))
 	{
-		value.type = IntType::getInstance();
+		value.type = intType;
 		return value;
 	}
 

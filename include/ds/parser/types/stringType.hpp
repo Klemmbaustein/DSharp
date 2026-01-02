@@ -27,18 +27,7 @@ namespace ds
 		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 			ErrorContext* errors, ParsedScope* with) override;
 
-		static StringType* getInstance()
-		{
-			if (!instance)
-			{
-				instance = new StringType();
-			}
-			return instance;
-		}
-
 	private:
-		static inline StringType* instance = nullptr;
-
 		ExpressionResult compileFormatString(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with);
 

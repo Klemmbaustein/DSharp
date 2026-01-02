@@ -4,6 +4,8 @@
 #include <ds/parser/error.hpp>
 #include <ds/languageTypes.hpp>
 #include <ds/service/scannedSymbols.hpp>
+#include <ds/parser/generic.hpp>
+#include <ds/parser/typeRegistry.hpp>
 
 namespace ds
 {
@@ -19,6 +21,7 @@ namespace ds
 		uint32_t size = 0;
 		std::string name;
 		bool hasDefaultValue = true;
+		bool isGeneric = false;
 
 		virtual std::string getName()
 		{
@@ -27,7 +30,7 @@ namespace ds
 
 		void applyName();
 		Type() = default;
-		Type(const Type& other) = delete;
+		Type(const Type&) = default;
 
 		virtual ~Type() = default;
 
@@ -36,6 +39,22 @@ namespace ds
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with, Type* hintType) = 0;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) = 0;
+
+		virtual std::vector<GenericArgument> getGenericArguments()
+		{
+			return {};
+		}
+
+		virtual std::vector<Type*> getGenericTypes()
+		{
+			return {};
+		}
+
+		virtual Type* instantiateGeneric(std::vector<Type*> types, Token at, ErrorContext* with,
+			TypeRegistry* registry)
+		{
+			return nullptr;
+		}
 
 		virtual bool sameAs(Type* other)
 		{
@@ -100,18 +119,6 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
-
-		static IntType* getInstance()
-		{
-			if (!instance)
-			{
-				instance = new IntType();
-			}
-			return instance;
-		}
-
-	private:
-		static inline IntType* instance = nullptr;
 	};
 
 	class CharType : public PrimitiveType
@@ -162,18 +169,6 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
-
-		static FloatType* getInstance()
-		{
-			if (!instance)
-			{
-				instance = new FloatType();
-			}
-			return instance;
-		}
-
-	private:
-		static inline FloatType* instance = nullptr;
 	};
 
 	class BoolType : public PrimitiveType
@@ -192,17 +187,5 @@ namespace ds
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
-
-		static BoolType* getInstance()
-		{
-			if (!instance)
-			{
-				instance = new BoolType();
-			}
-			return instance;
-		}
-
-	private:
-		static inline BoolType* instance = nullptr;
 	};
 } // namespace ds

@@ -75,9 +75,9 @@ BytecodeBuffer ds::NativeFunction::compileCallable(ErrorContext* errors, ParsedS
 	return result;
 }
 
-NativeFunction* ds::NativeModule::addFunction(NativeFunction function)
+NativeFunction* ds::NativeModule::addFunction(const NativeFunction& function)
 {
-	return this->functions.emplace_back(new NativeFunction(function));
+	return this->functions.emplace_back(function.create());
 }
 
 EnumType* ds::NativeModule::createEnum(std::string name)
@@ -93,20 +93,12 @@ void ds::NativeModule::addEnumIntValue(EnumType* type, std::string name, int val
 	type->values.insert({ Token(name), value });
 }
 
-void ds::NativeModule::addClassConstructor(ClassType* type, NativeFunction constructor)
+void ds::NativeModule::addClassConstructor(ClassType* type, const NativeFunction& function)
 {
-	type->constructors.push_back(addFunction(constructor));
+	type->constructors.push_back(addFunction(function));
 }
 
-void ds::NativeModule::addClassMethod(ClassType* type, NativeFunction function)
-{
-	auto fn = addFunction(function);
-	type->methods.insert({ fn->name,
-		fn });
-	fn->className = type->name;
-}
-
-void ds::NativeModule::addStructMethod(ClassType* type, NativeFunction function)
+void ds::NativeModule::addClassMethod(ClassType* type, const NativeFunction& function)
 {
 	auto fn = addFunction(function);
 	type->methods.insert({ fn->name,
@@ -114,7 +106,15 @@ void ds::NativeModule::addStructMethod(ClassType* type, NativeFunction function)
 	fn->className = type->name;
 }
 
-void ds::NativeModule::addClassVirtualMethod(ClassType* type, NativeFunction function, bytecodeOffset virtualId)
+void ds::NativeModule::addStructMethod(ClassType* type, const NativeFunction& function)
+{
+	auto fn = addFunction(function);
+	type->methods.insert({ fn->name,
+		fn });
+	fn->className = type->name;
+}
+
+void ds::NativeModule::addClassVirtualMethod(ClassType* type, const NativeFunction& function, bytecodeOffset virtualId)
 {
 	auto fn = addFunction(function);
 	type->methods.insert({ fn->name,

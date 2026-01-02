@@ -209,9 +209,24 @@ void ds::ParsedFile::compile(ParseContext* context)
 	}
 }
 
-Function* ParsedFile::getMethod(std::string name)
+Function* ParsedFile::getMethod(TokenLine& from, ErrorContext* errors)
 {
-	Function* found = this->fileModule->getMethod(name);
+	auto initialPos = from.savePosition();
+	auto name = from.get();
+	auto m = getMethod(name, from, errors);
+	if (m)
+	{
+		return m;
+	}
+	from.loadPosition(initialPos);
+	return nullptr;
+}
+
+Function* ds::ParsedFile::getMethod(Token name, TokenLine& from, ErrorContext* errors)
+{
+	auto pos = from.savePosition();
+
+	Function* found = this->fileModule->getMethod(name, from, errors);
 	if (found)
 		return found;
 
@@ -219,10 +234,12 @@ Function* ParsedFile::getMethod(std::string name)
 	{
 		if (!i.second)
 			continue;
-		found = i.second->getMethod(name);
+		from.loadPosition(pos);
+		found = i.second->getMethod(name, from, errors);
 		if (found)
 			return found;
 	}
+	from.loadPosition(pos);
 	return nullptr;
 }
 

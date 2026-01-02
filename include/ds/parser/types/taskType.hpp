@@ -7,23 +7,13 @@ namespace ds
 	class TaskType : public ClassType
 	{
 	public:
-		TaskType(Type* baseType);
+		TaskType(Type* baseType, TypeRegistry* registry);
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
-
-		static TaskType* getInstance(Type* baseType)
-		{
-			TaskType*& instance = taskTypes[baseType];
-			if (!instance)
-			{
-				instance = new TaskType(baseType);
-			}
-			return instance;
-		}
 
 		ExpressionResult compileAwait(ExpressionResult taskExpr, ExpressionResult returnTaskExpr,
 			ParsedScope* with);
@@ -33,7 +23,28 @@ namespace ds
 
 		Type* baseType;
 
-	private:
-		static inline std::map<Type*, TaskType*> taskTypes;
+		std::vector<GenericArgument> getGenericArguments() override
+		{
+			return { GenericArgument(Token("T"), nullptr) };
+		}
+
+		std::vector<Type*> getGenericTypes() override
+		{
+			if (baseType)
+				return { baseType };
+			return {};
+		}
+
+		Type* instantiateGeneric(std::vector<Type*> types, Token at, ErrorContext* with, TypeRegistry* registry) override
+		{
+			return getInstance(types[0], registry);
+		}
+
+		static TaskType* getInstance(Type* baseType, TypeRegistry* registry)
+		{
+			return registry->getClassGenericEntry<TaskType>({ baseType }, [&] {
+				return new TaskType(baseType, registry);
+			});
+		}
 	};
 } // namespace ds

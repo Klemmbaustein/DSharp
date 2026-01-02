@@ -1,6 +1,10 @@
 #include <ds/modules/system.hpp>
 #include <ds/parser/types/stringType.hpp>
 #include <cstring>
+#include <ds/language.hpp>
+#include <ds/parser/types/functionType.hpp>
+#include <ds/parser/types/genericArgument.hpp>
+#include <ds/native/nativeGeneric.hpp>
 
 using namespace ds;
 using namespace ds::modules::system;
@@ -78,6 +82,32 @@ static void array_delete(InterpretContext* context)
 		}
 		free(array->data);
 	}
+}
+
+static void map_delete(InterpretContext* context)
+{
+	ClassPtr<ArrayData> array = context->popPtr<ArrayData>();
+}
+
+static RuntimeFunction mapVTable = RuntimeFunction{
+	.nativeFn = &map_delete
+};
+
+static void map_new(InterpretContext* context)
+{
+	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
+	map.classPtr->vtable = &mapVTable;
+	map->comparator = nullptr;
+	context->pushValue(map);
+}
+
+static void map_insert(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
+
+	std::vector<uint8_t> buffer;
 }
 
 static void array_new(InterpretContext* context)
@@ -225,24 +255,27 @@ static void fn_new_native(InterpretContext* context)
 	context->pushValue(RuntimeClass::allocateClass(0, entries));
 }
 
-ds::NativeModule ds::modules::system::createModule()
+ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system";
 
+	auto intType = to->registry.getEntry<IntType>();
+	auto stringType = to->registry.getEntry<StringType>();
+
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("position")), FunctionArgument(IntType::getInstance(), Token("length")) }, StringType::getInstance(),
+		{ FunctionArgument(intType, Token("position")), FunctionArgument(intType, Token("length")) }, stringType,
 		"string.substr",
 		[](InterpretContext* context) {
 			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
 		}));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("intValue")) }, StringType::getInstance(),
+		{ FunctionArgument(intType, Token("intValue")) }, stringType,
 		"int.toString", &int_toString));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), Token("floatValue")) }, StringType::getInstance(),
+		{ FunctionArgument(intType, Token("floatValue")) }, stringType,
 		"float.toString", &float_toString));
 
 	out.addFunction(NativeFunction(
@@ -274,20 +307,37 @@ ds::NativeModule ds::modules::system::createModule()
 		"fn.new.lambda", &fn_new_lambda));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), Token("str")) }, StringType::getInstance(),
+		{ FunctionArgument(stringType, Token("str")) }, stringType,
 		"format", &string_format));
 
 	out.addFunction(NativeFunction(
-		{
-			FunctionArgument(StringType::getInstance(), Token("str1")),
-			FunctionArgument(StringType::getInstance(), Token("str2"))
-		},
-		IntType::getInstance(),
+		{ FunctionArgument(stringType, Token("str1")),
+			FunctionArgument(stringType, Token("str2")) },
+		intType,
 		"compareString", &string_compare));
 
 	out.addAttribute(new EntryPointAttribute());
 	out.addAttribute(new DiscardAttribute());
 	out.addAttribute(new ReflectAttribute());
+
+	auto mapType = out.createGenericClass<MapData>("Map", { GenericArgument("K"), GenericArgument("V") });
+
+	out.addClassConstructor(mapType, NativeFunction({}, nullptr, "Map.new", map_new));
+
+	auto firstGeneric = GenericArgumentType::getInstance(0, false);
+	auto secondGeneric = GenericArgumentType::getInstance(1, false);
+
+	mapType->members.push_back(ClassMember{
+		.name = "comparator",
+		.offset = offsetof(MapData, comparator),
+		.type = FunctionType::getInstance(to->registry.getEntry<BoolType>(),
+			{ firstGeneric, secondGeneric }, &to->registry)
+	        ->nullable });
+
+	out.addClassMethod(mapType,
+		NativeFunction(
+			{ FunctionArgument(firstGeneric, "key"), FunctionArgument(secondGeneric, "value") },
+			nullptr, "insert", &map_insert));
 
 	return out;
 }
@@ -299,4 +349,8 @@ RuntimeClass* ds::modules::system::createArrayObject()
 	};
 
 	return RuntimeClass::allocateClass(sizeof(ArrayData), &arrayVTable);
+}
+RuntimeClass* ds::modules::system::createMapObject()
+{
+	return RuntimeClass::allocateClass(sizeof(MapData), &mapVTable);
 }

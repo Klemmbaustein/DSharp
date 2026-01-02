@@ -154,6 +154,11 @@ ExpressionResult ds::Expression::compileOperatorBetween(ExpressionResult a, Expr
 {
 	auto oldType = a.type;
 
+	if (!a.type || !b.type)
+	{
+		return ExpressionResult();
+	}
+
 	if (op == Operator::equals || op == Operator::notEquals)
 	{
 		a = a.type->compileEqualsTo(a, b, opToken, errors, scope);
@@ -233,7 +238,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			//				scope->context->service->files[scope->scopeFile->name].variables.push_back(value);
 			//			}
 			// #endif
-			result.type = IntType::getInstance();
+			result.type = scope->context->registry->getEntry<IntType>();
 			result.valid = true;
 		}
 		else
@@ -334,12 +339,12 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		return result;
 	}
 
-	// If this comes after the value, probably a function call
-	if (currentLine.peek() == "(")
+	auto prevPos = currentLine.savePosition();
+	Function* function = scope->scopeFile->getMethod(value, currentLine, errors);
+	if (function)
 	{
-		Function* function = scope->scopeFile->getMethod(value.string);
-
-		if (function)
+		// Only compile if it's a function call
+		if (currentLine.peek() == "(")
 		{
 			auto args = currentLine.getInBraces(errors);
 			auto argsEnd = currentLine.previous();
@@ -347,9 +352,9 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			TokenLine argsLine;
 			argsLine.lineTokens = &args;
 
-			auto functionArgs = function->getArguments();
+			GenericParseData generic = getGenericFunctionData(function, currentLine, errors, scope);
 
-			ExpressionResult callCode = parseFunctionArguments(value, functionArgs,
+			ExpressionResult callCode = parseFunctionArguments(value, generic.args,
 				argsLine, errors, true, scope);
 
 #ifdef WITH_LANGUAGE_SERVICE
@@ -361,8 +366,9 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			}
 #endif
 
+			callCode.code.addBuffer(generic.code);
 			auto fn = function->compileCall();
-
+			fn.type = generic.returnType;
 			if (fn.type)
 			{
 				fn.code.addBuffer(fn.type->compileEndMove(scope));
@@ -375,6 +381,8 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 
 			return callCode;
 		}
+
+		currentLine.loadPosition(prevPos);
 	}
 
 	// Try to convert it into each default type.

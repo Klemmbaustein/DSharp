@@ -33,7 +33,7 @@ ExpressionResult ds::ArrayType::compileValue(Token first, TokenLine& line, Error
 
 ExpressionResult ds::ArrayType::compileCast(ExpressionResult value, ParsedScope* with)
 {
-	if (value.type->sameAs(ListType::getInstance()))
+	if (with->context->registry->ifTypeIs<ListType>(value.type))
 	{
 		return makeArrayValue({}, with);
 	}
@@ -48,7 +48,7 @@ ExpressionResult ds::ArrayType::compileMember(ExpressionResult value, TokenLine&
 	if (memberName == "length")
 	{
 		line.get();
-		return getLength(value.code);
+		return getLength(value.code, with->context);
 	}
 
 	value.code.pushInt(this->baseType->size);
@@ -62,7 +62,7 @@ ExpressionResult ds::ArrayType::compileIndex(ExpressionResult thisValue, Express
 	uint32_t elementSize = this->baseType->size;
 	ExpressionResult result;
 
-	if (!indexValue.type->sameAs(IntType::getInstance()))
+	if (!with->context->registry->ifTypeIs<IntType>(indexValue.type))
 	{
 		return ExpressionResult();
 	}
@@ -77,7 +77,7 @@ ExpressionResult ds::ArrayType::compileIndex(ExpressionResult thisValue, Express
 	return result;
 }
 
-ExpressionResult ds::ArrayType::getLength(BytecodeBuffer thisValue)
+ExpressionResult ds::ArrayType::getLength(BytecodeBuffer thisValue, ParseContext* context)
 {
 	ExpressionResult result;
 	result.code.addBuffer(thisValue);
@@ -86,7 +86,7 @@ ExpressionResult ds::ArrayType::getLength(BytecodeBuffer thisValue)
 	// array length size (sizeof uint32_t bytes)
 	result.code.pushInt(sizeof(uint32_t));
 	result.code.addOperation(BytecodeOp::classMember);
-	result.type = IntType::getInstance();
+	result.type = context->registry->getEntry<IntType>();
 	result.valid = true;
 	return result;
 }

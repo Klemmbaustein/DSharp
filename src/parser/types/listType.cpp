@@ -18,6 +18,12 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 	while (true)
 	{
 		auto next = line.get();
+
+		if (next.empty())
+		{
+			break;
+		}
+
 		if (next == "]")
 		{
 			depth--;

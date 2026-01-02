@@ -1,5 +1,6 @@
 #include <ds/modules/system.io.hpp>
 #include <ds/parser/types/stringType.hpp>
+#include <ds/language.hpp>
 #include <cstring>
 #include <cstdio>
 
@@ -132,47 +133,49 @@ static void io_popen(InterpretContext* context)
 }
 #endif
 
-ds::NativeModule ds::modules::system::io::createModule()
+ds::NativeModule ds::modules::system::io::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system::io";
 
+	auto stringType = to->registry.getEntry<StringType>();
+
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), "toWrite") }, nullptr,
+		{ FunctionArgument(stringType, "toWrite") }, nullptr,
 		"writeln", &io_writeLine));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), "toWrite") }, nullptr,
+		{ FunctionArgument(stringType, "toWrite") }, nullptr,
 		"write", &io_write));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(IntType::getInstance(), "toWrite") }, nullptr,
+		{ FunctionArgument(to->registry.getEntry<IntType>(), "toWrite") }, nullptr,
 		"writeInt", &io_writeInt));
 
 	out.addFunction(NativeFunction(
-		{}, StringType::getInstance(),
+		{}, stringType,
 		"readln", &io_readLine));
 
 	auto fileClass = out.createClass<io::File>("File");
 
 	out.addClassConstructor(fileClass,
 		NativeFunction(
-			{ FunctionArgument(StringType::getInstance(), "path") }, nullptr,
+			{ FunctionArgument(stringType, "path") }, nullptr,
 			"File.new", &io_file_construct));
 
 	out.addClassMethod(fileClass,
 		NativeFunction(
-			{}, StringType::getInstance(),
+			{}, stringType,
 			"readln", &io_file_readLine));
 
 	out.addClassMethod(fileClass,
 		NativeFunction(
-			{}, BoolType::getInstance(),
+			{}, to->registry.getEntry<BoolType>(),
 			"isEmpty", &io_file_isEmpty));
 
 #if HAS_POPEN
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(StringType::getInstance(), "command") }, fileClass,
+		{ FunctionArgument(stringType, "command") }, fileClass,
 		"popen", &io_popen));
 #endif
 

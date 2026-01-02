@@ -40,6 +40,22 @@ ds::NullableClassType::NullableClassType(ClassType* from)
 	this->size = from->size;
 	this->from = from;
 	this->name = from->name + "?";
+	this->isGeneric = from->isGeneric;
+}
+
+std::vector<GenericArgument> ds::NullableClassType::getGenericArguments()
+{
+	return from->getGenericArguments();
+}
+std::vector<Type*> ds::NullableClassType::getGenericTypes()
+{
+	return from->getGenericTypes();
+}
+
+Type* ds::NullableClassType::instantiateGeneric(std::vector<Type*> types, Token at, ErrorContext* with,
+	TypeRegistry* registry)
+{
+	return static_cast<ClassType*>(from->instantiateGeneric(types, at, with, registry))->nullable;
 }
 
 BytecodeBuffer ds::NullableClassType::compileUnref()
@@ -267,54 +283,13 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 	ErrorContext* errors, bool setMember, ParsedScope* with)
 {
 	Token memberName = line.get();
+	auto methodExpr = compileMethod(memberName, value, line, errors, with);
 
-	if (line.peek() == "(")
+	if (methodExpr.valid)
 	{
-		auto inBraces = line.getInBraces(errors);
-		auto bracesEnd = line.previous();
-
-		for (auto& [name, function] : this->methods)
-		{
-			if (name == "delete")
-			{
-				continue;
-			}
-			if (name != memberName.string)
-			{
-				continue;
-			}
-			TokenLine argsLine;
-			argsLine.lineTokens = &inBraces;
-
-			auto functionArgs = function->getArguments();
-
-			ExpressionResult callCode = Expression::parseFunctionArguments(memberName, functionArgs,
-				argsLine, errors, true, with);
-			callCode.code.addBuffer(value.code);
-			auto compiled = function->compileCall();
-			if (compiled.type)
-			{
-				compiled.code.addBuffer(compiled.type->compileEndMove(with));
-			}
-
-#ifdef WITH_LANGUAGE_SERVICE
-			if (with->context->service)
-			{
-				with->context->service->files[with->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, memberName,
-						ScannedFunction::Kind::functionCall, bracesEnd.position));
-			}
-#endif
-
-			callCode.type = compiled.type;
-			callCode.code.addBuffer(compiled.code);
-			callCode.valid = true;
-
-			return callCode;
-		}
-
-		return ExpressionResult();
+		return methodExpr;
 	}
+
 
 	for (auto& i : this->members)
 	{
@@ -339,7 +314,7 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 		result.code.pushInt(i.offset);
 		result.code.pushInt(i.type->size);
 
-		if (setMember)
+		if (setMember && !i.isConst)
 		{
 			auto unrefCode = i.type->compileUnref();
 			result.setCode = BytecodeBuffer();
@@ -366,12 +341,84 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 	return ExpressionResult();
 }
 
-ExpressionResult ds::NullType::compileOperator(Operator operatorType, ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
+BytecodeBuffer ds::ClassType::getClassGenericCode()
+{
+	if (!isGeneric)
+	{
+		return BytecodeBuffer();
+	}
+
+	return compileGenericArguments(this->getGenericTypes());
+}
+
+ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult value, TokenLine& line,
+	ErrorContext* errors, ParsedScope* with)
+{
+	if (memberName == "delete")
+	{
+		return ExpressionResult();
+	}
+
+	for (auto& [name, function] : this->methods)
+	{
+		if (name != memberName.string)
+		{
+			continue;
+		}
+
+		GenericParseData generic = getGenericFunctionData(function, line, errors, with);
+
+		if (line.peek() != "(")
+		{
+			continue;
+		}
+
+		auto inBraces = line.getInBraces(errors);
+		auto bracesEnd = line.previous();
+
+		TokenLine argsLine;
+		argsLine.lineTokens = &inBraces;
+
+		ExpressionResult callCode = Expression::parseFunctionArguments(memberName, generic.args,
+			argsLine, errors, true, with);
+		callCode.code.addBuffer(value.code);
+
+		callCode.code.addBuffer(generic.code);
+		callCode.code.addBuffer(getClassGenericCode());
+		auto compiled = function->compileCall();
+		compiled.type = generic.returnType;
+		if (compiled.type)
+		{
+			compiled.code.addBuffer(compiled.type->compileEndMove(with));
+		}
+
+#ifdef WITH_LANGUAGE_SERVICE
+		if (with->context->service)
+		{
+			with->context->service->files[with->scopeFile->name]
+				.functions.push_back(ScannedFunction(function, &generic, memberName,
+					ScannedFunction::Kind::functionCall, bracesEnd.position));
+		}
+#endif
+
+		callCode.type = compiled.type;
+		callCode.code.addBuffer(compiled.code);
+		callCode.valid = true;
+
+		return callCode;
+	}
+
+	return ExpressionResult();
+}
+
+ExpressionResult ds::NullType::compileOperator(Operator operatorType, ExpressionResult& first,
+	ExpressionResult& second, ParsedScope* with)
 {
 	return ExpressionResult();
 }
 
-ExpressionResult ds::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors, ParsedScope* with, Type* hintType)
+ExpressionResult ds::NullType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
+	ParsedScope* with, Type* hintType)
 {
 	if (first == "null")
 	{

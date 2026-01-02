@@ -54,7 +54,7 @@ void ds::ParsedFunction::addArguments(ParsedScope& scope, ErrorContext* errors)
 std::optional<SymbolDefinition> ds::ParsedFunction::getDefinition()
 {
 	return SymbolDefinition{
-		.file = functionFile->name,
+		.file = functionFile ? functionFile->name : "",
 		.at = name
 	};
 }
@@ -158,7 +158,7 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 
 	if (isAsync)
 	{
-		this->returnType = TaskType::getInstance(this->returnType);
+		this->returnType = TaskType::getInstance(this->returnType, context->registry);
 	}
 	resolveAttributes(functionFile, errors);
 }

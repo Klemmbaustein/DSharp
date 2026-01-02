@@ -65,7 +65,7 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 		args.push_back(i.type);
 	}
 
-	result.type = FunctionType::getInstance(newFunction.returnType, args);
+	result.type = FunctionType::getInstance(newFunction.returnType, args, with->context->registry);
 
 	newFunction.registerFunction(with->context);
 

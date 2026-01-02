@@ -3,40 +3,11 @@
 #include "expression.hpp"
 #include "attribute.hpp"
 #include "symbolDefinition.hpp"
+#include "generic.hpp"
+#include "functionArgument.hpp"
 
 namespace ds
 {
-	struct FunctionArgument
-	{
-		FunctionArgument(Type* type, Token name)
-		{
-			this->type = type;
-			this->name = name;
-		}
-
-		FunctionArgument(Type* type, std::string name)
-		{
-			this->type = type;
-			this->name = Token(name);
-		}
-
-		FunctionArgument(Type* type, const char* name)
-		{
-			this->type = type;
-			this->name = Token(name);
-		}
-
-		FunctionArgument() = default;
-
-		Type* type = nullptr;
-		Token name;
-
-		bool operator==(const FunctionArgument& other) const
-		{
-			return other.type->sameAs(this->type);
-		}
-	};
-
 	/**
 	 * @brief
 	 * A function that can be called in the language.
@@ -67,14 +38,23 @@ namespace ds
 		virtual std::string getFullName() const = 0;
 		virtual std::string getShortName() const = 0;
 		virtual bool discardable() const = 0;
+
 		virtual bool isVirtual() const
 		{
 			return false;
 		}
-
 		virtual bytecodeOffset getVirtualOffset() const
 		{
 			return 0;
+		}
+
+		virtual bool isGeneric() const
+		{
+			return false;
+		}
+		virtual std::vector<GenericArgument> getGenericTypes()
+		{
+			return {};
 		}
 
 		virtual std::optional<SymbolDefinition> getDefinition()

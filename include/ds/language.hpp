@@ -1,6 +1,7 @@
 #pragma once
 #include "native/nativeModule.hpp"
 #include "parser/parser.hpp"
+#include "parser/typeRegistry.hpp"
 #include "service/languageService.hpp"
 #include "interpreter.hpp"
 
@@ -53,6 +54,8 @@ namespace ds
 		 * @see InterpretContext
 		 */
 		void addNativeModule(const NativeModule& module);
+
+		TypeRegistry registry;
 
 		std::map<std::string, NativeModule*> languageModules;
 	};

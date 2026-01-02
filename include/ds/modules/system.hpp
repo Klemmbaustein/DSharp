@@ -82,7 +82,7 @@ namespace ds::modules
 		 *
 		 * @see ds::modules::createStandardLibrary
 		 */
-		NativeModule createModule();
+		NativeModule createModule(LanguageContext* to);
 
 		class ArrayData
 		{
@@ -92,9 +92,19 @@ namespace ds::modules
 			bool isType = false;
 		};
 
+		class MapData
+		{
+		public:
+			class Node
+			{
+			};
+
+			RuntimeClass* comparator;
+		};
+
 		RuntimeClass* createArrayObject();
 
-		template<typename T>
+		template <typename T>
 		RuntimeClass* createArray(T* items, Size length, bool isType)
 		{
 			size_t sizeInBytes = length * sizeof(T);
@@ -108,6 +118,28 @@ namespace ds::modules
 			memcpy(buffer, items, sizeInBytes);
 
 			RuntimeClass* array = createArrayObject();
+			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
+			data->data = buffer;
+			data->length = length;
+			data->isType = isType;
+			return array;
+		}
+		RuntimeClass* createMapObject();
+
+		template <typename T>
+		RuntimeClass* createMap(T* items, Size length, bool isType)
+		{
+			size_t sizeInBytes = length * sizeof(T);
+			void* buffer = malloc(sizeInBytes);
+
+			if (!buffer)
+			{
+				abort();
+			}
+
+			memcpy(buffer, items, sizeInBytes);
+
+			RuntimeClass* array = createMapObject();
 			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
 			data->data = buffer;
 			data->length = length;

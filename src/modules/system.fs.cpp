@@ -3,6 +3,7 @@
 #include <ds/modules/system.hpp>
 #include <ds/parser/types/stringType.hpp>
 #include <ds/parser/types/arrayType.hpp>
+#include <ds/language.hpp>
 #include <filesystem>
 
 using namespace ds;
@@ -101,12 +102,12 @@ static void fs_getCurrentPath(InterpretContext* context)
 }
 #endif
 
-ds::NativeModule fs::createModule()
+ds::NativeModule fs::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system::fs";
 
-	StringType* strType = StringType::getInstance();
+	StringType* strType = to->registry.getEntry<StringType>();
 
 	ClassType* pathType = out.createClass<fs::FilePath>("FilePath");
 

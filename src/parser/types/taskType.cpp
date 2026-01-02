@@ -5,18 +5,20 @@
 
 using namespace ds;
 
-ds::TaskType::TaskType(Type* baseType)
+ds::TaskType::TaskType(Type* baseType, TypeRegistry* registry)
 {
-	this->name = baseType ? ("task<" + Type::toString(baseType) + ">") : "task";
+	this->name = "task";
 	this->baseType = baseType;
 	this->size = sizeof(Pointer);
 	this->vTableOffset = UINT32_MAX;
 	this->baseType = baseType;
+	this->isGeneric = true;
 
 	this->members.push_back(ClassMember{
 		.name = "completed",
 		.offset = offsetof(modules::system::async::Task, completed),
-		.type = BoolType::getInstance(),
+		.type = registry->getEntry<BoolType>(),
+		.isConst = true,
 		});
 	applyName();
 }

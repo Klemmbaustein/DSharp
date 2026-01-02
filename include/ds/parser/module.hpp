@@ -21,7 +21,7 @@ namespace ds
 
 		std::map<std::string, Module*> submodules;
 
-		Function* getMethod(std::string name);
+		Function* getMethod(Token name, TokenLine& from, ErrorContext* errors);
 		Type* getType(Token name, TokenLine& from, ErrorContext* errors, ParsedFile* file, ParseContext* context);
 		Attribute* getAttribute(Token name, TokenLine& from, ParsedFile* file, ParseContext* context);
 		std::pair<EnumType*, std::string> getEnum(std::string name, TokenLine& from);

@@ -11,6 +11,7 @@
 #include <vector>
 #include "error.hpp"
 #include "parseFile.hpp"
+#include "typeRegistry.hpp"
 
 namespace ds
 {
@@ -54,6 +55,8 @@ namespace ds
 		void emitServiceTypesForModule(Module* mod);
 #endif
 		std::vector<Type*> defaultTypes;
+
+		TypeRegistry* registry = nullptr;
 
 		void scanModules();
 		void resetModules(LanguageContext* context);

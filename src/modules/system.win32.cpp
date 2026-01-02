@@ -2,6 +2,7 @@
 #include <ds/modules/system.win32.hpp>
 #include <ds/parser/types/stringType.hpp>
 #include <Windows.h>
+#include <ds/language.hpp>
 #include <print>
 
 #pragma comment(linker, "\"/manifestdependency:type='win32' \
@@ -93,7 +94,7 @@ static void win32_createWindow(InterpretContext* context)
 	context->pushValue(cls);
 }
 
-NativeModule win32::createModule()
+NativeModule win32::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system::win32";
@@ -101,8 +102,8 @@ NativeModule win32::createModule()
 	auto handleType = out.createClass<HANDLE>("HANDLE");
 	auto windowType = out.createClass<HWND>("HWND", handleType);
 	auto instanceType = out.createClass<HINSTANCE>("HINSTANCE", handleType);
-	auto strType = StringType::getInstance();
-	auto intType = IntType::getInstance();
+	auto strType = to->registry.getEntry<StringType>();
+	auto intType = to->registry.getEntry<IntType>();
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(windowType->nullable, "wnd"), FunctionArgument(strType, "text"),
