@@ -84,7 +84,7 @@ void ds::modules::system::async::pushTaskResult(Task* target, size_t size, Inter
 
 RuntimeClass* ds::modules::system::async::emptyTask()
 {
-	ClassRef<Task> c = RuntimeClass::allocateClass(sizeof(Task), &task_vTable);
+	ClassRef<Task> c = RuntimeClass::allocateClass(sizeof(Task), 0, &task_vTable);
 
 	c->completed = false;
 	c->awaiter = nullptr;

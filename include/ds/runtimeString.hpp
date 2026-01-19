@@ -2,6 +2,7 @@
 #include "class.hpp"
 #include "languageTypes.hpp"
 #include <cstring>
+#include <ds/parser/types/stringType.hpp>
 
 namespace ds
 {
@@ -15,7 +16,7 @@ namespace ds
 		{
 			Size contentSize = Size(stringLength + 1);
 
-			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(Size), 0);
+			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(Size), StringType::STRING_ID, 0);
 
 			(*(Size*)this->classPtr->getBody()) = Size(stringLength);
 			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(Size));
@@ -62,7 +63,7 @@ namespace ds
 		{
 			Size contentSize = Size(stringLength + 1);
 
-			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(Size), 0);
+			this->classPtr = RuntimeClass::allocateClass(contentSize + sizeof(Size), StringType::STRING_ID, 0);
 
 			(*(Size*)this->classPtr->getBody()) = Size(stringLength);
 			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(Size));

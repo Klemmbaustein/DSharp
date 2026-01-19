@@ -63,6 +63,10 @@ namespace ds
 		ScannedVariable(ParsedClassMember* from, ClassType* inClass, ParsedFile* file, Token atToken);
 
 		ScannedVariable(ClassMember* from, ClassType* inClass, ParsedFile* file, Token atToken);
+		ScannedVariable()
+		{
+
+		}
 	};
 
 	class ScannedMember

@@ -153,6 +153,6 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 
 RuntimeClass* ds::modules::system::fs::createPath()
 {
-	return RuntimeClass::allocateClass(sizeof(FilePath), &pathVTable);
+	return RuntimeClass::allocateClass(sizeof(FilePath), 0, &pathVTable);
 }
 #endif

@@ -26,11 +26,12 @@ namespace ds
 		 * The first function in the table always is the destructor.
 		 */
 		RuntimeFunction* vtable;
-		size_t references;
+		TypeId type;
+		Size references;
 		// Debug variable to ensure no classes are leaked
 		static inline size_t classRefCount = 0;
 
-		static RuntimeClass* allocateClass(size_t bodySize, RuntimeFunction* vTable);
+		static RuntimeClass* allocateClass(size_t bodySize, ds::TypeId id, RuntimeFunction* vTable);
 
 		/**
 		 * @brief

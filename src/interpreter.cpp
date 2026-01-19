@@ -355,7 +355,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			Size size = popValue<Size>();
 			Size typeId = *(Size*)&argumentBuffer[0];
 			bytecodeOffset vTableOffset = *(bytecodeOffset*)&argumentBuffer[sizeof(typeId)];
-			pushValue(RuntimeClass::allocateClass(size, vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr));
+			pushValue(RuntimeClass::allocateClass(size, typeId, vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr));
 			break;
 		}
 		case ds::BytecodeOp::classMember: {
@@ -432,7 +432,8 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			// Space for null terminator
 			Size contentSize = newSize + 1;
 
-			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t), 0);
+			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t),
+				first.classPtr->type, 0);
 
 			(*(Size*)newClass->getBody()) = newSize;
 			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
@@ -459,7 +460,8 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			Size strLength = str.length();
 			Size contentSize = str.length() + 1;
 
-			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(Size), 0);
+			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(Size),
+				str.classPtr->type, 0);
 
 			(*(Size*)newClass->getBody()) = strLength;
 			char* strBegin = (char*)(newClass->getBody() + sizeof(Size));

@@ -26,6 +26,14 @@ namespace ds
 
 		void addFile(std::string filePath);
 		void addString(const std::string& str, std::string fileName);
+		ParsedClass* addClass(Token className, std::string moduleName,
+			const std::string& body, std::string fileName, std::vector<std::vector<Token>> derived);
+		ParsedClass* addClass(Token className, std::string moduleName,
+			TokenStream& stream, std::string fileName, std::vector<std::vector<Token>> derived);
+
+		ParsedClass* updateClass(Token className, std::string moduleName,
+			TokenStream& stream, std::string fileName, std::vector<std::vector<Token>> derived);
+
 		void updateFile(const std::string& str, std::string fileName);
 
 		BytecodeStream compile();

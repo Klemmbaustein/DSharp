@@ -39,6 +39,7 @@ namespace ds
 		std::string className;
 		ClassType* virtualType = nullptr;
 		bytecodeOffset virtualId = 0;
+		bool isDiscardable = false;
 
 		ExpressionResult compileCall() override;
 		std::vector<FunctionArgument> getArguments() override;
@@ -71,6 +72,13 @@ namespace ds
 
 		NativeFunction* addFunction(const NativeFunction& function);
 
+		template <typename T>
+		static RuntimeClass* makePointerClass(T* value)
+		{
+			ClassRef<T*> newObject = RuntimeClass::allocateClass(sizeof(T*), 0, nullptr);
+			newObject.getValue() = value;
+			return newObject.classPtr;
+		}
 
 		Type* getType(const std::string& name);
 

@@ -29,6 +29,8 @@ namespace ds
 		Attribute* getAttribute(TokenLine& from);
 		std::pair<EnumType*, std::string> getEnum(TokenLine& from);
 
+		void updateUsings();
+
 		void scan(ErrorContext* errors);
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors);
 		ParsedFunction* scanFunction(TokenLine currentLine, ErrorContext* errors);

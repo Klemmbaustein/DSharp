@@ -58,6 +58,7 @@ namespace ds
 		size_t refVariableCount = 0;
 
 		std::map<Token, ParsedClassMember> members;
+		std::map<Token, ParsedClassMember> builtInMembers;
 		std::vector<ParsedFunction*> methods;
 
 		ClassLifetimeFunction constructor;
@@ -68,7 +69,11 @@ namespace ds
 
 		Function* getDefaultConstructor();
 
+		ParsedClassMember& addMember(Token name, ds::Type* type, const std::vector<ds::Token>& valueTokens,
+			bool builtIn);
+
 		bool scanned = false;
+		bool isFileClass = false;
 
 		void registerType(ParseContext* context, ParsedFile* file);
 		void scanClass(ParseContext* context, ParsedFile* file);

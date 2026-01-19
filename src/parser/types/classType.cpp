@@ -402,6 +402,7 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 		}
 #endif
 
+		callCode.discardable = compiled.discardable;
 		callCode.type = compiled.type;
 		callCode.code.addBuffer(compiled.code);
 		callCode.valid = true;

@@ -23,6 +23,24 @@ ds::ParsedFile::~ParsedFile()
 {
 }
 
+void ds::ParsedFile::updateUsings()
+{
+	for (auto& [name, module] : usings)
+	{
+		if (module)
+		{
+			continue;
+		}
+		auto foundModule = context->programModules.find(name.string);
+		if (foundModule == context->programModules.end())
+		{
+			context->errors.error(ErrorCode::parseUnknownModule, name, "Unknown module: " + name.string);
+			continue;
+		}
+		module = &foundModule->second;
+	}
+}
+
 bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors)
 {
 	TokenLine currentLine = stream.next(errors);
@@ -94,7 +112,7 @@ ParsedFunction* ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext
 {
 	bool isAsync = false;
 
-	auto next = currentLine.get();
+	Token next = currentLine.get();
 
 	while (next != "fn")
 	{
@@ -212,7 +230,7 @@ void ds::ParsedFile::compile(ParseContext* context)
 Function* ParsedFile::getMethod(TokenLine& from, ErrorContext* errors)
 {
 	auto initialPos = from.savePosition();
-	auto name = from.get();
+	auto& name = from.get();
 	auto m = getMethod(name, from, errors);
 	if (m)
 	{
@@ -246,7 +264,7 @@ Function* ds::ParsedFile::getMethod(Token name, TokenLine& from, ErrorContext* e
 Type* ParsedFile::getType(TokenLine& from, ErrorContext* errors)
 {
 	auto initialPos = from.savePosition();
-	auto name = from.get();
+	auto& name = from.get();
 	auto pos = from.savePosition();
 	Type* found = this->fileModule->getType(name, from, errors, this, this->context);
 	if (found)
@@ -267,7 +285,7 @@ Type* ParsedFile::getType(TokenLine& from, ErrorContext* errors)
 Attribute* ParsedFile::getAttribute(TokenLine& from)
 {
 	auto initialPos = from.savePosition();
-	auto name = from.get();
+	auto& name = from.get();
 	auto pos = from.savePosition();
 	Attribute* found = this->fileModule->getAttribute(name, from, this, this->context);
 	if (found)
@@ -288,7 +306,7 @@ Attribute* ParsedFile::getAttribute(TokenLine& from)
 std::pair<EnumType*, std::string> ds::ParsedFile::getEnum(TokenLine& from)
 {
 	auto initialPos = from.savePosition();
-	auto name = from.get();
+	auto& name = from.get();
 	auto pos = from.savePosition();
 	auto found = this->fileModule->getEnum(name.string, from);
 	if (found.first)

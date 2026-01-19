@@ -486,7 +486,7 @@ static void fn_new_bytecode(InterpretContext* context)
 	entries[1].nativeFn = &fn_call;
 	entries[2].codeOffset = offset;
 
-	context->pushValue(RuntimeClass::allocateClass(0, entries));
+	context->pushValue(RuntimeClass::allocateClass(0, 0, entries));
 }
 
 static void fn_delete_lambda(InterpretContext* context)
@@ -512,7 +512,7 @@ static void fn_new_lambda(InterpretContext* context)
 	auto deref = context->popValue<bytecodeOffset>();
 	entries[2].codeOffset = deref;
 
-	auto cls = RuntimeClass::allocateClass(size + 4, entries);
+	auto cls = RuntimeClass::allocateClass(size + 4, 0, entries);
 
 	*(int32_t*)cls->getBody() = size;
 
@@ -530,7 +530,7 @@ static void fn_new_native(InterpretContext* context)
 	entries[1].nativeFn = &fn_call;
 	entries[2].nativeFn = context->runtime->externals[offset];
 
-	context->pushValue(RuntimeClass::allocateClass(0, entries));
+	context->pushValue(RuntimeClass::allocateClass(0, 0, entries));
 }
 
 ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
@@ -636,9 +636,9 @@ RuntimeClass* ds::modules::system::createArrayObject()
 		.nativeFn = &array_delete
 	};
 
-	return RuntimeClass::allocateClass(sizeof(ArrayData), &arrayVTable);
+	return RuntimeClass::allocateClass(sizeof(ArrayData), 0, &arrayVTable);
 }
 RuntimeClass* ds::modules::system::createMapObject()
 {
-	return RuntimeClass::allocateClass(sizeof(MapData), &mapVTable);
+	return RuntimeClass::allocateClass(sizeof(MapData), 0, &mapVTable);
 }

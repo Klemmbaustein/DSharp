@@ -66,7 +66,7 @@ namespace ds
 			return this->string < other.string;
 		}
 
-		void checkIsName(ErrorContext* errors) const;
+		bool checkIsName(ErrorContext* errors) const;
 	};
 
 	struct TokenLine
@@ -116,6 +116,9 @@ namespace ds
 		TokenPos first;
 		TokenPos last;
 
+		void addLine();
+		void addToken(const Token& target);
+
 	private:
 		std::vector<std::vector<Token>> lineTokens;
 		std::vector<Token>* currentLine = nullptr;
@@ -127,7 +130,6 @@ namespace ds
 		void readWhitespace(std::istream& stream);
 		char getNextChar(std::istream& stream);
 
-		void addToken(const Token& target);
 
 		Token newToken() const;
 

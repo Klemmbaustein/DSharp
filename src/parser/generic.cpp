@@ -114,6 +114,12 @@ GenericParseData ds::getGenericFunctionData(ds::Function* fn, TokenLine& line, E
 	outData.code = compileGenericArguments(args);
 	outData.returnType = convertGenericType(fn->getReturnType(), args, true,
 		line.previous(), errors, with->context->registry);
+	outData.args = fn->getArguments();
+
+	for (auto& i : outData.args)
+	{
+		i.type = convertGenericType(i.type, args, true, line.previous(), errors, with->context->registry);
+	}
 
 	return outData;
 }

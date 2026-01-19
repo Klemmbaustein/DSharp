@@ -269,7 +269,7 @@ ds::BytecodeAllocClass::BytecodeAllocClass(ClassType* languageClass)
 void ds::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	// typeid
-	stream.addValue(uint32_t(0));
+	stream.addValue<TypeId>(languageClass->id);
 	// vtable
 	stream.addValue(languageClass->vTableOffset);
 }
@@ -426,7 +426,7 @@ void ds::BytecodeBuffer::add(InstructionPtr instruction)
 
 void ds::BytecodeBuffer::pushInt(uint32_t data)
 {
-	static BinaryBuffer args;
+	static thread_local BinaryBuffer args;
 	args.clear();
 	args.addValue(data);
 	addOperation(BytecodeOp::push, args);

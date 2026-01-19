@@ -23,14 +23,7 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 
 		auto value = currentLine.getUntil("", errors);
 
-		auto [newMember, added] = this->members.insert({ name,
-			ParsedClassMember{
-				.type = type,
-				.name = name,
-				.value = value,
-			} });
-
-		newMember->second.attributes = currentAttributes;
+		addMember(name, type, value, false).attributes = currentAttributes;
 		currentAttributes.clear();
 
 		return true;
@@ -43,7 +36,7 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 	bool isAsync = false;
 	std::vector<Token> modifiers;
 
-	auto next = currentLine.get();
+	Token next = currentLine.get();
 
 	if (next == "[")
 	{
@@ -113,10 +106,49 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 		return true;
 	}
 
+	if (isFileClass)
+	{
+		if (next == "using")
+		{
+			auto& usingName = currentLine.get();
+
+			if (usingName.checkIsName(errors))
+			{
+				file->usings[usingName.string] = nullptr;
+				file->updateUsings();
+			}
+			return true;
+		}
+	}
+
 	errors->error(ErrorCode::parseUnexpectedToken,
 		next, "Unexpected '" + next.string + "' in class definition");
 
 	return true;
+}
+
+ParsedClassMember& ds::ParsedClass::addMember(Token name, ds::Type* type,
+	const std::vector<ds::Token>& valueTokens, bool builtIn)
+{
+	if (builtIn)
+	{
+		auto [newMember, added] = this->builtInMembers.insert({ name,
+			ParsedClassMember{
+				.type = type,
+				.name = name,
+				.value = valueTokens,
+			} });
+
+		return newMember->second;
+	}
+	auto [newMember, added] = this->members.insert({ name,
+		ParsedClassMember{
+			.type = type,
+			.name = name,
+			.value = valueTokens,
+		} });
+
+	return newMember->second;
 }
 
 Function* ds::ParsedClass::getDefaultConstructor()
@@ -426,6 +458,17 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 			// do not pop the return value of the base constructor, so we still have
 			// a pointer to this
 			i->functionCode.addNew<BytecodeCallFunction>(this->constructor.getFullName());
+			for (auto& p : this->thisType->parents)
+			{
+				for (auto& c : p->constructors)
+				{
+					if (c->getArguments().empty())
+					{
+						i->functionCode.addBuffer(c->compileCall().code);
+						break;
+					}
+				}
+			}
 		}
 		i->compile(context, file, errors);
 
@@ -503,7 +546,9 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
+	this->members = this->builtInMembers;
 	this->methods.clear();
+
 	this->classStream.reset();
 	this->usedDestructor = &baseDestructor;
 	std::vector<AttribInfo> currentAttributes;

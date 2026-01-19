@@ -75,16 +75,18 @@ void ds::Token::merge(const Token& other)
 	this->position.endPos = other.position.endPos;
 }
 
-void ds::Token::checkIsName(ErrorContext* errors) const
+bool ds::Token::checkIsName(ErrorContext* errors) const
 {
 	if (this->empty())
 	{
 		errors->error(ErrorCode::parseExpectedName, *this, "Expected a name here.");
+		return false;
 	}
 
 	if (this->string[0] == '"' || this->string[0] == '\'' || this->string[0] == '$')
 	{
 		errors->error(ErrorCode::parseExpectedName, *this, "Expected a name, got a string");
+		return false;
 	}
 
 	bool isValid = true;
@@ -100,7 +102,9 @@ void ds::Token::checkIsName(ErrorContext* errors) const
 	if (!isValid)
 	{
 		errors->error(ErrorCode::parseExpectedName, *this, "The name '" + this->string + "' contains invalid characters");
+		return false;
 	}
+	return true;
 }
 
 static bool replace(std::string& str, const std::string& from, const std::string& to)
@@ -151,11 +155,16 @@ void ds::TokenStream::fromTokens(const std::vector<Token> from)
 	}
 }
 
+void ds::TokenStream::addLine()
+{
+	currentLine = &this->lineTokens.emplace_back();
+}
+
 void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorContext* errors)
 {
 	Token currentWord = newToken();
 
-	currentLine = &this->lineTokens.emplace_back();
+	addLine();
 
 	size_t bracketDepth = 0;
 
@@ -186,7 +195,7 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 
 				if (!currentLine->empty())
 				{
-					currentLine = &this->lineTokens.emplace_back();
+					addLine();
 				}
 				currentWord = newToken();
 				continue;

@@ -57,6 +57,11 @@ namespace ds
 		void addString(const std::string& content, std::string name);
 		void updateFile(const std::string& content, std::string name);
 
+		ParsedClass* addClass(Token className, std::string moduleName,
+			ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses);
+		ParsedClass* updateClass(Token className, std::string moduleName,
+			ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses);
+
 		void commitChanges();
 
 		std::vector<AutoCompleteResult> completeAt(ScannedFile* f, size_t character, size_t line,

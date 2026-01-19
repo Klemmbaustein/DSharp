@@ -24,6 +24,23 @@ void ds::LanguageService::updateFile(const std::string& str, std::string fileNam
 	hasChanges = true;
 }
 
+ParsedClass* ds::LanguageService::addClass(Token className, std::string moduleName,
+	ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses)
+{
+	hasChanges = true;
+	return this->parser->addClass(className, moduleName, body, fileName,
+		superClasses);
+}
+
+ParsedClass* ds::LanguageService::updateClass(Token className, std::string moduleName,
+	ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses)
+{
+	this->files.erase(fileName);
+	hasChanges = true;
+	return this->parser->updateClass(className, moduleName, body, fileName,
+		superClasses);
+}
+
 void ds::LanguageService::commitChanges()
 {
 	if (!hasChanges)

@@ -3,11 +3,6 @@
 #include <ds/parser/types/stringType.hpp>
 #include <Windows.h>
 #include <ds/language.hpp>
-#include <print>
-
-#pragma comment(linker, "\"/manifestdependency:type='win32' \
-name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
-processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 using namespace ds;
 using namespace ds::modules::system;
@@ -34,7 +29,7 @@ static void win32_getConsoleWindow(InterpretContext* context)
 		return;
 	}
 
-	ClassRef<HWND> cls = RuntimeClass::allocateClass(sizeof(HWND), nullptr);
+	ClassRef<HWND> cls = RuntimeClass::allocateClass(sizeof(HWND), 0, nullptr);
 	*cls.get() = wnd;
 	context->pushValue(cls);
 }
@@ -50,7 +45,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 	default:
-		return DefWindowProc(hwnd, uMsg, wParam, lParam); // add this
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return 0;
 }
@@ -89,7 +84,7 @@ static void win32_createWindow(InterpretContext* context)
 
 	ShowWindow(wnd, SW_SHOW);
 
-	ClassRef<HWND> cls = RuntimeClass::allocateClass(sizeof(HWND), nullptr);
+	ClassRef<HWND> cls = RuntimeClass::allocateClass(sizeof(HWND), 0, nullptr);
 	*cls.get() = wnd;
 	context->pushValue(cls);
 }

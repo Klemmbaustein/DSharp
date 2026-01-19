@@ -41,15 +41,52 @@ void ds::ParseContext::addString(const std::string& str, std::string fileName)
 	newFile.scan(&errors);
 }
 
+ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleName,
+	const std::string& body, std::string fileName, std::vector<std::vector<Token>> derived)
+{
+	this->errors.currentFile = fileName;
+	auto& newFile = this->files.emplace_back();
+	newFile.name = fileName;
+	newFile.context = this;
+	newFile.usings[Token(moduleName)] = nullptr;
+	newFile.scopeName = moduleName;
+
+	ParsedClass& newClass = newFile.classes.emplace_back();
+	newClass.name = className;
+	newClass.classStream.fromString(body, fileName, &errors);
+	newClass.derivedFrom = derived;
+	return &newClass;
+}
+
+ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleName,
+	ds::TokenStream& stream, std::string fileName, std::vector<std::vector<Token>> derived)
+{
+	this->errors.currentFile = fileName;
+	auto& newFile = this->files.emplace_back();
+	newFile.name = fileName;
+	newFile.context = this;
+	newFile.usings[Token(moduleName)] = nullptr;
+	newFile.scopeName = moduleName;
+
+	ParsedClass& newClass = newFile.classes.emplace_back();
+	newClass.name = className;
+	newClass.classStream = stream;
+	newClass.derivedFrom = derived;
+	newClass.isFileClass = true;
+	return &newClass;
+}
+
 void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 {
 	for (auto& i : this->files)
 	{
 		if (i.name == fileName)
 		{
+			this->errors.currentFile = fileName;
 			i.classes.clear();
 			i.functions.clear();
 			i.enums.clear();
+			i.usings.clear();
 
 			i.stream = TokenStream();
 			i.stream.fromString(str, fileName, &errors);
@@ -58,6 +95,35 @@ void ds::ParseContext::updateFile(const std::string& str, std::string fileName)
 			break;
 		}
 	}
+}
+
+ds::ParsedClass* ds::ParseContext::updateClass(Token className, std::string moduleName, ds::TokenStream& stream,
+	std::string fileName, std::vector<std::vector<Token>> derived)
+{
+	for (auto& i : this->files)
+	{
+		if (i.name == fileName)
+		{
+			this->errors.currentFile = fileName;
+			i.classes.clear();
+			i.functions.clear();
+			i.enums.clear();
+			i.usings.clear();
+
+			i.name = fileName;
+			i.context = this;
+			i.usings[Token(moduleName)] = nullptr;
+			i.scopeName = moduleName;
+
+			ParsedClass& newClass = i.classes.emplace_back();
+			newClass.name = className;
+			newClass.classStream = stream;
+			newClass.derivedFrom = derived;
+			newClass.isFileClass = true;
+			return &newClass;
+		}
+	}
+	return nullptr;
 }
 
 BytecodeStream ds::ParseContext::compile()
@@ -210,6 +276,13 @@ void ds::ParseContext::resetModules(LanguageContext* context)
 	}
 
 	this->programModules.clear();
+	for (auto& i : this->files)
+	{
+		for (auto& [name, ptr] : i.usings)
+		{
+			ptr = nullptr;
+		}
+	}
 
 	for (auto& [name, module] : context->languageModules)
 	{
@@ -278,16 +351,7 @@ void ds::ParseContext::scanModules()
 	for (ParsedFile& file : this->files)
 	{
 		this->errors.currentFile = file.name;
-		for (auto& [name, module] : file.usings)
-		{
-			auto foundModule = this->programModules.find(name.string);
-			if (foundModule == this->programModules.end())
-			{
-				errors.error(ErrorCode::parseUnknownModule, name, "Unknown module: " + name.string);
-				continue;
-			}
-			module = &foundModule->second;
-		}
+		file.updateUsings();
 		file.usings.insert({ Token(""), &globalModule });
 	}
 

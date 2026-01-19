@@ -5,7 +5,8 @@ using namespace ds;
 
 RuntimeClass* TypeInfo::create(InterpretContext* context) const
 {
-	auto cls = RuntimeClass::allocateClass(this->bodySize, &context->runtime->vTable->at(this->vTableOffset));
+	auto cls = RuntimeClass::allocateClass(this->bodySize,
+		this->hash, &context->runtime->vTable->at(this->vTableOffset));
 
 	context->pushValue(cls);
 

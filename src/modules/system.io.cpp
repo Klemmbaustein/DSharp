@@ -115,7 +115,7 @@ static void io_file_isEmpty(InterpretContext* context)
 static void io_popen(InterpretContext* context)
 {
 	RuntimeStr command = context->popRuntimeString();
-	ClassRef<io::File> newFile = RuntimeClass::allocateClass(sizeof(io::File), &io_procFile_vTable);
+	ClassRef<io::File> newFile = RuntimeClass::allocateClass(sizeof(io::File), 0, &io_procFile_vTable);
 
 #if _WIN32
 	newFile->handle = _popen(command.ptr(), "r");

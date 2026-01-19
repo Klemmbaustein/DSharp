@@ -16,6 +16,7 @@ ExpressionResult NativeFunction::compileCall()
 	}
 	result.type = this->returnType;
 	result.valid = true;
+	result.discardable = this->discardable();
 	return result;
 }
 
@@ -57,7 +58,7 @@ std::string NativeFunction::getFullName() const
 
 bool ds::NativeFunction::discardable() const
 {
-	return true;
+	return isDiscardable;
 }
 
 ds::TypeId ds::NativeModule::addAttribute(Attribute* attrib)
