@@ -99,7 +99,7 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 		{
 			return result;
 		}
-		Token nextToken = currentLine.peek();
+		const Token& nextToken = currentLine.peek();
 		if (nextToken == "[")
 		{
 			currentLine.get();
@@ -131,7 +131,7 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 		if (nextToken == ".")
 		{
 			currentLine.get();
-			auto memberName = currentLine.peek();
+			auto& memberName = currentLine.peek();
 			auto oldType = result.type;
 			result = result.type->compileMember(result,
 				currentLine, errors, setExpression, scope);
@@ -347,7 +347,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		if (currentLine.peek() == "(")
 		{
 			auto args = currentLine.getInBraces(errors);
-			auto argsEnd = currentLine.previous();
+			auto& argsEnd = currentLine.previous();
 
 			TokenLine argsLine;
 			argsLine.lineTokens = &args;
@@ -425,7 +425,7 @@ ExpressionResult ds::Expression::parseFunctionArguments(Token functionName, std:
 
 	while (!currentLine.empty())
 	{
-		auto exprToken = currentLine.peek();
+		auto& exprToken = currentLine.peek();
 
 		Type* hintType = arguments.size() > argIndex ? arguments[argIndex].type : nullptr;
 

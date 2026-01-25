@@ -9,8 +9,7 @@ void ds::ExpressionResult::discard(Token at, ErrorContext* errors)
 		return;
 	}
 	errors->error(ErrorCode::returnValueDiscarded, at,
-		"This value is discarded, but isn't discardable.\n"
-		"If this is a function and the return value is supposed to be discardable, add the Discard attribute.");
+		"Expression value ignored. Assign it to the _ operator if this intentional.");
 }
 
 void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* with, ErrorContext* errors)
@@ -29,7 +28,8 @@ void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* wi
 	if (!cast.valid && errors)
 	{
 		errors->error(ErrorCode::parseInvalidType, at,
-			"Type mismatch. Expected " + Type::toString(target) + ", got " + Type::toString(type) + " and no cast is possible.");
+			"Type mismatch. Expected " + Type::toString(target)
+			+ ", got " + Type::toString(type) + " and no cast is possible.");
 		return;
 	}
 

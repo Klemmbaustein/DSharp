@@ -103,7 +103,7 @@ namespace ds
 		}
 		void fromFile(std::string path, ErrorContext* errors);
 		void fromStream(std::istream& stream, std::string name, ErrorContext* errors);
-		void fromString(std::string stringData, std::string path, ErrorContext* errors);
+		void fromString(const std::string& stringData, std::string path, ErrorContext* errors);
 
 		void fromTokens(const std::vector<Token> from);
 

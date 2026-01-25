@@ -15,6 +15,12 @@ std::vector<Type*> ds::parseGenericArguments(std::vector<GenericArgument> args,
 		return foundTypes;
 	}
 
+	if (line.peek() == ">")
+	{
+		line.get();
+		return {};
+	}
+
 	while (true)
 	{
 		auto newType = with->getType(line, errors);
@@ -28,7 +34,7 @@ std::vector<Type*> ds::parseGenericArguments(std::vector<GenericArgument> args,
 			auto typeName = line.get();
 			errors->error(ErrorCode::parseInvalidType, typeName, "Unknown type: '" + typeName.string + "'");
 		}
-		auto next = line.get();
+		auto& next = line.get();
 
 		if (next == ">")
 		{
@@ -54,20 +60,18 @@ bool ds::checkGenericArguments(std::vector<GenericArgument> args, std::vector<Ty
 
 	for (size_t i = 0; i < args.size(); i++)
 	{
-		if (args[i].baseClassType)
+		if (types[i] && args[i].baseClassType)
 		{
 			auto foundClass = dynamic_cast<ClassType*>(types[i]);
 
 			if (!foundClass)
 			{
 				errors->error(ErrorCode::parseInvalidType, at, "Invalid type");
-				return false;
 			}
 
-			if (!foundClass->isSubclassOf(args[i].baseClassType))
+			else if (!foundClass->isSubclassOf(args[i].baseClassType))
 			{
 				errors->error(ErrorCode::parseInvalidType, at, "Invalid type");
-				return false;
 			}
 		}
 	}
@@ -105,10 +109,8 @@ GenericParseData ds::getGenericFunctionData(ds::Function* fn, TokenLine& line, E
 	auto functionTypes = fn->getGenericTypes();
 	auto args = parseGenericArguments(functionTypes, line, errors, with->scopeFile);
 
-	if (!checkGenericArguments(functionTypes, args, line.previous(), errors))
-	{
-		return {};
-	}
+	checkGenericArguments(functionTypes, args, line.previous(), errors);
+
 	GenericParseData outData;
 
 	outData.code = compileGenericArguments(args);

@@ -300,7 +300,7 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 
 		if (classType->languageClass)
 		{
-			classType->languageClass->scanClass(context, file);
+			classType->languageClass->scanClass(context, classType->languageClass->definitionFile);
 			for (auto& m : classType->languageClass->members)
 			{
 				auto [value, success] = this->members.insert(m);

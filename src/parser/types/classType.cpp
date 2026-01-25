@@ -43,6 +43,17 @@ ds::NullableClassType::NullableClassType(ClassType* from)
 	this->isGeneric = from->isGeneric;
 }
 
+void ds::NullableClassType::applyName()
+{
+	this->id = typeIdFromName(this->from->getName());
+}
+
+void ds::ClassType::applyName()
+{
+	Type::applyName();
+	nullable->applyName();
+}
+
 std::vector<GenericArgument> ds::NullableClassType::getGenericArguments()
 {
 	return from->getGenericArguments();
@@ -89,7 +100,7 @@ ScannedType ds::ClassType::toScanned()
 			.memberTypeId = i.type ? i.type->id : 0,
 			.memberTypeName = Type::toString(i.type),
 			.name = i.name.string,
-			});
+		});
 	}
 
 	for (auto& i : this->methods)
@@ -200,7 +211,7 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	ExpressionResult result;
 
 	auto constructorArgs = line.getInBraces(errors);
-	auto argsEnd = line.previous();
+	auto& argsEnd = line.previous();
 
 	TokenLine argsLine;
 	argsLine.lineTokens = &constructorArgs;
@@ -302,8 +313,10 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 #ifdef WITH_LANGUAGE_SERVICE
 		if (with->context->service)
 		{
-			with->context->service->files[with->scopeFile->name].variables
-				.push_back(ScannedVariable(&i, this, with->scopeFile, memberName));
+			auto file = this->languageClass ? this->languageClass->definitionFile : nullptr;
+
+			with->context->service->files[with->scopeFile->name].variables.push_back(ScannedVariable(
+				&i, this, file, memberName));
 		}
 #endif
 
@@ -371,11 +384,20 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 
 		if (line.peek() != "(")
 		{
+#ifdef WITH_LANGUAGE_SERVICE
+			if (with->context->service)
+			{
+				with->context->service->files[with->scopeFile->name]
+					.functions.push_back(ScannedFunction(function, &generic, memberName,
+						ScannedFunction::Kind::functionCall, memberName.position));
+			}
+#endif
+
 			continue;
 		}
 
 		auto inBraces = line.getInBraces(errors);
-		auto bracesEnd = line.previous();
+		auto& bracesEnd = line.previous();
 
 		TokenLine argsLine;
 		argsLine.lineTokens = &inBraces;

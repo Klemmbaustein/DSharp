@@ -52,6 +52,8 @@ namespace ds
 			"throw",
 			"const",
 			"var",
+			"new",
+			"fn",
 		};
 
 		void addString(const std::string& content, std::string name);

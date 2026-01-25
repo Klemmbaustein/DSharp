@@ -1,8 +1,6 @@
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/bytecode/compileBytecodeVariables.hpp>
 #include <ds/parser/bytecode/compileBytecodeUnwind.hpp>
-#include <format>
-#include <list>
 #include <ds/parser/types/arrayType.hpp>
 #include <ds/parser/types/lambdaType.hpp>
 #include <ds/service/languageService.hpp>
@@ -21,7 +19,7 @@ std::optional<VariableInfo> ds::ParsedScope::parseVariableDefinition(TokenLine& 
 {
 	VariableInfo info;
 
-	auto first = line.peek();
+	auto& first = line.peek();
 
 	info.type = file->getType(line, errors);
 
@@ -430,7 +428,7 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 
 void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
-	auto first = line.get();
+	auto& first = line.get();
 
 	if (first == "return" && scopeFunction)
 	{
@@ -472,6 +470,28 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		code->addBuffer(compileScopeExit(0, false));
 		this->code->addOperation(BytecodeOp::ret);
 		line.expectEndOfLine(errors);
+		return;
+	}
+	if (first == "_")
+	{
+		if (line.expect("=", errors))
+		{
+			return;
+		}
+
+		auto expr = Expression::pushExpression(line, errors, true, nullptr, this);
+		this->code->addBuffer(expr.code);
+		if (expr.type)
+		{
+			BinaryBuffer args;
+			args.addValue<uint32_t>(expr.type->size);
+			this->code->addOperation(BytecodeOp::pop, args);
+		}
+		else if (expr.valid)
+		{
+			errors->error(ErrorCode::parseInvalidType, first, "Cannot discard expression that doesn't return a value.");
+		}
+
 		return;
 	}
 	if (first == "if")
@@ -558,7 +578,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 	auto compoundOperator = stringToCompoundOperator(line.peek().string);
 	if ((line.peek() == "=" || compoundOperator != CompoundOperator::unknown) && expr.valid)
 	{
-		auto equals = line.get();
+		auto& equals = line.get();
 
 		if (!expr.setCode)
 		{
@@ -682,7 +702,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 		return;
 	}
 
-	auto arrayExpression = var->assignedValue;
+	auto& arrayExpression = var->assignedValue;
 	if (!arrayExpression.valid)
 	{
 		errors->error(ErrorCode::parseUnexpectedToken, line.previous(),

@@ -47,7 +47,11 @@ namespace ds
 
 	struct ParsedClass : public Attributable
 	{
-		ParsedClass() = default;
+		ParsedClass(ParsedFile* definitionFile)
+		{
+			this->definitionFile = definitionFile;
+		}
+
 		~ParsedClass();
 
 		Token name;
@@ -66,6 +70,7 @@ namespace ds
 		Function* usedDestructor = &baseDestructor;
 		ClassType* thisType = nullptr;
 		Module* classModule = nullptr;
+		ParsedFile* definitionFile = nullptr;
 
 		Function* getDefaultConstructor();
 

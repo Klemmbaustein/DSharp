@@ -28,7 +28,7 @@ namespace ds
 			return this->name;
 		}
 
-		void applyName();
+		virtual void applyName();
 		Type() = default;
 		Type(const Type&) = default;
 

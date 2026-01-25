@@ -137,7 +137,7 @@ ParsedFunction* ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext
 
 ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* errors)
 {
-	ParsedClass& newClass = this->classes.emplace_back();
+	ParsedClass& newClass = this->classes.emplace_back(this);
 	newClass.name = currentLine.get();
 	newClass.name.checkIsName(errors);
 

@@ -51,7 +51,7 @@ ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleN
 	newFile.usings[Token(moduleName)] = nullptr;
 	newFile.scopeName = moduleName;
 
-	ParsedClass& newClass = newFile.classes.emplace_back();
+	ParsedClass& newClass = newFile.classes.emplace_back(&newFile);
 	newClass.name = className;
 	newClass.classStream.fromString(body, fileName, &errors);
 	newClass.derivedFrom = derived;
@@ -68,7 +68,7 @@ ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleN
 	newFile.usings[Token(moduleName)] = nullptr;
 	newFile.scopeName = moduleName;
 
-	ParsedClass& newClass = newFile.classes.emplace_back();
+	ParsedClass& newClass = newFile.classes.emplace_back(&newFile);
 	newClass.name = className;
 	newClass.classStream = stream;
 	newClass.derivedFrom = derived;
@@ -115,7 +115,7 @@ ds::ParsedClass* ds::ParseContext::updateClass(Token className, std::string modu
 			i.usings[Token(moduleName)] = nullptr;
 			i.scopeName = moduleName;
 
-			ParsedClass& newClass = i.classes.emplace_back();
+			ParsedClass& newClass = i.classes.emplace_back(&i);
 			newClass.name = className;
 			newClass.classStream = stream;
 			newClass.derivedFrom = derived;

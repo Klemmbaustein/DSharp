@@ -133,7 +133,7 @@ void ds::TokenStream::fromFile(std::string path, ErrorContext* errors)
 	file.close();
 }
 
-void ds::TokenStream::fromString(std::string stringData, std::string path, ErrorContext* errors)
+void ds::TokenStream::fromString(const std::string& stringData, std::string path, ErrorContext* errors)
 {
 	std::stringstream stream;
 	stream << stringData;

@@ -27,6 +27,7 @@ namespace ds
 		BytecodeBuffer compileUnref() override;
 		BytecodeBuffer compileMove(ParsedScope* with) override;
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;
+		void applyName() override;
 
 		std::string getName() override;
 
@@ -89,6 +90,7 @@ namespace ds
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;
 
 		bool isSubclassOf(ClassType* parent);
+		void applyName() override;
 
 		std::vector<ClassType*> parents;
 
