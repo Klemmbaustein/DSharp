@@ -24,6 +24,15 @@ void ds::LanguageService::updateFile(const std::string& str, std::string fileNam
 	hasChanges = true;
 }
 
+void ds::LanguageService::removeFile(std::string name)
+{
+	this->files.erase(name);
+	this->parser->files.remove_if([name](ParsedFile& f) {
+		return f.name == name;
+	});
+	hasChanges = true;
+}
+
 ParsedClass* ds::LanguageService::addClass(Token className, std::string moduleName,
 	ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses)
 {

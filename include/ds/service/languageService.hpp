@@ -58,6 +58,7 @@ namespace ds
 
 		void addString(const std::string& content, std::string name);
 		void updateFile(const std::string& content, std::string name);
+		void removeFile(std::string name);
 
 		ParsedClass* addClass(Token className, std::string moduleName,
 			ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses);

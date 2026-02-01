@@ -218,6 +218,7 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 
 	if (this->constructors.empty())
 	{
+		argsLine.expectEndOfLine(errors);
 		result.code.pushInt(Size(this->classSize));
 		result.code.add(std::make_shared<BytecodeAllocClass>(this));
 		if (baseConstructor)
