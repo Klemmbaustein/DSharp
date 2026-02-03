@@ -243,6 +243,8 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		}
 		else
 		{
+			errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
+				"The enum '" + enumValue->name + "' doesn't contain an entry '" + enumEntry + "'");
 			result.valid = false;
 		}
 		return result;

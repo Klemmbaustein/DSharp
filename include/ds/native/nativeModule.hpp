@@ -80,6 +80,14 @@ namespace ds
 			return newObject.classPtr;
 		}
 
+		template <typename T>
+		static RuntimeClass* makeClass(const T& value)
+		{
+			ClassRef<T> newObject = RuntimeClass::allocateClass(sizeof(T), 0, nullptr);
+			newObject.getValue() = value;
+			return newObject.classPtr;
+		}
+
 		Type* getType(const std::string& name);
 
 		template <typename TNative>
