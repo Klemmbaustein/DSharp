@@ -140,6 +140,16 @@ ExpressionResult ds::NullableClassType::compileOperator(Operator operatorType,
 	return from->compileOperator(operatorType, first, second, with);
 }
 
+ClassType* ds::NullableClassType::asClass()
+{
+	return from;
+}
+
+ClassType* ds::ClassType::asClass()
+{
+	return this;
+}
+
 ExpressionResult ds::NullableClassType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with, Type* hintType)
 {

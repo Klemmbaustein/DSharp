@@ -417,7 +417,7 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 			// Function not ending in a return statement should abort if it ever reaches the end.
 			// You could write code in which the normal end of the function is unreachable and there's no nice way to detect this,
 			// so this seems like the best solution.
-			code->addNew<BytecodeCallNative>("system::err::abort");
+			code->addOperation(BytecodeOp::noReturn);
 		}
 		else
 		{
@@ -513,12 +513,6 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget.get());
 			return;
 		}
-	}
-
-	if (first == "unwind")
-	{
-		this->code->addOperation(BytecodeOp::unwind);
-		return;
 	}
 
 	if (first == "continue")
@@ -646,6 +640,7 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 
 	auto condition = Expression::pushExpression(conditionTokens, errors, false, nullptr, this);
 	conditionTokens.expectEndOfLine(errors);
+	condition.compileToType(conditionTokens.previous(), file->context->registry->getEntry<BoolType>(), this, errors);
 	this->code->addBuffer(condition.code);
 
 	// The end of the if-statement scope, might also be the start of an else statement if there is one

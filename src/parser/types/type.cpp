@@ -32,7 +32,6 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 		result.code.addBuffer(second.code);
 		result.code.addBuffer(first.code);
 	}
-	result.type = this;
 	result.valid = true;
 
 	switch (operatorType)
@@ -260,6 +259,8 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 		}
 		result.code.addBuffer(first.code);
 	}
+	result.type = this;
+	result.valid = true;
 
 	switch (operatorType)
 	{
@@ -290,8 +291,6 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 		return ExpressionResult();
 	}
 
-	result.type = this;
-	result.valid = true;
 	return result;
 }
 

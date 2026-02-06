@@ -38,6 +38,7 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
+		ClassType* asClass() override;
 
 		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 			ErrorContext* errors, ParsedScope* with) override;
@@ -72,7 +73,7 @@ namespace ds
 		bytecodeOffset vTableOffset = 0;
 
 		void makePointerClass();
-
+		ClassType* asClass() override;
 		Function* baseConstructor = nullptr;
 		Function* destructor = nullptr;
 		ParsedClass* languageClass = nullptr;

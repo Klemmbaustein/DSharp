@@ -3,6 +3,7 @@
 #include <ds/native/nativeGeneric.hpp>
 #include <ds/parser/attribute.hpp>
 #include <cstring>
+#include <cassert>
 
 namespace ds::modules
 {
@@ -90,6 +91,12 @@ namespace ds::modules
 		public:
 			uint32_t length = 0;
 			void* data = nullptr;
+			template<typename T>
+			T& at(uint32_t index)
+			{
+				assert(index < length);
+				return reinterpret_cast<T*>(data)[index];
+			}
 			bool isType = false;
 		};
 

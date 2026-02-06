@@ -12,6 +12,7 @@ namespace ds
 	class Function;
 	struct ParsedScope;
 	struct ParsedFile;
+	class ClassType;
 
 	class Type
 	{
@@ -71,6 +72,11 @@ namespace ds
 		virtual BytecodeBuffer compileEndMove(ParsedScope* with)
 		{
 			return BytecodeBuffer();
+		}
+
+		virtual ClassType* asClass()
+		{
+			return nullptr;
 		}
 
 		virtual ExpressionResult defaultValue();

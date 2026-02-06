@@ -115,6 +115,9 @@ namespace ds
 		awaitTask,
 		returnAsync,
 		unwind,
+		classIs,
+		classAs,
+		noReturn,
 	};
 
 	/**

@@ -142,6 +142,7 @@ namespace ds
 		DebugInfo* debug = nullptr;
 		BinaryBuffer* bytecodeBuffer = nullptr;
 		UnwindInfo unwindBuffer;
+		ReflectInfo* reflect = nullptr;
 		std::vector<ExternalFunctionPointer> externals;
 		std::vector<RuntimeFunction>* vTable = nullptr;
 

@@ -104,7 +104,6 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 		{
 			currentLine.get();
 			auto index = pushExpression(currentLine, errors, false, hintType, scope);
-
 			if (!index.valid)
 			{
 				break;
@@ -142,6 +141,88 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 					"The type " + Type::toString(oldType) + " does not have a member called '" +
 						memberName.string + "'");
 			}
+			continue;
+		}
+		else if (nextToken == "is")
+		{
+			currentLine.get();
+
+			bool isNot = currentLine.peek() == "not";
+
+			if (isNot)
+			{
+				currentLine.get();
+			}
+
+			auto foundType = scope->scopeFile->getType(currentLine, errors);
+
+			auto foundClass = foundType ? foundType->asClass() : nullptr;
+
+			if (!foundClass)
+			{
+				errors->error(ErrorCode::parseInvalidType, nextToken, "Type " + Type::toString(foundType) + " is not a class");
+				return result;
+			}
+			auto expressionClass = result.type ? result.type->asClass() : nullptr;
+
+			if (!expressionClass)
+			{
+				errors->error(ErrorCode::parseInvalidType, nextToken, "Type " + Type::toString(expressionClass) + " is not a class");
+				return result;
+			}
+
+			if (!foundClass->isSubclassOf(expressionClass))
+			{
+				errors->error(ErrorCode::parseInvalidType, nextToken, "Class " + Type::toString(foundClass) + " is not a subclass of " + Type::toString(expressionClass));
+			}
+
+			BinaryBuffer args;
+			args.addValue(foundType->id);
+
+			result.code.addOperation(BytecodeOp::classIs, args);
+			if (isNot)
+			{
+				result.code.addOperation(BytecodeOp::boolNot, args);
+			}
+			result.type = scope->context->registry->getEntry<BoolType>();
+			continue;
+		}
+		else if (nextToken == "as")
+		{
+			currentLine.get();
+
+			auto foundType = scope->scopeFile->getType(currentLine, errors);
+
+			bool isNullable = foundType && typeid(*foundType) == typeid(NullableClassType);
+			auto foundClass = foundType ? foundType->asClass() : nullptr;
+
+			if (!foundClass)
+			{
+				errors->error(ErrorCode::parseInvalidType, nextToken,
+					"Type " + Type::toString(foundType) + " is not a class");
+				return result;
+			}
+			auto expressionClass = result.type ? result.type->asClass() : nullptr;
+
+			if (!expressionClass)
+			{
+				errors->error(ErrorCode::parseInvalidType, nextToken,
+					"Type " + Type::toString(expressionClass) + " is not a class");
+				return result;
+			}
+
+			if (!foundClass->isSubclassOf(expressionClass))
+			{
+				errors->error(ErrorCode::parseInvalidType, nextToken,
+					"Class " + Type::toString(foundClass) + " is not a subclass of " + Type::toString(expressionClass));
+			}
+
+			BinaryBuffer args;
+			args.addValue(foundType->id);
+			args.addValue<Bool>(isNullable);
+
+			result.code.addOperation(BytecodeOp::classAs, args);
+			result.type = foundType;
 			continue;
 		}
 		break;
@@ -336,8 +417,6 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 				ScannedVariable(&foundVariable->second, value));
 		}
 #endif
-
-
 		return result;
 	}
 

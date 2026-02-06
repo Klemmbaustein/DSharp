@@ -52,6 +52,7 @@ void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 	this->vTable = &code->virtualTable;
 	this->debug = &code->debug;
 	this->unwindBuffer = code->unwind;
+	this->reflect = &code->reflect;
 
 	this->externals.clear();
 	this->externals.reserve(code->externalFunctions.size());
@@ -490,7 +491,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 		}
 		case ds::BytecodeOp::nullCheck: {
 			Pointer ptr = popValue<Pointer>();
-			if (!ptr)
+			if (!ptr) [[unlikely]]
 			{
 				runtimePanic(RuntimeStr("Attempted to use null reference"));
 				return;
@@ -524,6 +525,48 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 		}
 		case ds::BytecodeOp::unwind: {
 			doUnwind();
+			return;
+		}
+		case ds::BytecodeOp::classIs: {
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			if (ptr)
+			{
+				TypeId id = *(TypeId*)&argumentBuffer[0];
+				if (id == ptr->type)
+				{
+					pushValue<Bool>(true);
+				}
+				else
+				{
+					pushValue<Bool>(false);
+				}
+			}
+			else
+			{
+				pushValue<Bool>(false);
+			}
+			break;
+		}
+		case ds::BytecodeOp::classAs: {
+			RuntimeClass* ptr = popValue<RuntimeClass*>();
+			Bool isNullable = *(Bool*)&argumentBuffer[sizeof(TypeId)];
+			if (ptr)
+			{
+				TypeId id = *(TypeId*)&argumentBuffer[0];
+				if (id != ptr->type && !this->runtime->reflect->isSubclassOf(ptr->type, id))
+				{
+					ptr = nullptr;
+				}
+			}
+			if (!isNullable && !ptr)
+			{
+				runtimePanic(RuntimeStr("Non nullable cast failed."));
+			}
+			pushValue(ptr);
+			break;
+		}
+		case ds::BytecodeOp::noReturn: {
+			runtimePanic(RuntimeStr("Function did not return"));
 			return;
 		}
 		default:
