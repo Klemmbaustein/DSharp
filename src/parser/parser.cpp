@@ -263,7 +263,6 @@ void ds::ParseContext::emitServiceTypes()
 				auto found = f.accessibleTypes.find(type->id);
 				if (found == f.accessibleTypes.end() || (!isRecursing && !found->second.empty()))
 				{
-					std::cout << type->name << " -> " << (isRecursing ? module->name : "") << std::endl;
 					f.accessibleTypes[type->id] = isRecursing ? module->name : "";
 				}
 			}

@@ -181,8 +181,6 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(Scann
 	{
 		for (auto& [type, module] : f->accessibleTypes)
 		{
-			std::cout << types.at(type).name << ": " << module << std::endl;
-
 			result.push_back(AutoCompleteResult{ .name = types.at(type).name,
 				.completionModule = module,
 				.type = CompletionType::type });
