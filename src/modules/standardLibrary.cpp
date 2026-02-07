@@ -5,7 +5,6 @@
 #include <ds/modules/system.fs.hpp>
 #include <ds/modules/system.math.hpp>
 #include <ds/modules/system.err.hpp>
-#include <ds/modules/system.win32.hpp>
 
 void ds::modules::registerStandardLibrary(LanguageContext* context)
 {
@@ -17,8 +16,5 @@ void ds::modules::registerStandardLibrary(LanguageContext* context)
 
 #if MODULE_FS
 	context->addNativeModule(system::fs::createModule(context));
-#endif
-#if WITH_WINAPI
-	context->addNativeModule(system::win32::createModule(context));
 #endif
 }

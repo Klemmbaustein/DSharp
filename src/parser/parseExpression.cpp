@@ -342,7 +342,7 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 
 		if (className == "(" && hintType)
 		{
-			foundType = hintType;
+			foundType = hintType->asClass();
 			className = value;
 		}
 		else

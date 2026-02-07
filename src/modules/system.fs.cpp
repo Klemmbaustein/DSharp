@@ -107,7 +107,7 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 	NativeModule out;
 	out.name = "system::fs";
 
-	StringType* strType = to->registry.getEntry<StringType>();
+	StringType* strType = to->registry->getEntry<StringType>();
 
 	ClassType* pathType = out.createClass<fs::FilePath>("FilePath");
 
@@ -118,7 +118,7 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 
 	out.addClassMethod(pathType,
 		NativeFunction(
-			{}, to->registry.getArray(pathType),
+			{}, to->registry->getArray(pathType),
 			"getFiles", &fs_path_getFiles));
 
 	out.addClassMethod(pathType,

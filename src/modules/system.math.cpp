@@ -66,8 +66,8 @@ NativeModule ds::modules::system::math::createModule(LanguageContext* to)
 	NativeModule out;
 	out.name = "system::math";
 
-	auto floatInst = to->registry.getEntry<FloatType>();
-	auto intInst = to->registry.getEntry<IntType>();
+	auto floatInst = to->registry->getEntry<FloatType>();
+	auto intInst = to->registry->getEntry<IntType>();
 
 	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
 		floatInst, "sin", &math_sin));

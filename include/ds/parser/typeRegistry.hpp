@@ -3,6 +3,7 @@
 #include <functional>
 #include <map>
 #include <ds/typeId.hpp>
+#include <iostream>
 
 namespace ds
 {

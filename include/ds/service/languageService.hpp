@@ -14,6 +14,8 @@ namespace ds
 		std::vector<ScannedFunction> functions;
 		std::vector<ScannedVariable> variables;
 		std::vector<Token> types;
+		std::map<TypeId, std::string> accessibleTypes;
+		std::map<Token, std::string> accessibleFunctions;
 
 		std::vector<ScannedScope> scopes;
 	};
@@ -33,6 +35,7 @@ namespace ds
 	struct AutoCompleteResult
 	{
 		std::string name;
+		std::string completionModule;
 		CompletionType type = CompletionType::variable;
 	};
 
@@ -54,6 +57,10 @@ namespace ds
 			"var",
 			"new",
 			"fn",
+			"await",
+			"not",
+			"and",
+			"or"
 		};
 
 		void addString(const std::string& content, std::string name);

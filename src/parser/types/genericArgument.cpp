@@ -4,6 +4,7 @@ using namespace ds;
 
 ds::GenericArgumentType::GenericArgumentType(size_t index, bool isFunctionIndex)
 {
+	this->name = "T" + std::to_string(index);
 	this->index = index;
 	this->isFunctionIndex = isFunctionIndex;
 }

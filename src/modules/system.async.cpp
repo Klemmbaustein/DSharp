@@ -68,7 +68,7 @@ NativeModule ds::modules::system::async::createModule(LanguageContext* to)
 	NativeModule out;
 	out.name = "system::async";
 
-	out.addFunction(NativeFunction({}, TaskType::getInstance(nullptr, &to->registry), "sleep", &async_sleepAndReturn));
+	out.addFunction(NativeFunction({}, TaskType::getInstance(nullptr, to->registry), "sleep", &async_sleepAndReturn));
 
 	out.addFunction(NativeFunction({}, nullptr, "task.newEmpty", &task_newEmpty));
 

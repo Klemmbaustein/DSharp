@@ -538,8 +538,8 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	NativeModule out;
 	out.name = "system";
 
-	auto intType = to->registry.getEntry<IntType>();
-	auto stringType = to->registry.getEntry<StringType>();
+	auto intType = to->registry->getEntry<IntType>();
+	auto stringType = to->registry->getEntry<StringType>();
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(intType, Token("position")), FunctionArgument(intType, Token("length")) }, stringType,
@@ -608,8 +608,8 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	mapType->members.push_back(ClassMember{
 		.name = "comparator",
 		.offset = offsetof(MapData, comparator),
-		.type = FunctionType::getInstance(to->registry.getEntry<BoolType>(),
-			{ firstGeneric, secondGeneric }, &to->registry)
+		.type = FunctionType::getInstance(to->registry->getEntry<BoolType>(),
+			{ firstGeneric, secondGeneric }, to->registry)
 	        ->nullable });
 
 	out.addClassMethod(mapType,

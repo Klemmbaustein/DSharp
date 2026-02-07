@@ -13,7 +13,7 @@ using namespace ds;
 ds::ParseContext::ParseContext(LanguageContext* context)
 {
 	resetModules(context);
-	this->registry = new TypeRegistry(context->registry);
+	this->registry = new TypeRegistry(*context->registry);
 }
 
 ds::ParseContext::~ParseContext()
@@ -250,6 +250,51 @@ void ds::ParseContext::emitServiceTypes()
 	for (auto& [name, module] : this->programModules)
 	{
 		emitServiceTypesForModule(&module);
+	}
+	std::function<void(ds::Module*, ds::ParsedFile&, bool)> processModule;
+
+	processModule = [this, &processModule](ds::Module* module, ds::ParsedFile& file, bool isRecursing) {
+		auto& f = service->files[file.name];
+
+		for (auto& [_, type] : module->moduleTypes)
+		{
+			if (type->id && type->name.find_first_of(".()[]<>") == std::string::npos)
+			{
+				auto found = f.accessibleTypes.find(type->id);
+				if (found == f.accessibleTypes.end() || (!isRecursing && !found->second.empty()))
+				{
+					std::cout << type->name << " -> " << (isRecursing ? module->name : "") << std::endl;
+					f.accessibleTypes[type->id] = isRecursing ? module->name : "";
+				}
+			}
+		}
+		for (auto& [_, fn] : module->moduleFunctions)
+		{
+			auto name = fn->getShortName();
+			if (name.find('.') == std::string::npos)
+			{
+				auto found = f.accessibleFunctions.find(name);
+				if (found == f.accessibleFunctions.end() || (!isRecursing && !found->second.empty()))
+				{
+					f.accessibleFunctions[name] = isRecursing ? module->name : "";
+				}
+			}
+		}
+
+		for (auto& [_, submodule] : module->submodules)
+		{
+			processModule(submodule.module, file, true);
+		}
+	};
+
+	for (auto& file : this->files)
+	{
+		processModule(file.fileModule, file, false);
+
+		for (auto& [_, module] : file.usings)
+		{
+			processModule(module, file, false);
+		}
 	}
 }
 

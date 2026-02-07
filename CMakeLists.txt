@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD 23)
 
 project(DSharp)
 
-option(BUILD_WINAPI_MODULE "Include Windows API standard module" ON)
 option(WITH_LANGUAGE_SERVICE "Include LanguageService class and related functionality." ON)
 option(HAS_CPP_FORMAT "Has C++23 <format> library. Used for better compiler messages." ON)
 option(MODULE_FS "Include system::fs module." ON)
@@ -30,10 +29,6 @@ file(
 add_library(
 	DSharp
 	${SRCS} ${HEADERS})
-
-if(BUILD_WINAPI_MODULE AND WIN32)
-	target_compile_definitions(DSharp PUBLIC WITH_WINAPI=1)
-endif()
 
 if(WITH_LANGUAGE_SERVICE)
 	target_compile_definitions(DSharp PUBLIC WITH_LANGUAGE_SERVICE=1)

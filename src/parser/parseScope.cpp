@@ -725,12 +725,14 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 	// For example, with for int i = [1, 2]
 	// The array would need to be reloaded for each iteration unless it's a variable
 	auto& iterated = addVariable(Token(".for_iterated" + std::to_string(tempCounter++)), arrayType, errors);
+	iterated.isInternal = true;
 
 	// The iterator is an int that stores the current index of the array
 	auto iterType = context->registry->getEntry<IntType>();
 	this->code->addBuffer(iterType->defaultValue().code);
 	pushVariableValue(iterType, true);
 	auto& iterator = addVariable(Token(".for_iterator" + std::to_string(tempCounter++)), iterType, errors);
+	iterator.isInternal = true;
 
 	// The label for restarting the loop
 	auto beginLabel = std::make_shared<BytecodeJumpLabel>("for_begin");

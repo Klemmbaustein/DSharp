@@ -77,7 +77,7 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 	for (auto& i : f->variables)
 	{
 		if (i.at.position.line == line && i.at.position.endPos <= character &&
-			i.at.position.startPos <= character && nearestLine < i.at.position.endPos)
+			i.at.position.startPos <= character && nearestLine < i.at.position.endPos && character < i.at.position.endPos + 2)
 		{
 			nearestLine = i.at.position.endPos;
 			foundVariable = &i;
@@ -89,14 +89,18 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 		if (i.at.position.line == line)
 		{
 			if (i.argEnd.endPos <= character &&
-				i.at.position.startPos <= character && nearestLine < i.argEnd.endPos)
+				i.at.position.startPos <= character &&
+				nearestLine < i.argEnd.endPos &&
+				character < i.argEnd.endPos + 2)
 			{
 				nearestLine = i.argEnd.endPos;
 				foundVariable = nullptr;
 				foundFunction = &i;
 			}
 			if (i.argEnd.endPos >= character &&
-				i.at.position.startPos <= character && nearestLine < i.at.position.endPos)
+				i.at.position.startPos <= character &&
+				nearestLine < i.at.position.endPos &&
+				character < i.argEnd.endPos + 2)
 			{
 				nearestLine = i.argEnd.endPos;
 				foundVariable = nullptr;
@@ -170,6 +174,28 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(Scann
 
 			result.push_back(AutoCompleteResult{ .name = i.name,
 				.type = CompletionType::variable });
+		}
+	}
+
+	if (includes(options, CompletionType::type))
+	{
+		for (auto& [type, module] : f->accessibleTypes)
+		{
+			std::cout << types.at(type).name << ": " << module << std::endl;
+
+			result.push_back(AutoCompleteResult{ .name = types.at(type).name,
+				.completionModule = module,
+				.type = CompletionType::type });
+		}
+	}
+
+	if (includes(options, CompletionType::function))
+	{
+		for (auto& [name, module] : f->accessibleFunctions)
+		{
+			result.push_back(AutoCompleteResult{ .name = name.string,
+				.completionModule = module,
+				.type = CompletionType::function });
 		}
 	}
 

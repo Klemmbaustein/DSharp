@@ -10,6 +10,7 @@ namespace ds
 		NativeGenericClassType(std::vector<GenericArgument> arguments);
 
 		NativeGenericClassType(const NativeGenericClassType&) = default;
+		~NativeGenericClassType();
 
 		virtual std::vector<GenericArgument> getGenericArguments() override
 		{

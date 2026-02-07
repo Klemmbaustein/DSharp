@@ -24,6 +24,7 @@ namespace ds
 	public:
 		ClassType* from = nullptr;
 		NullableClassType(ClassType* from);
+		~NullableClassType();
 		BytecodeBuffer compileUnref() override;
 		BytecodeBuffer compileMove(ParsedScope* with) override;
 		BytecodeBuffer compileEndMove(ParsedScope* with) override;
@@ -66,7 +67,9 @@ namespace ds
 
 		~ClassType() override
 		{
-			delete this->nullable;
+			this->nullable->from = nullptr;
+			if (this->nullable)
+				delete this->nullable;
 		}
 
 		size_t classSize = 0;

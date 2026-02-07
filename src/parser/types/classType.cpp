@@ -43,6 +43,12 @@ ds::NullableClassType::NullableClassType(ClassType* from)
 	this->isGeneric = from->isGeneric;
 }
 
+ds::NullableClassType::~NullableClassType()
+{
+	if (from)
+		from->nullable = nullptr;
+}
+
 void ds::NullableClassType::applyName()
 {
 	this->id = typeIdFromName(this->from->getName());

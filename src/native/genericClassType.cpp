@@ -14,6 +14,7 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 	return registry->getGenericEntry<NativeGenericClassType>(this->id, types,
 		[this, types, at, with, registry] {
 			auto t = new NativeGenericClassType(*this);
+			t->nullable = new NullableClassType(t);
 			t->types = types;
 
 			for (auto& i : t->members)
@@ -28,6 +29,14 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 
 			return t;
 		});
+}
+
+ds::NativeGenericClassType::~NativeGenericClassType()
+{
+	for (auto& i : this->methods)
+	{
+		delete i.second;
+	}
 }
 
 ds::NativeGenericClassType::GenericMethod::GenericMethod(NativeGenericClassType* classInstance, Function* base,

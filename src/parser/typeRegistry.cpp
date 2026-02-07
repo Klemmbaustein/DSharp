@@ -22,13 +22,19 @@ ds::TypeRegistry::~TypeRegistry()
 	}
 	for (auto& [_, t] : this->genericTypes)
 	{
+		std::vector<GenericEntry> newEntries;
 		for (auto& i : t)
 		{
 			if (i.owner == this)
 			{
 				delete i.type;
 			}
+			else
+			{
+				newEntries.push_back(i);
+			}
 		}
+		t = newEntries;
 	}
 }
 

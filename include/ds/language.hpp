@@ -22,6 +22,11 @@ namespace ds
 	 */
 	struct LanguageContext
 	{
+		~LanguageContext()
+		{
+			delete registry;
+		}
+
 		LanguageRuntime* createRuntime();
 
 		/**
@@ -55,7 +60,7 @@ namespace ds
 		 */
 		void addNativeModule(const NativeModule& module);
 
-		TypeRegistry registry;
+		TypeRegistry* registry = new TypeRegistry();
 
 		std::map<std::string, NativeModule*> languageModules;
 	};

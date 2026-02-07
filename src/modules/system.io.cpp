@@ -138,7 +138,7 @@ ds::NativeModule ds::modules::system::io::createModule(LanguageContext* to)
 	NativeModule out;
 	out.name = "system::io";
 
-	auto stringType = to->registry.getEntry<StringType>();
+	auto stringType = to->registry->getEntry<StringType>();
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(stringType, "toWrite") }, nullptr,
@@ -149,7 +149,7 @@ ds::NativeModule ds::modules::system::io::createModule(LanguageContext* to)
 		"write", &io_write));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(to->registry.getEntry<IntType>(), "toWrite") }, nullptr,
+		{ FunctionArgument(to->registry->getEntry<IntType>(), "toWrite") }, nullptr,
 		"writeInt", &io_writeInt));
 
 	out.addFunction(NativeFunction(
@@ -170,7 +170,7 @@ ds::NativeModule ds::modules::system::io::createModule(LanguageContext* to)
 
 	out.addClassMethod(fileClass,
 		NativeFunction(
-			{}, to->registry.getEntry<BoolType>(),
+			{}, to->registry->getEntry<BoolType>(),
 			"isEmpty", &io_file_isEmpty));
 
 #if HAS_POPEN
