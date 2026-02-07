@@ -16,7 +16,7 @@ namespace ds
 			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 
 		ExpressionResult compileAwait(ExpressionResult taskExpr, ExpressionResult returnTaskExpr,
-			ParsedScope* with);
+			ParsedScope* with) const;
 
 		ExpressionResult compileTask();
 		ExpressionResult compileCompleteTask();

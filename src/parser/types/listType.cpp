@@ -17,7 +17,7 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 
 	while (true)
 	{
-		auto next = line.get();
+		auto& next = line.get();
 
 		if (next.empty())
 		{
@@ -80,7 +80,7 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 
 		arrayElements.push_back(nextValue);
 
-		auto next = inListLine.peek();
+		auto& next = inListLine.peek();
 
 		if (next.empty())
 		{
@@ -98,7 +98,7 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 		return result;
 	}
 
-	ArrayType* arrayType = ArrayType::getInstance(itemType);
+	ArrayType* arrayType = with->context->registry->getArray(itemType);
 
 	return arrayType->makeArrayValue(arrayElements, with);
 }

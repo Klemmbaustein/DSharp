@@ -8,25 +8,28 @@ namespace ds
 	{
 	public:
 		BuiltinClassFunction(std::vector<FunctionArgument> arguments, Type* returnType,
-			std::string name)
+			std::string name, std::string shortName)
 		{
 			this->arguments = arguments;
 			this->returnType = returnType;
 			this->name = name;
+			this->shortName = shortName;
 		}
 		BuiltinClassFunction(std::vector<FunctionArgument> arguments, Type* returnType,
-			std::string name, bytecodeOffset virtualId, ClassType* thisClass)
+			std::string name, std::string shortName, bytecodeOffset virtualId, ClassType* thisClass)
 		{
 			this->arguments = arguments;
 			this->returnType = returnType;
 			this->name = name;
 			this->virtualId = virtualId;
 			this->thisClass = thisClass;
+			this->shortName = shortName;
 		}
 
 		std::vector<FunctionArgument> arguments;
 		Type* returnType;
 		std::string name;
+		std::string shortName;
 		bytecodeOffset virtualId = UINT32_MAX;
 		ClassType* thisClass = nullptr;
 		ExpressionResult compileCall() override
@@ -69,7 +72,7 @@ namespace ds
 		}
 		std::string getShortName() const override
 		{
-			return name;
+			return shortName;
 		}
 
 		bool discardable() const override

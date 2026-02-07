@@ -15,7 +15,7 @@ fn doUnwind()
 {
 	string s = "hi"
 
-	unwind
+	err::abort()
 }
 
 [EntryPoint]

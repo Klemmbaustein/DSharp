@@ -2,10 +2,9 @@
 #include <ds/parser/types/listType.hpp>
 #include <ds/parser/types/builtinClassFunction.hpp>
 #include <ds/parser/parseScope.hpp>
-#include <ds/native/nativeModule.hpp>
 using namespace ds;
 
-ds::ArrayType::ArrayType(Type* baseType)
+ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 {
 	this->name = baseType->getName() + "[]";
 	this->size = sizeof(Pointer);
@@ -13,10 +12,20 @@ ds::ArrayType::ArrayType(Type* baseType)
 	this->baseType = baseType;
 
 	this->methods.insert({ "push",
-		new BuiltinClassFunction({ FunctionArgument(baseType, Token("value")) }, nullptr, "system::array.push") });
+		new BuiltinClassFunction({ FunctionArgument(baseType, Token("value")) }, nullptr, "system::array.push", "push") });
 
 	this->methods.insert({ "pop",
-		new BuiltinClassFunction({ }, nullptr, "system::array.pop") });
+		new BuiltinClassFunction({}, nullptr, "system::array.pop", "pop") });
+
+	this->members.push_back(ClassMember{
+		.name = "length",
+		.offset = 0,
+		.type = registry->getEntry<IntType>() });
+
+	isGeneric = true;
+	addGenericToName = false;
+
+	applyName();
 }
 
 ExpressionResult ds::ArrayType::compileOperator(Operator operatorType, ExpressionResult& first,
@@ -38,22 +47,6 @@ ExpressionResult ds::ArrayType::compileCast(ExpressionResult value, ParsedScope*
 		return makeArrayValue({}, with);
 	}
 	return ExpressionResult();
-}
-
-ExpressionResult ds::ArrayType::compileMember(ExpressionResult value, TokenLine& line,
-	ErrorContext* errors, bool setMember, ParsedScope* with)
-{
-	Token memberName = line.peek();
-
-	if (memberName == "length")
-	{
-		line.get();
-		return getLength(value.code, with->context);
-	}
-
-	value.code.pushInt(this->baseType->size);
-
-	return ClassType::compileMember(value, line, errors, setMember, with);
 }
 
 ExpressionResult ds::ArrayType::compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,

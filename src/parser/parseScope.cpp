@@ -280,7 +280,8 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 
 	for (auto& i : variables)
 	{
-		if (i.second.depth < toDepth)
+		bool isLambdaOwned = !this->isLambda || i.second.ownedBy == this;
+		if (i.second.depth < toDepth || !isLambdaOwned)
 		{
 			continue;
 		}
@@ -288,7 +289,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 		bool isDestructor = scopeFunction && scopeFunction->name == "delete";
 		bool isConstructor = scopeFunction && scopeFunction->name == "new";
 		bool varIsThis = &i.second == thisVariable;
-		bool shouldUnrefThis = (!isDestructor && !returnThis) || isConstructor;
+		bool shouldUnrefThis = ((!isDestructor && !returnThis) || isConstructor);
 
 		if (dereferenceAll && (!varIsThis || shouldUnrefThis) && this->taskVariable != &i.second)
 		{

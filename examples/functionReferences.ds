@@ -1,14 +1,13 @@
 using system::io
+using system
 
 module functionReferences
 
 [EntryPoint]
 fn example()
 {
-	fn() -> int reference
-
 	// Regular function
-	reference = getNumberFunction
+	fn() -> int reference = getNumberFunction
 
 	writeInt(reference.call())
 
@@ -26,14 +25,14 @@ fn example()
 	writeInt(reference.call())
 
 	// Output:
-	// 6
+	// 1
+	// 5
 	// 10
-	// 15
 }
 
-fn getNumberFunction()
+fn getNumberFunction() -> int
 {
-	return 1
+	return 2
 }
 
 class GetNumberFunctionClass : fn() -> int

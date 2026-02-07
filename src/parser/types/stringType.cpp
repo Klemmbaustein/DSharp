@@ -253,25 +253,3 @@ ExpressionResult ds::StringType::compileStringValue(std::string str, ParsedScope
 	result.code.addBuffer(with->addTemporaryVariable(this));
 	return result;
 }
-
-ExpressionResult ds::StringType::compileMember(ExpressionResult value, TokenLine& line,
-	ErrorContext* errors, bool setMember, ParsedScope* with)
-{
-	Token memberName = line.get();
-
-	if (memberName == "length")
-	{
-		ExpressionResult result;
-		result.code.addBuffer(value.code);
-		// string length offset (0 bytes)
-		result.code.pushInt(0);
-		// string length size (sizeof uint32_t bytes)
-		result.code.pushInt(sizeof(uint32_t));
-		result.code.addOperation(BytecodeOp::classMember);
-		result.type = with->context->registry->getEntry<IntType>();
-		result.valid = true;
-		return result;
-	}
-
-	return ExpressionResult();
-}

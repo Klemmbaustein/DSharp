@@ -17,7 +17,7 @@ ds::FunctionType::FunctionType(Type* returnType, std::vector<Type*> arguments)
 	}
 
 	this->methods.insert({ "call",
-		new BuiltinClassFunction(args, returnType, "call", 1, this) });
+		new BuiltinClassFunction(args, returnType, "call", "call", 1, this) });
 	applyName();
 }
 
@@ -100,7 +100,7 @@ FunctionType* ds::FunctionType::compileType(Token first, TokenLine& line, ErrorC
 
 	argsLine.expectEndOfLine(errors);
 
-	auto next = line.peek();
+	auto& next = line.peek();
 
 	if (next != "->")
 	{

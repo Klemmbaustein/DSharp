@@ -412,23 +412,23 @@ static void array_new(InterpretContext* context)
 
 static void array_push(InterpretContext* context)
 {
-	uint32_t elementSize = context->popValue<uint32_t>();
+	auto generic = GenericData(context);
 	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 
 	array->length++;
 
-	void* newData = realloc(array->data, array->length * elementSize);
+	void* newData = realloc(array->data, array->length * generic.typeSize);
 
 	if (newData)
 	{
 		array->data = newData;
-		context->popBytes((uint8_t*)array->data + elementSize * (array->length - 1), elementSize);
+		context->popBytes((uint8_t*)array->data + generic.typeSize * (array->length - 1), generic.typeSize);
 	}
 }
 
 static void array_pop(InterpretContext* context)
 {
-	uint32_t elementSize = context->popValue<uint32_t>();
+	auto generic = GenericData(context);
 	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 
 	if (array->length == 0)
@@ -442,7 +442,7 @@ static void array_pop(InterpretContext* context)
 
 	context->destruct(elem[array->length]);
 
-	void* newData = realloc(array->data, array->length * elementSize);
+	void* newData = realloc(array->data, array->length * generic.typeSize);
 
 	if (newData || array->length == 0)
 	{

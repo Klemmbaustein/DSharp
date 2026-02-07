@@ -23,6 +23,7 @@ namespace ds
 		std::string name;
 		bool hasDefaultValue = true;
 		bool isGeneric = false;
+		bool addGenericToName = true;
 
 		virtual std::string getName()
 		{

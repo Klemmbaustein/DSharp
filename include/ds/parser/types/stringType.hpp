@@ -6,12 +6,18 @@ namespace ds
 	class StringType : public ClassType
 	{
 	public:
-		StringType()
+		StringType(TypeRegistry* registry)
 		{
 			this->name = "string";
 			this->size = sizeof(Pointer);
 			this->vTableOffset = UINT32_MAX;
 			applyName();
+
+			this->members.push_back(ClassMember{
+				.name = "length",
+				.offset = 0,
+				.type = registry->getEntry<IntType>(),
+				});
 		}
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
@@ -19,8 +25,6 @@ namespace ds
 		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors,
 			ParsedScope* with, Type* hintType) override;
 		ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
-		ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
-			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 		ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 

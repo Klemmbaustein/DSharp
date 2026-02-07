@@ -118,7 +118,7 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 
 	out.addClassMethod(pathType,
 		NativeFunction(
-			{}, ArrayType::getInstance(pathType),
+			{}, to->registry.getArray(pathType),
 			"getFiles", &fs_path_getFiles));
 
 	out.addClassMethod(pathType,

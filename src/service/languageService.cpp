@@ -67,7 +67,7 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 	CompletionType type)
 {
 	ScannedFunction* foundFunction = nullptr;
-	ScannedVariable* found = nullptr;
+	ScannedVariable* foundVariable = nullptr;
 	size_t nearestLine = 0;
 
 	auto listScopeContents = [&]() -> std::vector<AutoCompleteResult> {
@@ -80,7 +80,7 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 			i.at.position.startPos <= character && nearestLine < i.at.position.endPos)
 		{
 			nearestLine = i.at.position.endPos;
-			found = &i;
+			foundVariable = &i;
 		}
 	}
 
@@ -92,14 +92,14 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 				i.at.position.startPos <= character && nearestLine < i.argEnd.endPos)
 			{
 				nearestLine = i.argEnd.endPos;
-				found = nullptr;
+				foundVariable = nullptr;
 				foundFunction = &i;
 			}
 			if (i.argEnd.endPos >= character &&
-				i.at.position.startPos <= character && nearestLine < i.argEnd.startPos)
+				i.at.position.startPos <= character && nearestLine < i.at.position.endPos)
 			{
 				nearestLine = i.argEnd.endPos;
-				found = nullptr;
+				foundVariable = nullptr;
 				foundFunction = nullptr;
 			}
 		}
@@ -107,9 +107,9 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 
 	TypeId typeToList = 0;
 
-	if (found)
+	if (foundVariable)
 	{
-		typeToList = found->typeId;
+		typeToList = foundVariable->typeId;
 	}
 	else if (foundFunction)
 	{

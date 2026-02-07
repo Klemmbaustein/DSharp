@@ -239,6 +239,14 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 #ifdef WITH_LANGUAGE_SERVICE
 void ds::ParseContext::emitServiceTypes()
 {
+	auto types = this->registry->getAllTypes();
+
+	for (auto& i : types)
+	{
+		auto t = i->toScanned();
+		this->service->types.insert({ t.id, t });
+	}
+
 	for (auto& [name, module] : this->programModules)
 	{
 		emitServiceTypesForModule(&module);

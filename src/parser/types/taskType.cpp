@@ -35,7 +35,7 @@ ExpressionResult ds::TaskType::compileValue(Token first, TokenLine& line, ErrorC
 }
 
 ExpressionResult ds::TaskType::compileAwait(ExpressionResult taskExpr, ExpressionResult returnTaskExpr,
-	ParsedScope* with)
+	ParsedScope* with) const
 {
 	returnTaskExpr.code.addBuffer(taskExpr.code);
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("endAwait");

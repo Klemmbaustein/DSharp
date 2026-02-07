@@ -20,6 +20,13 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	}
 
 	auto argTokens = line.getInBraces(errors);
+	Type* returnType = nullptr;
+
+	if (line.peek() == "->")
+	{
+		line.get();
+		returnType = with->scopeFile->getType(line, errors);
+	}
 
 	if (line.expect("{", errors))
 	{
@@ -41,6 +48,7 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
 	newFunction.functionFile = with->scopeFile;
+	newFunction.returnType = returnType;
 
 	newFunction.argumentTokens = argTokens;
 

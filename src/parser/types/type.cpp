@@ -201,7 +201,7 @@ ScannedType ds::Type::toScanned()
 
 std::string ds::Type::toString(Type* target)
 {
-	if (target && target->isGeneric)
+	if (target && target->isGeneric && target->addGenericToName)
 	{
 		auto args = target->getGenericTypes();
 		std::string outName = target->getName();

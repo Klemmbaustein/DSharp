@@ -7,10 +7,12 @@
 namespace ds
 {
 	class Type;
+	class ArrayType;
 
 	class TypeRegistry
 	{
 	public:
+
 		template <typename T>
 		T* getEntry()
 		{
@@ -22,10 +24,22 @@ namespace ds
 				}
 			}
 
-			auto newType = new T();
+			T* newType;
+
+			if constexpr (requires { new T(this); })
+			{
+				newType = new T(this);
+			}
+			else
+			{
+				newType = new T();
+			}
+
 			this->types.push_back(Entry(newType, this));
 			return newType;
 		}
+
+		ArrayType* getArray(Type* base);
 
 		template <typename T>
 		T* getGenericEntry(TypeId type, std::vector<Type*> args, std::function<T*()> create)
@@ -114,6 +128,8 @@ namespace ds
 			return compareTypes(outType, inType);
 		}
 
+		std::vector<Type*> getAllTypes();
+
 		~TypeRegistry();
 
 	private:
@@ -133,6 +149,8 @@ namespace ds
 		};
 
 		std::vector<Entry> types;
+		std::map<Type*, Entry> arrayTypes;
+
 		std::map<TypeId, std::vector<GenericEntry>> genericTypes;
 	};
 } // namespace ds

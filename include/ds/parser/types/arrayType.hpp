@@ -9,35 +9,25 @@ namespace ds
 	class ArrayType : public ClassType
 	{
 	public:
-		ArrayType(Type* baseType);
+		ArrayType(Type* baseType, TypeRegistry* registry);
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		ExpressionResult compileValue(Token first, TokenLine& line, ErrorContext* errors,
 			ParsedScope* with, Type* hintType) override;
 		ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
-		ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
-			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 		ExpressionResult compileIndex(ExpressionResult thisValue, ExpressionResult indexValue,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 
 		ExpressionResult getLength(BytecodeBuffer thisValue, ParseContext* context);
 
-		static ArrayType* getInstance(Type* baseType)
-		{
-			ArrayType*& instance = arrayTypes[baseType];
-			if (!instance)
-			{
-				instance = new ArrayType(baseType);
-			}
-			return instance;
-		}
-
 		ExpressionResult makeArrayValue(std::vector<ExpressionResult> values, ParsedScope* with);
 
-		Type* baseType;
+		virtual std::vector<Type*> getGenericTypes()
+		{
+			return {baseType};
+		}
 
-	private:
-		static inline std::map<Type*, ArrayType*> arrayTypes;
+		Type* baseType;
 	};
 }

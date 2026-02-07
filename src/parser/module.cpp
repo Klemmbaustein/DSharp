@@ -72,10 +72,10 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 
 	if (from.peek() == "?")
 	{
-		auto nullableType = dynamic_cast<ClassType*>(found);
-		from.get();
+		auto nullableType = found->asClass();
 		if (nullableType)
 		{
+			from.get();
 			found = nullableType->nullable;
 		}
 	}
@@ -85,7 +85,17 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 	{
 		from.get();
 		from.expect("]", errors);
-		found = ArrayType::getInstance(found);
+		found = context->registry->getArray(found);
+
+		if (from.peek() == "?")
+		{
+			auto nullableType = found->asClass();
+			if (nullableType)
+			{
+				from.get();
+				found = nullableType->nullable;
+			}
+		}
 	}
 
 	return found;

@@ -2,12 +2,9 @@
 #include <ds/language.hpp>
 #include <ds/modules/standardLibrary.hpp>
 #include <cassert>
-#include <condition_variable>
 #include <print>
-#include <ds/modules/system.async.hpp>
 
 using namespace ds;
-using namespace ds::modules::system::async;
 
 bool completed = false;
 
