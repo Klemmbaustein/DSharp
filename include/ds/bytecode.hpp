@@ -100,23 +100,33 @@ namespace ds
 		/// Will push the pointer of the class again after the set operation
 		/// Arguments: 4 bytes offset, 4 bytes size
 		setClassMemberPushAgain,
+		/// Concatenates 2 strings from the stack into a single string and pushes the result to the stack.
 		concatString,
+		/// Pushes the char at the given index from the given string onto the stack.
 		indexString,
 		/// Creates a new string in which a single character is different. Used for:
 		/// string x = "hello world"
 		/// x[0] = 'h'
 		setStringIndexCopy,
+		/// Calls a virtual function.
 		virtualCall,
 		/// Verifies that the current pointer on the stack is not null.
 		nullCheck,
 		getStructMember,
 		setStructMember,
+		/// Suspends the current context, to be resumed later.
 		suspend,
+		/// Suspends the current context, resumed when a given task finishes.
 		awaitTask,
+		/// Returns from an async function.
 		returnAsync,
+		/// Unwinds the stack, destructing all objects on the way.
 		unwind,
+		/// Checks if a class has the given type.
 		classIs,
+		/// Converts a class to the given type if possible.
 		classAs,
+		/// Marks the end of a function with a missing return statement.
 		noReturn,
 	};
 

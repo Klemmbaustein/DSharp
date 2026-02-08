@@ -98,6 +98,10 @@ namespace ds
 
 		std::vector<ClassType*> parents;
 
+		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+			ErrorContext* errors, ParsedScope* with) override;
+
+
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,

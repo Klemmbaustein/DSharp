@@ -175,6 +175,14 @@ ExpressionResult ds::NullableClassType::compileCast(ExpressionResult value, Pars
 		return value;
 	}
 
+	auto classValue = value.type->asClass();
+
+	if (classValue && (classValue->isSubclassOf(from)))
+	{
+		value.type = this;
+		return value;
+	}
+
 	auto nullValue = dynamic_cast<NullType*>(value.type);
 
 	if (nullValue)
@@ -288,9 +296,37 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
+ExpressionResult ds::ClassType::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+	ErrorContext* errors, ParsedScope* with)
+{
+	auto secondClass = second.type->asClass();
+
+	if (!secondClass || !(secondClass->isSubclassOf(this) || this->isSubclassOf(secondClass)))
+	{
+		second.compileToType(opToken, first.type, with, errors);
+		if (!first.type->sameAs(second.type))
+		{
+			return ExpressionResult();
+		}
+	}
+
+	ExpressionResult result;
+	result.valid = true;
+	result.type = with->context->registry->getEntry<BoolType>();
+
+	result.code.addBuffer(first.code);
+	result.code.addBuffer(second.code);
+
+	result.code.pushInt(first.type->size);
+	result.code.addOperation(BytecodeOp::equals);
+
+	return result;
+}
+
+
 ExpressionResult ds::ClassType::compileCast(ExpressionResult value, ParsedScope* with)
 {
-	auto castValue = dynamic_cast<ClassType*>(value.type);
+	auto castValue = value.type->asClass();
 
 	if (castValue && (castValue->isSubclassOf(this)))
 	{
