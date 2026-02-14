@@ -4,6 +4,7 @@
 
 namespace ds
 {
+	/// Unique (usually hashed from the name) identifier for a type.
 	using TypeId = Size;
 
 	constexpr TypeId typeIdFromName(std::string name)
