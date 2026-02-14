@@ -207,10 +207,18 @@ ExpressionResult ds::NullableClassType::compileEqualsTo(ExpressionResult first, 
 	if (second.type->sameAs(NullType::getInstance()))
 	{
 		second.type = this;
+		return this->from->compileEqualsTo(first, second, opToken, errors, with);
+
 	}
-	else if (!second.type->sameAs(this))
+	auto secondClass = second.type->asClass();
+
+	if (!secondClass || !(secondClass->isSubclassOf(this->from) || this->from->isSubclassOf(secondClass)))
 	{
-		return ExpressionResult();
+		second.compileToType(opToken, first.type, with, errors);
+		if (!first.type->sameAs(second.type))
+		{
+			return ExpressionResult();
+		}
 	}
 
 	return this->from->compileEqualsTo(first, second, opToken, errors, with);

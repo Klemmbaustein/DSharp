@@ -55,10 +55,7 @@ static void task_complete(InterpretContext* context)
 		completeTask(task, context);
 	}
 
-	if (task->awaitNative || task->awaiter)
-	{
-		context->destruct(task.classPtr);
-	}
+	context->destruct(task.classPtr);
 
 	context->pushValue(task);
 }
