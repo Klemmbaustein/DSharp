@@ -138,7 +138,7 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 
 	pathType->members.push_back(ClassMember{
 		.name = "pathString",
-		.offset = offsetof(fs::FilePath, pathString),
+		.offset = DS_OFFSETOF(fs::FilePath, pathString),
 		.type = strType,
 	});
 

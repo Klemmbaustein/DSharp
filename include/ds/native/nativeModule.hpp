@@ -6,6 +6,8 @@
 #include "externalFunction.hpp"
 #include "genericClassType.hpp"
 
+#define DS_OFFSETOF(T, m) (::ds::Size)(::std::size_t) & (reinterpret_cast<char const volatile&>(((T*)nullptr)->m))
+
 namespace ds
 {
 	struct LanguageContext;
