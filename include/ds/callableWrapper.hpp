@@ -23,7 +23,7 @@ namespace ds
 			this->interpreter = interpreter;
 		}
 
-		void operator=(const CallableWrapper& other) const
+		void operator=(const CallableWrapper& other)
 		{
 			this->callablePtr = other.callablePtr;
 			callablePtr->addRef();
