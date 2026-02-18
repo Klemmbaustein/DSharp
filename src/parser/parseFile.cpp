@@ -89,9 +89,9 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 		currentAttributes.push_back(AttribInfo(attribTokens));
 		return true;
 	}
-	if (first == "class")
+	if (first == "class" || first == "interface")
 	{
-		scanClass(currentLine, errors).addAttributes(currentAttributes);
+		scanClass(currentLine, first == "interface", errors).addAttributes(currentAttributes);
 		currentAttributes.clear();
 		return true;
 	}
@@ -135,11 +135,12 @@ ParsedFunction* ds::ParsedFile::scanFunction(TokenLine currentLine, ErrorContext
 	return &fn;
 }
 
-ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* errors)
+ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, bool isInterface, ErrorContext* errors)
 {
 	ParsedClass& newClass = this->classes.emplace_back(this);
 	newClass.name = currentLine.get();
 	newClass.name.checkIsName(errors);
+	newClass.isInterface = isInterface;
 
 	if (currentLine.peek() == ":")
 	{
@@ -157,9 +158,10 @@ ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, ErrorContext* erro
 				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(), "Expected a '{'");
 				return newClass;
 			}
-			else if (currentLine.expect(",", errors))
+			else if (currentLine.previous() != ",")
 			{
-				break;
+				errors->error(ErrorCode::parseUnexpectedToken, currentLine.previous(),
+					"Expected a ',', got: '" + currentLine.previous().string + "'");
 			}
 		}
 	}

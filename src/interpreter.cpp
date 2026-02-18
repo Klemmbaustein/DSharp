@@ -83,15 +83,15 @@ void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 	this->baseContext.code.buf = this->bytecodeBuffer;
 }
 
-void ds::LanguageRuntime::run(bytecodeOffset position)
+void ds::LanguageRuntime::run(BytecodeOffset position)
 {
 	baseContext.run(position);
 }
 
-void ds::InterpretContext::run(bytecodeOffset position)
+void ds::InterpretContext::run(BytecodeOffset position)
 {
-	callStack[callStackPos++] = bytecodeOffset(code.streamPos);
-	bytecodeOffset baseCallStackPos = this->callStackPos;
+	callStack[callStackPos++] = BytecodeOffset(code.streamPos);
+	BytecodeOffset baseCallStackPos = this->callStackPos;
 	this->code.streamPos = position;
 
 	runLoop(baseCallStackPos);
@@ -105,11 +105,11 @@ void ds::InterpretContext::doUnwind()
 {
 	auto& buffer = runtime->unwindBuffer;
 
-	callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+	callStack[callStackPos++] = BytecodeOffset(code.streamPos);
 
 	for (uint32_t i = callStackPos - 1; i > 0; i--)
 	{
-		bytecodeOffset codePos = callStack[i];
+		BytecodeOffset codePos = callStack[i];
 
 		auto tbl = buffer.getSectionAt(codePos);
 
@@ -154,7 +154,7 @@ void ds::InterpretContext::doUnwind()
 	code.streamPos = SIZE_MAX;
 }
 
-void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
+void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 {
 	std::array<uint8_t, 255> argumentBuffer{};
 
@@ -277,8 +277,8 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			break;
 		}
 		case ds::BytecodeOp::call:
-			callStack[callStackPos++] = bytecodeOffset(code.streamPos);
-			code.streamPos = size_t(*(bytecodeOffset*)&argumentBuffer[0]);
+			callStack[callStackPos++] = BytecodeOffset(code.streamPos);
+			code.streamPos = size_t(*(BytecodeOffset*)&argumentBuffer[0]);
 			break;
 		case ds::BytecodeOp::callExternal:
 			runtime->externals[*(Size*)&argumentBuffer[0]](this);
@@ -355,8 +355,24 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 		case ds::BytecodeOp::allocClass: {
 			Size size = popValue<Size>();
 			Size typeId = *(Size*)&argumentBuffer[0];
-			bytecodeOffset vTableOffset = *(bytecodeOffset*)&argumentBuffer[sizeof(typeId)];
+			BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(typeId)];
 			pushValue(RuntimeClass::allocateClass(size, typeId, vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr));
+			break;
+		}
+		case ds::BytecodeOp::implInterface: {
+			RuntimeClass* classPtr = popValue<RuntimeClass*>();
+			BytecodeOffset offset = *(BytecodeOffset*)&argumentBuffer[0];
+			BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(offset)];
+
+			RuntimeClass* cls = reinterpret_cast<RuntimeClass*>(classPtr->getBody() + offset);
+			*cls = RuntimeClass{
+				.vtable = vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr,
+				.type = classPtr->type,
+				.references = offset,
+				.referencesAreOffset = true,
+			};
+
+			pushValue(cls);
 			break;
 		}
 		case ds::BytecodeOp::classMember: {
@@ -376,8 +392,9 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 		case ds::BytecodeOp::classMemberPtr: {
 			Size size = popValue<Size>();
 			Size offset = popValue<Size>();
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			pushBytes(*(uint8_t**)ptr->getBody() + offset, size);
+			RuntimeClass* classPtr = popValue<RuntimeClass*>();
+			uint8_t* bodyPointer = *(uint8_t**)classPtr->getBody();
+			pushBytes(bodyPointer + offset, size);
 			break;
 		}
 		case ds::BytecodeOp::setClassMemberPtr: {
@@ -418,7 +435,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 				}
 				else
 				{
-					callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+					callStack[callStackPos++] = BytecodeOffset(code.streamPos);
 					code.streamPos = destructor.codeOffset;
 				}
 			}
@@ -474,7 +491,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 		}
 		case ds::BytecodeOp::virtualCall: {
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			bytecodeOffset called = *(bytecodeOffset*)&argumentBuffer[0];
+			BytecodeOffset called = *(BytecodeOffset*)&argumentBuffer[0];
 			auto& entry = ptr->vtable[called];
 			pushValue(ptr);
 			if (entry.nativeFn)
@@ -483,7 +500,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			}
 			else
 			{
-				callStack[callStackPos++] = bytecodeOffset(code.streamPos);
+				callStack[callStackPos++] = BytecodeOffset(code.streamPos);
 				code.streamPos = entry.codeOffset;
 			}
 
@@ -532,7 +549,7 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			if (ptr)
 			{
 				TypeId id = *(TypeId*)&argumentBuffer[0];
-				if (id == ptr->type)
+				if (id == ptr->type || this->runtime->reflect->isSubclassOf(ptr->type, id))
 				{
 					pushValue<Bool>(true);
 				}
@@ -553,9 +570,18 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 			if (ptr)
 			{
 				TypeId id = *(TypeId*)&argumentBuffer[0];
-				if (id != ptr->type && !this->runtime->reflect->isSubclassOf(ptr->type, id))
+				if (id != ptr->type)
 				{
-					ptr = nullptr;
+					auto [success, offset] = this->runtime->reflect->tryCast(ptr->type, id);
+
+					if (success)
+					{
+						ptr = reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset);
+					}
+					else
+					{
+						ptr = nullptr;
+					}
 				}
 			}
 			if (!isNullable && !ptr)
@@ -568,6 +594,23 @@ void ds::InterpretContext::runLoop(bytecodeOffset& baseCallStackPos)
 		case ds::BytecodeOp::noReturn: {
 			runtimePanic(RuntimeStr("Function did not return"));
 			return;
+		}
+		case ds::BytecodeOp::castInterface: {
+			Int offset = *(Int*)&argumentBuffer[0];
+			Bool unCast = *(Bool*)&argumentBuffer[sizeof(offset)];
+			RuntimeClass* classPtr = popValue<RuntimeClass*>();
+			if (unCast)
+			{
+				classPtr = (RuntimeClass*)((uint8_t*)classPtr - offset - sizeof(RuntimeClass));
+			}
+			else
+			{
+				classPtr = (RuntimeClass*)((uint8_t*)classPtr + offset + sizeof(RuntimeClass));
+			}
+			RuntimeClass* ptr = (RuntimeClass*)classPtr;
+
+			pushValue(ptr);
+			break;
 		}
 		default:
 			abort();
@@ -654,7 +697,7 @@ bool ds::InterpretContext::resumeSuspend()
 {
 	if (suspended)
 	{
-		bytecodeOffset pos = suspendStackPos;
+		BytecodeOffset pos = suspendStackPos;
 		suspended = false;
 		runLoop(pos);
 		return true;

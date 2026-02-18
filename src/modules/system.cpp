@@ -56,7 +56,7 @@ static void string_compare(InterpretContext* context)
 
 static void int_toString(InterpretContext* context)
 {
-	auto str = std::to_string(context->popValue<uint32_t>());
+	auto str = std::to_string(context->popValue<Int>());
 	context->pushRuntimeString(RuntimeStr(str.data(), str.size()));
 }
 
@@ -479,7 +479,7 @@ static void fn_call(InterpretContext* context)
 
 static void fn_new_bytecode(InterpretContext* context)
 {
-	auto offset = context->popValue<bytecodeOffset>();
+	auto offset = context->popValue<BytecodeOffset>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
@@ -501,15 +501,15 @@ static void fn_delete_lambda(InterpretContext* context)
 
 static void fn_new_lambda(InterpretContext* context)
 {
-	auto offset = context->popValue<bytecodeOffset>();
+	auto offset = context->popValue<BytecodeOffset>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete_lambda;
 	entries[1].codeOffset = offset;
 
-	int32_t size = context->popValue<bytecodeOffset>();
+	int32_t size = context->popValue<BytecodeOffset>();
 
-	auto deref = context->popValue<bytecodeOffset>();
+	auto deref = context->popValue<BytecodeOffset>();
 	entries[2].codeOffset = deref;
 
 	auto cls = RuntimeClass::allocateClass(size + 4, 0, entries);
@@ -523,7 +523,7 @@ static void fn_new_lambda(InterpretContext* context)
 
 static void fn_new_native(InterpretContext* context)
 {
-	auto offset = context->popValue<bytecodeOffset>();
+	auto offset = context->popValue<BytecodeOffset>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;

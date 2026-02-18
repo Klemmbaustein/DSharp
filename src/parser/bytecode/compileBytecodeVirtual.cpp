@@ -16,9 +16,9 @@ void ds::BytecodeCallVirtual::getArgs(BinaryBuffer& stream, BytecodeCompiler* co
 	stream.addValue(this->functionToCall->getVirtualOffset());
 }
 
-bytecodeOffset ds::BytecodeCallVirtual::getArgsSize()
+BytecodeOffset ds::BytecodeCallVirtual::getArgsSize()
 {
-	return sizeof(bytecodeOffset);
+	return sizeof(BytecodeOffset);
 }
 
 std::string ds::BytecodeCallVirtual::toString()

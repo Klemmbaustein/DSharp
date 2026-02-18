@@ -37,7 +37,7 @@ void BytecodePushVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compi
 	stream.addValue<uint32_t>(this->variableType->size);
 }
 
-bytecodeOffset BytecodePushVariable::getArgsSize()
+BytecodeOffset BytecodePushVariable::getArgsSize()
 {
 	return sizeof(uint32_t);
 }
@@ -64,7 +64,7 @@ void BytecodeReadVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compi
 	stream.addValue<uint32_t>(compiler->variableStackPosition - this->variable->variablePos);
 }
 
-bytecodeOffset BytecodeReadVariable::getArgsSize()
+BytecodeOffset BytecodeReadVariable::getArgsSize()
 {
 	return sizeof(uint32_t) * 2;
 }
@@ -90,7 +90,7 @@ void BytecodeStoreVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* comp
 	stream.addValue<uint32_t>(compiler->variableStackPosition - this->variable->variablePos);
 }
 
-bytecodeOffset BytecodeStoreVariable::getArgsSize()
+BytecodeOffset BytecodeStoreVariable::getArgsSize()
 {
 	return sizeof(uint32_t) * 2;
 }
@@ -128,7 +128,7 @@ void ds::BytecodePopVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSe
 		});
 }
 
-bytecodeOffset BytecodePopVariable::getArgsSize()
+BytecodeOffset BytecodePopVariable::getArgsSize()
 {
 	return sizeof(Size);
 }

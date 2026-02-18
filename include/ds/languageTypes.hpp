@@ -16,14 +16,14 @@ namespace ds
 	using Float = float;
 	using Pointer = uintptr_t;
 	using Size = uint32_t;
-	using bytecodeOffset = uint32_t;
+	using BytecodeOffset = uint32_t;
 	using TypeId = Size;
 
 	class InterpretContext;
 
 	struct RuntimeFunction
 	{
-		bytecodeOffset codeOffset = UINT32_MAX;
+		BytecodeOffset codeOffset = UINT32_MAX;
 		void (*nativeFn)(InterpretContext*) = nullptr;
 
 		operator bool()

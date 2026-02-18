@@ -43,7 +43,7 @@ namespace ds
 		{
 			return false;
 		}
-		virtual bytecodeOffset getVirtualOffset() const
+		virtual BytecodeOffset getVirtualOffset() const
 		{
 			return 0;
 		}

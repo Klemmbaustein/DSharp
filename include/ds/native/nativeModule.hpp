@@ -40,7 +40,7 @@ namespace ds
 		std::string moduleName;
 		std::string className;
 		ClassType* virtualType = nullptr;
-		bytecodeOffset virtualId = 0;
+		BytecodeOffset virtualId = 0;
 		bool isDiscardable = false;
 
 		ExpressionResult compileCall() override;
@@ -60,7 +60,7 @@ namespace ds
 			return virtualId != 0;
 		}
 
-		virtual bytecodeOffset getVirtualOffset() const
+		virtual BytecodeOffset getVirtualOffset() const
 		{
 			return virtualId;
 		}
@@ -102,7 +102,7 @@ namespace ds
 
 			if (derived)
 			{
-				cls->parents = { derived };
+				cls->parent = derived;
 
 				for (auto& i : derived->members)
 				{
@@ -129,7 +129,7 @@ namespace ds
 
 			if (derived)
 			{
-				cls->parents = { derived };
+				cls->parent = derived;
 
 				for (auto& i : derived->members)
 				{
@@ -161,7 +161,7 @@ namespace ds
 		void addClassConstructor(ClassType* type, const NativeFunction& function);
 		void addClassMethod(ClassType* type, const NativeFunction& function);
 		void addStructMethod(ClassType* type, const NativeFunction& function);
-		void addClassVirtualMethod(ClassType* type, const NativeFunction& function, bytecodeOffset virtualId);
+		void addClassVirtualMethod(ClassType* type, const NativeFunction& function, BytecodeOffset virtualId);
 
 		void addType(Type* newType)
 		{

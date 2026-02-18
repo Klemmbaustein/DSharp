@@ -62,6 +62,15 @@ namespace ds
 			"and",
 			"or"
 		};
+		std::vector<std::string> fileKeywords = {
+			"class",
+			"interface",
+			"module",
+			"fn",
+			"async",
+			"virtual",
+			"override"
+		};
 
 		void addString(const std::string& content, std::string name);
 		void updateFile(const std::string& content, std::string name);

@@ -12,7 +12,7 @@ namespace ds
 		BytecodeUnwindClass(std::shared_ptr<BytecodePushVariable> variable);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
 

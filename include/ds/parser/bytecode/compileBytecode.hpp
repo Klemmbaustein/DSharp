@@ -18,9 +18,9 @@ namespace ds
 	public:
 		size_t baseSize = 3;
 		BytecodeOp operation = BytecodeOp::push;
-		bytecodeOffset offset = 0;
+		BytecodeOffset offset = 0;
 		virtual void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) = 0;
-		virtual bytecodeOffset getArgsSize() = 0;
+		virtual BytecodeOffset getArgsSize() = 0;
 		virtual std::string toString() { return ""; }
 		virtual void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section);
 		std::string toStringDefault(const BinaryBuffer& arguments) const;
@@ -32,7 +32,7 @@ namespace ds
 		BytecodeOperation(BytecodeOp operation, BinaryBuffer arguments);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		BinaryBuffer arguments;
@@ -44,7 +44,7 @@ namespace ds
 		BytecodeCallFunction(std::string callName);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		std::string callName;
@@ -56,7 +56,7 @@ namespace ds
 		BytecodeFunctionAddress(std::string callName, bool native = false);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		bool native = false;
@@ -70,7 +70,7 @@ namespace ds
 		BytecodeCallNative(std::string functionName);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		std::string functionName;
@@ -81,7 +81,7 @@ namespace ds
 		BytecodeAllocClass(ClassType* languageClass);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		ClassType* languageClass = nullptr;
@@ -93,7 +93,7 @@ namespace ds
 		BytecodeJumpLabel(std::string name);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		std::string name;
@@ -105,7 +105,7 @@ namespace ds
 		BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		BytecodeJumpLabel* target = nullptr;
@@ -117,7 +117,7 @@ namespace ds
 		BytecodeAwait(Size awaitSize, BytecodeJumpLabel* onFinished);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		Size awaitSize = 0;
@@ -151,7 +151,7 @@ namespace ds
 		bool isEntryPoint = false;
 		bool isPreCompiled = false;
 		std::string name;
-		bytecodeOffset offset = 0;
+		BytecodeOffset offset = 0;
 	};
 
 	struct BytecodeCompiler

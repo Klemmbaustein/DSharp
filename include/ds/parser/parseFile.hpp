@@ -34,7 +34,7 @@ namespace ds
 		void scan(ErrorContext* errors);
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors);
 		ParsedFunction* scanFunction(TokenLine currentLine, ErrorContext* errors);
-		ParsedClass& scanClass(TokenLine currentLine, ErrorContext* errors);
+		ParsedClass& scanClass(TokenLine currentLine, bool isInterface, ErrorContext* errors);
 		ParsedEnum& scanEnum(TokenLine currentLine, ErrorContext* errors);
 
 		void compile(ParseContext* context);

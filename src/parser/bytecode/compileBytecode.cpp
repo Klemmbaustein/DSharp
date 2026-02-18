@@ -18,9 +18,9 @@ void ds::BytecodeOperation::getArgs(BinaryBuffer& stream, BytecodeCompiler* comp
 {
 	stream.addBuffer(this->arguments);
 }
-bytecodeOffset ds::BytecodeOperation::getArgsSize()
+BytecodeOffset ds::BytecodeOperation::getArgsSize()
 {
-	return bytecodeOffset(this->arguments.buffer.size());
+	return BytecodeOffset(this->arguments.buffer.size());
 }
 
 void ds::BytecodeInstruction::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
@@ -58,10 +58,12 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::storeVariable, "STORE_VAR" },
 		{ BytecodeOp::readVariable, "READ_VAR" },
 		{ BytecodeOp::popVariable, "POP_VAR" },
-		{ BytecodeOp::allocClass, "NEW_CLASS" },
+		{ BytecodeOp::allocClass, "ALLOC_CLASS" },
+		{ BytecodeOp::implInterface, "IMPL_INTERFACE" },
 		{ BytecodeOp::refClass, "REF_CLASS" },
 		{ BytecodeOp::unrefClass, "UNREF_CLASS" },
 		{ BytecodeOp::classMember, "CLASS_MEMBER" },
+		{ BytecodeOp::classMemberPtr, "CLASS_MEMBER_PTR" },
 		{ BytecodeOp::setClassMember, "SET_CLASS_MEMBER" },
 		{ BytecodeOp::setClassMemberPushAgain, "SET_CLASS_MEMBER_PUSH" },
 		{ BytecodeOp::concatString, "CONCAT_STRING" },
@@ -73,6 +75,8 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::suspend, "SUSPEND" },
 		{ BytecodeOp::awaitTask, "AWAIT_TASK" },
 		{ BytecodeOp::unwind, "UNWIND" },
+		{ BytecodeOp::castInterface, "CAST_INTERFACE" },
+		{ BytecodeOp::noReturn, "NO_RETURN" },
 	};
 
 	const char* op = operations[this->operation];
@@ -110,9 +114,9 @@ void ds::BytecodeCallFunction::getArgs(BinaryBuffer& stream, BytecodeCompiler* c
 	stream.addValue(compiler->functions[this->callName].offset);
 }
 
-bytecodeOffset ds::BytecodeCallFunction::getArgsSize()
+BytecodeOffset ds::BytecodeCallFunction::getArgsSize()
 {
-	return sizeof(bytecodeOffset);
+	return sizeof(BytecodeOffset);
 }
 
 // --------------- //
@@ -158,9 +162,9 @@ void ds::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler
 	}
 }
 
-bytecodeOffset ds::BytecodeFunctionAddress::getArgsSize()
+BytecodeOffset ds::BytecodeFunctionAddress::getArgsSize()
 {
-	return sizeof(bytecodeOffset);
+	return sizeof(BytecodeOffset);
 }
 
 // ------------- //
@@ -204,7 +208,7 @@ void ds::BytecodeCallNative::getArgs(BinaryBuffer& stream, BytecodeCompiler* com
 	stream.addValue(position);
 }
 
-bytecodeOffset ds::BytecodeCallNative::getArgsSize()
+BytecodeOffset ds::BytecodeCallNative::getArgsSize()
 {
 	return sizeof(uint32_t);
 }
@@ -223,7 +227,7 @@ void ds::BytecodeJumpLabel::getArgs(BinaryBuffer& stream, BytecodeCompiler* comp
 {
 }
 
-bytecodeOffset ds::BytecodeJumpLabel::getArgsSize()
+BytecodeOffset ds::BytecodeJumpLabel::getArgsSize()
 {
 	return 0;
 }
@@ -244,12 +248,12 @@ ds::BytecodeJump::BytecodeJump(BytecodeOp operation, BytecodeJumpLabel* target)
 
 void ds::BytecodeJump::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
-	stream.addValue<bytecodeOffset>(this->target->offset);
+	stream.addValue<BytecodeOffset>(this->target->offset);
 }
 
-bytecodeOffset ds::BytecodeJump::getArgsSize()
+BytecodeOffset ds::BytecodeJump::getArgsSize()
 {
-	return sizeof(bytecodeOffset);
+	return sizeof(BytecodeOffset);
 }
 
 std::string BytecodeJump::toString()
@@ -274,7 +278,7 @@ void ds::BytecodeAllocClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* com
 	stream.addValue(languageClass->vTableOffset);
 }
 
-bytecodeOffset ds::BytecodeAllocClass::getArgsSize()
+BytecodeOffset ds::BytecodeAllocClass::getArgsSize()
 {
 	return sizeof(uint32_t) * 2;
 }
@@ -298,12 +302,12 @@ ds::BytecodeAwait::BytecodeAwait(Size awaitSize, BytecodeJumpLabel* onFinished)
 void ds::BytecodeAwait::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	stream.addValue<Size>(this->awaitSize);
-	stream.addValue<bytecodeOffset>(this->target->offset);
+	stream.addValue<BytecodeOffset>(this->target->offset);
 }
 
-bytecodeOffset ds::BytecodeAwait::getArgsSize()
+BytecodeOffset ds::BytecodeAwait::getArgsSize()
 {
-	return sizeof(Size) + sizeof(bytecodeOffset);
+	return sizeof(Size) + sizeof(BytecodeOffset);
 }
 
 std::string ds::BytecodeAwait::toString()
@@ -334,7 +338,7 @@ void ds::BytecodeCompiler::printAssembly()
 
 void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors)
 {
-	bytecodeOffset bytecodePos = stream.code.streamPos;
+	BytecodeOffset bytecodePos = stream.code.streamPos;
 
 	std::vector<BytecodeFunction*> orderedFunctions;
 

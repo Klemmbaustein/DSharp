@@ -12,9 +12,9 @@ void ds::BytecodeUnwindClass::getArgs(BinaryBuffer& stream, BytecodeCompiler* co
 {
 }
 
-bytecodeOffset ds::BytecodeUnwindClass::getArgsSize()
+BytecodeOffset ds::BytecodeUnwindClass::getArgsSize()
 {
-	return bytecodeOffset();
+	return BytecodeOffset();
 }
 
 std::string ds::BytecodeUnwindClass::toString()

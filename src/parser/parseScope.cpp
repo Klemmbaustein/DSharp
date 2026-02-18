@@ -597,10 +597,9 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		{
 			valueExpr = expr.type->compileOperator(
 				Operator(compoundOperator), expr, valueExpr, this);
-
-			if (!valueExpr.type)
+			if (!valueExpr.valid)
 			{
-				return;
+				errors->error(ErrorCode::parseInvalidType, line.previous(), "Failed to compile operator");
 			}
 		}
 

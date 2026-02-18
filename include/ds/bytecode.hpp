@@ -78,8 +78,11 @@ namespace ds
 		/// Pops n bytes off of the variable stack.
 		popVariable,
 		/// Allocates a managed class object, pushes it's address on the stack.
-		/// Arguments: 4 bytes - size, 4 bytes - type id
+		/// Arguments: 4 bytes - size, 4 bytes - type id, 4 bytes - vtable offset
 		allocClass,
+		/// Adds an interface class header into the class body.
+		/// Arguments: 4 bytes - offset 4 bytes - vtable offset
+		implInterface,
 		/// Adds a reference to the class object on the stack, will push the reference again
 		refClass,
 		/// Removes a reference to the class object on the stack
@@ -128,6 +131,10 @@ namespace ds
 		classAs,
 		/// Marks the end of a function with a missing return statement.
 		noReturn,
+		/// Casts a pointer from the stack to an interface pointer,
+		/// adding the given offset to it and pushing it back on the stack.
+		/// Arguments: 4 bytes offset, 1 byte uncast (reverse direction of cast)
+		castInterface,
 	};
 
 	/**

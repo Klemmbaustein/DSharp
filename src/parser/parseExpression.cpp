@@ -154,26 +154,29 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 				currentLine.get();
 			}
 
-			auto foundType = scope->scopeFile->getType(currentLine, errors);
+			Type* foundType = scope->scopeFile->getType(currentLine, errors);
 
-			auto foundClass = foundType ? foundType->asClass() : nullptr;
+			ClassType* foundClass = foundType ? foundType->asClass() : nullptr;
 
 			if (!foundClass)
 			{
-				errors->error(ErrorCode::parseInvalidType, nextToken, "Type " + Type::toString(foundType) + " is not a class");
+				errors->error(ErrorCode::parseInvalidType, nextToken,
+					"Type " + Type::toString(foundType) + " is not a class");
 				return result;
 			}
-			auto expressionClass = result.type ? result.type->asClass() : nullptr;
+			ClassType* expressionClass = result.type ? result.type->asClass() : nullptr;
 
 			if (!expressionClass)
 			{
-				errors->error(ErrorCode::parseInvalidType, nextToken, "Type " + Type::toString(expressionClass) + " is not a class");
+				errors->error(ErrorCode::parseInvalidType, nextToken,
+					"Type " + Type::toString(expressionClass) + " is not a class");
 				return result;
 			}
 
-			if (!foundClass->isSubclassOf(expressionClass))
+			if (!foundClass->isInterface && !foundClass->isSubclassOf(expressionClass))
 			{
-				errors->error(ErrorCode::parseInvalidType, nextToken, "Class " + Type::toString(foundClass) + " is not a subclass of " + Type::toString(expressionClass));
+				errors->error(ErrorCode::parseInvalidType, nextToken,
+					"Class " + Type::toString(foundClass) + " is not a subclass of " + Type::toString(expressionClass));
 			}
 
 			BinaryBuffer args;
@@ -191,10 +194,10 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 		{
 			currentLine.get();
 
-			auto foundType = scope->scopeFile->getType(currentLine, errors);
+			Type* foundType = scope->scopeFile->getType(currentLine, errors);
 
 			bool isNullable = foundType && typeid(*foundType) == typeid(NullableClassType);
-			auto foundClass = foundType ? foundType->asClass() : nullptr;
+			ClassType* foundClass = foundType ? foundType->asClass() : nullptr;
 
 			if (!foundClass)
 			{
@@ -202,7 +205,7 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 					"Type " + Type::toString(foundType) + " is not a class");
 				return result;
 			}
-			auto expressionClass = result.type ? result.type->asClass() : nullptr;
+			ClassType* expressionClass = result.type ? result.type->asClass() : nullptr;
 
 			if (!expressionClass)
 			{
@@ -211,7 +214,7 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 				return result;
 			}
 
-			if (!foundClass->isSubclassOf(expressionClass))
+			if (!foundClass->isInterface && !foundClass->isSubclassOf(expressionClass))
 			{
 				errors->error(ErrorCode::parseInvalidType, nextToken,
 					"Class " + Type::toString(foundClass) + " is not a subclass of " + Type::toString(expressionClass));
@@ -220,7 +223,6 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 			BinaryBuffer args;
 			args.addValue(foundType->id);
 			args.addValue<Bool>(isNullable);
-
 			result.code.addOperation(BytecodeOp::classAs, args);
 			result.type = foundType;
 			continue;

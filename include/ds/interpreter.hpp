@@ -18,7 +18,7 @@ namespace ds
 	{
 	public:
 
-		void run(bytecodeOffset position = 0);
+		void run(BytecodeOffset position = 0);
 
 		template <typename T>
 		T popValue()
@@ -71,7 +71,7 @@ namespace ds
 
 		template<typename T>
 		[[nodiscard]]
-		T callVirtualMethod(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
+		T callVirtualMethod(RuntimeClass* targetObject, BytecodeOffset vTableIndex)
 		{
 			auto entry = targetObject->vtable[vTableIndex];
 			if (!entry)
@@ -84,7 +84,7 @@ namespace ds
 			return popValue<T>();
 		}
 
-		void callVirtualMethodVoid(RuntimeClass* targetObject, bytecodeOffset vTableIndex)
+		void callVirtualMethodVoid(RuntimeClass* targetObject, BytecodeOffset vTableIndex)
 		{
 			auto entry = targetObject->vtable[vTableIndex];
 			if (!entry)
@@ -115,13 +115,13 @@ namespace ds
 		BinaryBufferRef code;
 		bool suspended = false;
 		bool canAwait = false;
-		bytecodeOffset suspendStackPos = 0;
+		BytecodeOffset suspendStackPos = 0;
 
 		void doUnwind();
 
 	private:
 
-		void runLoop(bytecodeOffset& baseCallStackPos);
+		void runLoop(BytecodeOffset& baseCallStackPos);
 
 		constexpr static size_t STACK_SIZE = 4096;
 		constexpr static size_t VAR_STACK_SIZE = 4096;
@@ -130,7 +130,7 @@ namespace ds
 
 		std::array<uint8_t, STACK_SIZE> stack = {};
 		std::array<uint8_t, VAR_STACK_SIZE> variableStack = {};
-		std::array<bytecodeOffset, CALL_STACK_SIZE> callStack = {};
+		std::array<BytecodeOffset, CALL_STACK_SIZE> callStack = {};
 		uint32_t stackPos = 0;
 		uint32_t variableStackPos = 0;
 		uint32_t callStackPos = 0;
@@ -164,7 +164,7 @@ namespace ds
 
 		std::list<InterpretContext> asyncContexts;
 
-		void run(bytecodeOffset position = 0);
+		void run(BytecodeOffset position = 0);
 	};
 
 } // namespace ds

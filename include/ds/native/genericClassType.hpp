@@ -44,7 +44,7 @@ namespace ds
 
 			bool isVirtual() const override;
 
-			virtual bytecodeOffset getVirtualOffset() const;
+			virtual BytecodeOffset getVirtualOffset() const;
 
 			BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
 

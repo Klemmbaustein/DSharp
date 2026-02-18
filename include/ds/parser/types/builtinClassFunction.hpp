@@ -16,7 +16,7 @@ namespace ds
 			this->shortName = shortName;
 		}
 		BuiltinClassFunction(std::vector<FunctionArgument> arguments, Type* returnType,
-			std::string name, std::string shortName, bytecodeOffset virtualId, ClassType* thisClass)
+			std::string name, std::string shortName, BytecodeOffset virtualId, ClassType* thisClass)
 		{
 			this->arguments = arguments;
 			this->returnType = returnType;
@@ -30,7 +30,7 @@ namespace ds
 		Type* returnType;
 		std::string name;
 		std::string shortName;
-		bytecodeOffset virtualId = UINT32_MAX;
+		BytecodeOffset virtualId = UINT32_MAX;
 		ClassType* thisClass = nullptr;
 		ExpressionResult compileCall() override
 		{
@@ -57,7 +57,7 @@ namespace ds
 			return virtualId != UINT32_MAX;
 		}
 
-		virtual bytecodeOffset getVirtualOffset() const
+		virtual BytecodeOffset getVirtualOffset() const
 		{
 			return virtualId;
 		}

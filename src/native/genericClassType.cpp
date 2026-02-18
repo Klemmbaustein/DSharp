@@ -24,7 +24,7 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 
 			for (auto& i : t->methods)
 			{
-				i.second = new GenericMethod(t, i.second, at, with, registry);
+				i.second.function = new GenericMethod(t, i.second.function, at, with, registry);
 			}
 
 			return t;
@@ -35,7 +35,7 @@ ds::NativeGenericClassType::~NativeGenericClassType()
 {
 	for (auto& i : this->methods)
 	{
-		delete i.second;
+		delete i.second.function;
 	}
 }
 
@@ -76,7 +76,7 @@ bool ds::NativeGenericClassType::GenericMethod::isVirtual() const
 	return base->isVirtual();
 }
 
-bytecodeOffset ds::NativeGenericClassType::GenericMethod::getVirtualOffset() const
+BytecodeOffset ds::NativeGenericClassType::GenericMethod::getVirtualOffset() const
 {
 	return base->getVirtualOffset();
 }

@@ -132,9 +132,9 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeAt(ScannedFile* f, 
 		return listScopeContents();
 	}
 
-
 	return completeType(&t->second, type);
 }
+
 std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(ScannedFile* f,
 	size_t character, size_t line, CompletionType options)
 {
@@ -175,16 +175,45 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(Scann
 			result.push_back(AutoCompleteResult{ .name = i.name,
 				.type = CompletionType::variable });
 		}
+
+		if (includes(options, CompletionType::keyword))
+		{
+			for (auto& i : this->scopeKeywords)
+			{
+				result.push_back(AutoCompleteResult{
+					.name = i,
+					.type = CompletionType::keyword });
+			}
+		}
+	}
+	if (!innermostScope)
+	{
+		if (includes(options, CompletionType::keyword))
+		{
+			for (auto& i : this->fileKeywords)
+			{
+				result.push_back(AutoCompleteResult{
+					.name = i,
+					.type = CompletionType::keyword });
+			}
+		}
 	}
 
-	if (includes(options, CompletionType::type))
+	try
 	{
-		for (auto& [type, module] : f->accessibleTypes)
+		if (includes(options, CompletionType::type))
 		{
-			result.push_back(AutoCompleteResult{ .name = types.at(type).name,
-				.completionModule = module,
-				.type = CompletionType::type });
+			for (auto& [type, module] : f->accessibleTypes)
+			{
+				result.push_back(AutoCompleteResult{ .name = types.at(type).name,
+					.completionModule = module,
+					.type = CompletionType::type });
+			}
 		}
+	}
+	catch (std::out_of_range& e)
+	{
+
 	}
 
 	if (includes(options, CompletionType::function))
@@ -219,16 +248,6 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeType(ScannedType* t
 			result.push_back(AutoCompleteResult{
 				.name = i.shortName.empty() ? i.name : i.shortName,
 				.type = CompletionType::method });
-		}
-	}
-
-	if (includes(options, CompletionType::keyword))
-	{
-		for (auto& i : this->scopeKeywords)
-		{
-			result.push_back(AutoCompleteResult{
-				.name = i,
-				.type = CompletionType::keyword });
 		}
 	}
 

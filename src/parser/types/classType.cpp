@@ -111,7 +111,7 @@ ScannedType ds::ClassType::toScanned()
 
 	for (auto& i : this->methods)
 	{
-		out.methods.push_back(ScannedFunction(i.second, Token(), ScannedFunction::Kind::classMember));
+		out.methods.push_back(ScannedFunction(i.second.function, Token(), ScannedFunction::Kind::classMember));
 	}
 
 	return out;
@@ -120,7 +120,18 @@ ScannedType ds::ClassType::toScanned()
 
 bool ds::ClassType::isSubclassOf(ClassType* parent)
 {
-	for (ClassType* i : parents)
+	if (this->parent)
+	{
+		if (this->parent == parent)
+		{
+			return true;
+		}
+		else if (this->parent->isSubclassOf(parent))
+		{
+			return true;
+		}
+	}
+	for (auto& [_, i] : interfaces)
 	{
 		if (i == parent)
 		{
@@ -304,6 +315,35 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	return result;
 }
 
+ExpressionResult ds::ClassType::toInterface(ExpressionResult expr, ClassType* interface)
+{
+	for (auto& [offset, type] : this->interfaces)
+	{
+		if (type->sameAs(interface))
+		{
+			BinaryBuffer args;
+			args.addValue<Int>(offset);
+			args.addValue<Bool>(false);
+			expr.code.addOperation(BytecodeOp::castInterface, args);
+			expr.type = interface;
+			return expr;
+		}
+	}
+	return ExpressionResult();
+}
+
+BytecodeOffset ds::ClassType::getInterfaceOffset(ClassType* interface)
+{
+	for (auto& [offset, type] : this->interfaces)
+	{
+		if (type->sameAs(interface))
+		{
+			return offset;
+		}
+	}
+	return 0;
+}
+
 ExpressionResult ds::ClassType::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 	ErrorContext* errors, ParsedScope* with)
 {
@@ -335,6 +375,11 @@ ExpressionResult ds::ClassType::compileEqualsTo(ExpressionResult first, Expressi
 ExpressionResult ds::ClassType::compileCast(ExpressionResult value, ParsedScope* with)
 {
 	auto castValue = value.type->asClass();
+
+	if (castValue && isInterface)
+	{
+		return castValue->toInterface(value, this);
+	}
 
 	if (castValue && (castValue->isSubclassOf(this)))
 	{
@@ -441,7 +486,7 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 			continue;
 		}
 
-		GenericParseData generic = getGenericFunctionData(function, line, errors, with);
+		GenericParseData generic = getGenericFunctionData(function.function, line, errors, with);
 
 		if (line.peek() != "(")
 		{
@@ -449,7 +494,7 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 			if (with->context->service)
 			{
 				with->context->service->files[with->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, &generic, memberName,
+					.functions.push_back(ScannedFunction(function.function, &generic, memberName,
 						ScannedFunction::Kind::functionCall, memberName.position));
 			}
 #endif
@@ -466,10 +511,14 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 		ExpressionResult callCode = Expression::parseFunctionArguments(memberName, generic.args,
 			argsLine, errors, true, with);
 		callCode.code.addBuffer(value.code);
+		if (function.interfaceSource)
+		{
+			callCode = toInterface(value, function.interfaceSource);
+		}
 
 		callCode.code.addBuffer(generic.code);
 		callCode.code.addBuffer(getClassGenericCode());
-		auto compiled = function->compileCall();
+		auto compiled = function.function->compileCall();
 		compiled.type = generic.returnType;
 		if (compiled.type)
 		{
@@ -480,7 +529,7 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 		if (with->context->service)
 		{
 			with->context->service->files[with->scopeFile->name]
-				.functions.push_back(ScannedFunction(function, &generic, memberName,
+				.functions.push_back(ScannedFunction(function.function, &generic, memberName,
 					ScannedFunction::Kind::functionCall, bracesEnd.position));
 		}
 #endif

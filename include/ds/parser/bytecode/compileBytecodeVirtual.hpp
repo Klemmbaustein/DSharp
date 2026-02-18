@@ -10,7 +10,7 @@ namespace ds
 		BytecodeCallVirtual(Function* fn);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		Function* functionToCall = nullptr;

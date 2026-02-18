@@ -11,7 +11,7 @@ namespace ds
 		BytecodePushVariable(std::string name, Type* variableType);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
 
@@ -26,7 +26,7 @@ namespace ds
 		BytecodeReadVariable(std::shared_ptr<BytecodePushVariable> variablePtr);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		std::shared_ptr<BytecodePushVariable> variable = nullptr;
@@ -37,7 +37,7 @@ namespace ds
 		BytecodeStoreVariable(std::shared_ptr<BytecodePushVariable> variablePtr);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		std::shared_ptr<BytecodePushVariable> variable = nullptr;
@@ -49,7 +49,7 @@ namespace ds
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
-		bytecodeOffset getArgsSize() override;
+		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 
 		uint32_t popSize = 0;

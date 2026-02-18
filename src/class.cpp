@@ -18,6 +18,7 @@ RuntimeClass* ds::RuntimeClass::allocateClass(size_t bodySize, ds::TypeId id, Ru
 	header->vtable = vTable;
 	header->type = id;
 	header->references = 1;
+	header->referencesAreOffset = false;
 
 	return header;
 }

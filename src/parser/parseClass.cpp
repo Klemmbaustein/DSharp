@@ -127,6 +127,80 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 	return true;
 }
 
+void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMember>& members,
+	std::map<std::string, ClassMethod>& methods, ParseContext* context, ParsedFile* file)
+{
+	if (this->isInterface && !this->derivedFrom.empty())
+	{
+		context->errors.error(ErrorCode::parseInvalidType, this->name, "Interface cannot inherit from other types.");
+		return;
+	}
+
+	for (auto& i : this->derivedFrom)
+	{
+		TokenLine line;
+		line.lineTokens = &i;
+
+		Type* type = file->getType(line, &context->errors);
+
+		if (!type)
+		{
+			context->errors.error(ErrorCode::parseExpectedName, line.peek(),
+				"Expected a type name, got " + line.peek().string);
+			continue;
+		}
+
+		ClassType* classType = type->asClass();
+
+		if (!classType)
+		{
+			context->errors.error(ErrorCode::parseInvalidType, line.previous(),
+				"Cannot inherit from '" + Type::toString(type) + "', it isn't a class.");
+			continue;
+		}
+
+		if (classType->languageClass)
+		{
+			classType->languageClass->scanClass(context, classType->languageClass->definitionFile);
+			for (auto& m : classType->languageClass->members)
+			{
+				auto [value, success] = this->members.insert(m);
+				value->second.isDerived = true;
+			}
+		}
+
+		if (classType->isInterface)
+		{
+			thisType->interfaces.insert({ position, classType });
+			position += Size(sizeof(RuntimeClass));
+		}
+		else
+		{
+			if (thisType->parent)
+			{
+				context->errors.error(ErrorCode::parseInvalidType, *i.begin(),
+					"Can only derive from a single class. First class is " + Type::toString(thisType->parent));
+			}
+			thisType->parent = classType;
+		}
+
+		for (ClassMember i : classType->members)
+		{
+			i.offset += position;
+			members.push_back(i);
+		}
+
+		for (auto& i : classType->methods)
+		{
+			ClassMethod m = i.second;
+			if (classType->isInterface)
+				m.interfaceSource = classType;
+			methods.insert({i.first, m});
+		}
+		position += Size(classType->classSize);
+	}
+}
+
 ParsedClassMember& ds::ParsedClass::addMember(Token name, ds::Type* type,
 	const std::vector<ds::Token>& valueTokens, bool builtIn)
 {
@@ -211,6 +285,209 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 	}
 }
 
+void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+{
+	ParsedScope constructorScope;
+	constructorScope.scopeFile = file;
+	constructorScope.context = context;
+	constructorScope.code = &this->constructor.code;
+	auto& code = constructorScope.code;
+
+	if (thisType->parent && thisType->parent->baseConstructor)
+	{
+		code->addBuffer(thisType->parent->baseConstructor->compileCall().code);
+	}
+	constructorScope.setClass(this, true);
+
+	for (auto& [offset, interface] : thisType->interfaces)
+	{
+		code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+		BinaryBuffer args;
+		args.addValue(offset);
+		args.addValue(createInterfaceVTable(interface, context, errors, file));
+		code->addOperation(BytecodeOp::implInterface, args);
+		if (interface->baseConstructor)
+			code->addBuffer(interface->baseConstructor->compileCall().code);
+	}
+
+	for (auto& [name, member] : this->members)
+	{
+		if (member.isDerived)
+		{
+			continue;
+		}
+		if (member.value.empty())
+		{
+			if (!member.type->hasDefaultValue)
+			{
+				errors->error(ErrorCode::parseInvalidType, member.name,
+					"The type '" + Type::toString(member.type) + "' requires an initial value.");
+			}
+			continue;
+		}
+
+		TokenLine valueLine;
+		valueLine.lineTokens = &member.value;
+		auto varExpr = Expression::pushExpression(valueLine, &context->errors, false, member.type,
+			&constructorScope);
+		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
+		if (varExpr.type)
+		{
+			code->addBuffer(varExpr.code);
+			code->addBuffer(varExpr.type->compileMove(&constructorScope));
+			code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+
+			code->pushInt(member.offset);
+			code->pushInt(member.type->size);
+
+			code->addOperation(BytecodeOp::setClassMember);
+			valueLine.expectEndOfLine(errors);
+		}
+	}
+
+	// Return a reference to this.
+	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+	code->addBuffer(constructorScope.compileScopeExit(0, false));
+	code->addOperation(BytecodeOp::ret);
+
+	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
+	constructorBytecode.instructions = constructor.code.instructions;
+
+	compileConstructor(context, errors, file);
+}
+
+void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+{
+	for (auto& i : this->methods)
+	{
+		if (i->name == "new")
+		{
+			// do not pop the return value of the base constructor, so we still have
+			// a pointer to this
+			i->functionCode.addNew<BytecodeCallFunction>(this->constructor.getFullName());
+			for (auto& c : thisType->parent->constructors)
+			{
+				if (c->getArguments().empty())
+				{
+					i->functionCode.addBuffer(c->compileCall().code);
+					break;
+				}
+			}
+			for (auto& [_, p] : this->thisType->interfaces)
+			{
+				for (auto& c : p->constructors)
+				{
+					if (c->getArguments().empty())
+					{
+						i->functionCode.addBuffer(c->compileCall().code);
+						break;
+					}
+				}
+			}
+		}
+		i->compile(context, file, errors);
+
+		auto& bytecodeFunction = context->compiler.functions[i->getFullName()];
+		bytecodeFunction.instructions = i->functionCode.instructions;
+	}
+}
+
+void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* parent, ParseContext* context,
+	ErrorContext* errors, ParsedFile* file)
+{
+	for (auto& m : parent->methods)
+	{
+		if (!m.second.function->isVirtual())
+		{
+			continue;
+		}
+
+		bool found = false;
+
+		for (auto& i : this->methods)
+		{
+			if (!i->isOverride || i->getShortName() != m.second.function->getShortName())
+			{
+				continue;
+			}
+			if (!Function::signaturesMatch(i, m.second.function))
+			{
+				errors->error(ErrorCode::parseInvalidOverride, i->name,
+					"Function signatures of " + i->getFullName() + " and " +
+						m.second.function->getFullName() + " do not match.\nExpected signature: " +
+						m.second.function->getSignatureText() + "\nGot:                " + i->getSignatureText());
+			}
+
+			context->virtualTable.push_back(i);
+			i->vTableOffset = vTableIndex++;
+			i->foundOverride = true;
+			found = true;
+			break;
+		}
+		if (found)
+		{
+			continue;
+		}
+		context->virtualTable.push_back(m.second.function);
+		vTableIndex++;
+	}
+}
+
+BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, ParseContext* context,
+	ErrorContext* errors, ParsedFile* file)
+{
+	BytecodeOffset vTableIndex = BytecodeOffset(context->virtualTable.size());
+	BytecodeOffset initialIndex = vTableIndex;
+
+	context->virtualTable.push_back(usedDestructor);
+
+	for (auto& m : interface->methods)
+	{
+		if (!m.second.function->isVirtual())
+		{
+			continue;
+		}
+
+		bool found = false;
+
+		for (auto& i : this->methods)
+		{
+			if (!i->isOverride || i->foundOverride || i->getShortName() != m.second.function->getShortName())
+			{
+				continue;
+			}
+			if (!Function::signaturesMatch(i, m.second.function))
+			{
+				errors->error(ErrorCode::parseInvalidOverride, i->name,
+					"Function signatures of " + i->getFullName() + " and " +
+						m.second.function->getFullName() + " do not match.\nExpected signature: " +
+						m.second.function->getSignatureText() + "\nGot:                " + i->getSignatureText());
+			}
+
+			context->virtualTable.push_back(i);
+
+			BinaryBuffer args;
+			args.addValue<Int>(thisType->getInterfaceOffset(interface));
+			args.addValue<Bool>(true);
+
+			i->functionCode.instructions.insert(i->functionCode.instructions.begin(),
+				std::make_shared<BytecodeOperation>(BytecodeOp::castInterface, args));
+			i->vTableOffset = vTableIndex++;
+			i->foundOverride = true;
+			found = true;
+			break;
+		}
+		if (found)
+		{
+			continue;
+		}
+		context->virtualTable.push_back(m.second.function);
+		vTableIndex++;
+	}
+
+	return initialIndex;
+}
+
 ExpressionResult ds::ClassLifetimeFunction::compileCall()
 {
 	ExpressionResult result;
@@ -227,13 +504,14 @@ std::vector<FunctionArgument> ds::ClassLifetimeFunction::getArguments()
 
 std::string ds::ClassLifetimeFunction::getShortName() const
 {
-	return std::string();
+	return getFullName();
 }
 
 std::string ds::ClassLifetimeFunction::getFullName() const
 {
 	return this->parent->classModule->name + "::" +
-	       this->parent->name.string + (this->isConstructor ? ".new.base" : ".delete.base");
+	       this->parent->name.string +
+	       (this->isConstructor ? ".new.base" : ".delete.base");
 }
 
 bool ds::ClassLifetimeFunction::discardable() const
@@ -259,6 +537,7 @@ void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	thisType->languageClass = this;
 	thisType->applyName();
 	thisType->nullable->applyName();
+	thisType->isInterface = this->isInterface;
 	file->fileModule->moduleTypes.insert({ name.string, thisType });
 }
 
@@ -270,57 +549,11 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 	}
 
 	scanned = true;
-	uint32_t position = 0;
+	BytecodeOffset position = 0;
 	std::vector<ClassMember> members;
-	std::map<std::string, Function*> methods;
+	std::map<std::string, ClassMethod> methods;
 
-	std::vector<ClassType*> parents;
-	for (auto& i : this->derivedFrom)
-	{
-		TokenLine line;
-		line.lineTokens = &i;
-
-		Type* type = file->getType(line, &context->errors);
-
-		if (!type)
-		{
-			context->errors.error(ErrorCode::parseExpectedName, line.peek(),
-				"Expected a type name, got " + line.peek().string);
-			continue;
-		}
-
-		auto classType = dynamic_cast<ClassType*>(type);
-
-		if (!classType)
-		{
-			context->errors.error(ErrorCode::parseInvalidType, line.previous(),
-				"Cannot inherit from '" + Type::toString(type) + "', it isn't a class.");
-			continue;
-		}
-
-		if (classType->languageClass)
-		{
-			classType->languageClass->scanClass(context, classType->languageClass->definitionFile);
-			for (auto& m : classType->languageClass->members)
-			{
-				auto [value, success] = this->members.insert(m);
-				value->second.isDerived = true;
-			}
-		}
-		for (auto& i : classType->members)
-		{
-			members.push_back(i);
-		}
-
-		for (auto& i : classType->methods)
-		{
-			methods.insert(i);
-		}
-		position += Size(classType->classSize);
-
-		parents.push_back(classType);
-	}
-
+	scanDerived(position, members, methods, context, file);
 
 	this->classModule = file->fileModule;
 
@@ -367,7 +600,7 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		}
 		else
 		{
-			methods.insert({ i->name.string, i });
+			methods.insert({ i->name.string, ClassMethod(i) });
 		}
 	}
 
@@ -380,7 +613,6 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 	thisType->baseConstructor = &this->constructor;
 	thisType->destructor = this->usedDestructor;
 	thisType->constructors = constructors;
-	thisType->parents = parents;
 
 	for (auto& m : this->methods)
 	{
@@ -398,136 +630,26 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 
 void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
-	ParsedScope constructorScope;
-	constructorScope.scopeFile = file;
-	constructorScope.context = context;
-	constructorScope.code = &this->constructor.code;
-	auto& code = constructorScope.code;
-
-	for (auto& i : thisType->parents)
-	{
-		if (i->baseConstructor)
-			code->addBuffer(i->baseConstructor->compileCall().code);
-	}
-
-	constructorScope.setClass(this, true);
-
-	for (auto& [name, member] : this->members)
-	{
-		if (member.isDerived)
-			continue;
-		if (member.value.empty())
-		{
-			if (member.type->hasDefaultValue)
-			{
-				continue;
-			}
-			else
-			{
-				errors->error(ErrorCode::parseInvalidType, member.name,
-					"The type '" + Type::toString(member.type) + "' requires an initial value.");
-				continue;
-			}
-		}
-
-		TokenLine valueLine;
-		valueLine.lineTokens = &member.value;
-		auto varExpr = Expression::pushExpression(valueLine, &context->errors, false, member.type,
-			&constructorScope);
-		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
-		if (varExpr.type)
-		{
-			code->addBuffer(varExpr.code);
-			code->addBuffer(varExpr.type->compileMove(&constructorScope));
-			code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
-
-			code->pushInt(member.offset);
-			code->pushInt(member.type->size);
-
-			code->addOperation(BytecodeOp::setClassMember);
-			valueLine.expectEndOfLine(errors);
-		}
-	}
-
 	compileDestructor(context, errors, file);
+
+	this->thisType->vTableOffset = BytecodeOffset(context->virtualTable.size());
+	BytecodeOffset vTableIterator = 1;
+	context->virtualTable.push_back(usedDestructor);
+
+	if (thisType->parent)
+	{
+		handleParentClass(vTableIterator, thisType->parent, context, errors, file);
+	}
 
 	for (auto& i : this->methods)
 	{
-		if (i->name == "new")
+		if (i->functionIsVirtual && !i->isOverride)
 		{
-			// do not pop the return value of the base constructor, so we still have
-			// a pointer to this
-			i->functionCode.addNew<BytecodeCallFunction>(this->constructor.getFullName());
-			for (auto& p : this->thisType->parents)
-			{
-				for (auto& c : p->constructors)
-				{
-					if (c->getArguments().empty())
-					{
-						i->functionCode.addBuffer(c->compileCall().code);
-						break;
-					}
-				}
-			}
-		}
-		i->compile(context, file, errors);
-
-		auto& bytecodeFunction = context->compiler.functions[i->getFullName()];
-		bytecodeFunction.instructions = i->functionCode.instructions;
-	}
-
-	// Return a reference to this.
-	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
-	code->addBuffer(constructorScope.compileScopeExit(0, false));
-	code->addOperation(BytecodeOp::ret);
-
-	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
-	constructorBytecode.instructions = constructor.code.instructions;
-
-	this->thisType->vTableOffset = bytecodeOffset(context->virtualTable.size());
-	bytecodeOffset it = 1;
-	context->virtualTable.push_back(usedDestructor);
-
-	for (auto& p : thisType->parents)
-	{
-		for (auto& m : p->methods)
-		{
-			if (!m.second->isVirtual())
-			{
-				continue;
-			}
-
-			bool found = false;
-
-			for (auto& i : this->methods)
-			{
-				if (!i->isOverride || i->getShortName() != m.second->getShortName())
-				{
-					continue;
-				}
-				if (!Function::signaturesMatch(i, m.second))
-				{
-					errors->error(ErrorCode::parseInvalidOverride, i->name,
-						"Function signatures of " + i->getFullName() + " and " +
-							m.second->getFullName() + " do not match.\nExpected signature: " +
-							m.second->getSignatureText() + "\nGot:                " + i->getSignatureText());
-				}
-
-				context->virtualTable.push_back(i);
-				i->vTableOffset = it++;
-				i->foundOverride = true;
-				it++;
-				found = true;
-				break;
-			}
-			if (found)
-			{
-				continue;
-			}
-			context->virtualTable.push_back(m.second);
-			it++;
+			i->vTableOffset = vTableIterator++;
+			context->virtualTable.push_back(i);
 		}
 	}
+	compileBaseConstructor(context, errors, file);
 
 	for (auto& i : this->methods)
 	{
@@ -536,12 +658,8 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 			errors->error(ErrorCode::parseInvalidOverride, i->name,
 				"Could not find any function that " + i->name.string + " can override.");
 		}
-		if (i->functionIsVirtual && !i->isOverride)
-		{
-			i->vTableOffset = it++;
-			context->virtualTable.push_back(i);
-		}
 	}
+
 }
 
 void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)

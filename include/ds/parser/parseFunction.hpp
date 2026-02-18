@@ -24,7 +24,7 @@ namespace ds
 		bool foundOverride = false;
 		bool isLambda = false;
 		bool isAsync = false;
-		bytecodeOffset vTableOffset = 0;
+		BytecodeOffset vTableOffset = 0;
 
 		std::string getFullName() const override;
 		std::string getShortName() const override;
@@ -54,7 +54,7 @@ namespace ds
 		BytecodeBuffer compileCallable(ErrorContext* errors, ParsedScope* with, Type* hintType) const override;
 		std::optional<SymbolDefinition> getDefinition() override;
 
-		virtual bytecodeOffset getVirtualOffset() const
+		virtual BytecodeOffset getVirtualOffset() const
 		{
 			return vTableOffset;
 		}

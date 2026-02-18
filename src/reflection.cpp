@@ -13,7 +13,6 @@ RuntimeClass* TypeInfo::create(InterpretContext* context) const
 	context->run(this->constructor);
 
 	return context->popValue<RuntimeClass*>();
-
 }
 std::optional<std::string> ds::TypeMember::getParameterValue(const std::string& name) const
 {
@@ -36,13 +35,24 @@ bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const
 
 	if (t != this->types.end())
 	{
-		for (auto& i : t->second.superClasses)
+		if (t->second.superClass)
 		{
-			if (i == superClass)
+			if (t->second.superClass == superClass)
 			{
 				return true;
 			}
-			else if (isSubclassOf(i, superClass))
+			else if (isSubclassOf(t->second.superClass, superClass))
+			{
+				return true;
+			}
+		}
+		for (auto& i : t->second.interfaces)
+		{
+			if (i.first == superClass)
+			{
+				return true;
+			}
+			else if (isSubclassOf(i.first, superClass))
 			{
 				return true;
 			}
@@ -50,4 +60,45 @@ bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const
 	}
 
 	return false;
+}
+
+std::pair<bool, BytecodeOffset> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass) const
+{
+	auto t = this->types.find(toCheck);
+
+	if (t != this->types.end())
+	{
+		if (t->second.superClass)
+		{
+			if (t->second.superClass == superClass)
+			{
+				return { true, 0 };
+			}
+			else
+			{
+				auto [success, offset] = tryCast(t->second.superClass, superClass);
+				if (success)
+				{
+					return { true, offset };
+				}
+			}
+		}
+		for (auto& i : t->second.interfaces)
+		{
+			if (i.first == superClass)
+			{
+				return { true, i.second };
+			}
+			else
+			{
+				auto [success, offset] = tryCast(i.first, superClass);
+				if (success)
+				{
+					return { true, offset };
+				}
+			}
+		}
+	}
+
+	return { false, 0 };
 }

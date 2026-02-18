@@ -216,11 +216,11 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				}
 			}
 
-			std::vector<TypeId> superClasses;
+			std::map<TypeId, BytecodeOffset> superClasses;
 
-			for (auto& super : cls.thisType->parents)
+			for (auto& [offset, super] : cls.thisType->interfaces)
 			{
-				superClasses.push_back(super->id);
+				superClasses.insert({ super->id, offset });
 			}
 
 			toStream.reflect.types[cls.thisType->id] = TypeInfo{
@@ -230,7 +230,8 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,
 				.bodySize = cls.thisType->classSize,
 				.members = members,
-				.superClasses = superClasses,
+				.superClass = cls.thisType->parent ? cls.thisType->parent->id : 0,
+				.interfaces = superClasses,
 			};
 		}
 	}

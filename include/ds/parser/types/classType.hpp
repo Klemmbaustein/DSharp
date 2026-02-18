@@ -18,6 +18,22 @@ namespace ds
 
 	class ClassType;
 
+	struct ClassMethod
+	{
+		ClassMethod(Function* fn)
+		{
+			function = fn;
+		}
+		ClassMethod(Function* fn, ClassType* interfaceClass)
+		{
+			function = fn;
+			interfaceSource = interfaceClass;
+		}
+
+		Function* function = nullptr;
+		ClassType* interfaceSource = nullptr;
+	};
+
 	class NullableClassType : public Type
 	{
 
@@ -72,8 +88,9 @@ namespace ds
 				delete this->nullable;
 		}
 
+		BytecodeOffset vTableOffset = 0;
+		bool isInterface = false;
 		size_t classSize = 0;
-		bytecodeOffset vTableOffset = 0;
 
 		void makePointerClass();
 		ClassType* asClass() override;
@@ -81,7 +98,7 @@ namespace ds
 		Function* destructor = nullptr;
 		ParsedClass* languageClass = nullptr;
 		std::vector<ClassMember> members;
-		std::map<std::string, Function*> methods;
+		std::map<std::string, ClassMethod> methods;
 		std::vector<Function*> constructors;
 		NullableClassType* nullable = nullptr;
 
@@ -96,11 +113,14 @@ namespace ds
 		bool isSubclassOf(ClassType* parent);
 		void applyName() override;
 
-		std::vector<ClassType*> parents;
+		ClassType* parent = nullptr;
+		std::map<BytecodeOffset, ClassType*> interfaces;
+
+		ExpressionResult toInterface(ExpressionResult expr, ClassType* interface);
+		BytecodeOffset getInterfaceOffset(ClassType* interface);
 
 		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
 			ErrorContext* errors, ParsedScope* with) override;
-
 
 		virtual ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;

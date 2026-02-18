@@ -33,6 +33,7 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 		result.code.addBuffer(first.code);
 	}
 	result.valid = true;
+	result.type = this;
 
 	switch (operatorType)
 	{

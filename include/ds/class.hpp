@@ -28,6 +28,7 @@ namespace ds
 		RuntimeFunction* vtable;
 		TypeId type;
 		Size references;
+		bool referencesAreOffset;
 		// Debug variable to ensure no classes are leaked
 		static inline size_t classRefCount = 0;
 
@@ -39,7 +40,16 @@ namespace ds
 		 */
 		void addRef()
 		{
-			references++;
+			getReferences()++;
+		}
+
+		Size& getReferences()
+		{
+			if (referencesAreOffset)
+			{
+				return ((RuntimeClass*)((uint8_t*)this - sizeof(RuntimeClass) - references))->getReferences();
+			}
+			return references;
 		}
 
 		/**
@@ -62,24 +72,26 @@ namespace ds
 				return RuntimeFunction();
 			}
 
+			auto& ref = object->getReferences();
+
 #ifdef _DEBUG
-			if (object->references > UINT16_MAX)
+			if (ref > UINT16_MAX)
 			{
 				// If the refcount is this high we're probably reading invalid data
 				abort();
 			}
 #endif
 
-			if (object->references == 0)
+			if (ref == 0)
 			{
 				classRefCount--;
 				free(object);
 				return RuntimeFunction();
 			}
 
-			object->references--;
+			ref--;
 
-			if (object->references == 0)
+			if (ref == 0)
 			{
 				if (!object->vtable || !bool(object->vtable[0]))
 				{

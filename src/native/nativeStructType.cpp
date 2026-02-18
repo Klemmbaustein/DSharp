@@ -157,11 +157,11 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 			TokenLine argsLine;
 			argsLine.lineTokens = &inBraces;
 
-			auto functionArgs = function->getArguments();
+			auto functionArgs = function.function->getArguments();
 			ExpressionResult callCode = Expression::parseFunctionArguments(next, functionArgs, argsLine,
 				errors, true, with);
 			callCode.code.addBuffer(value.code);
-			auto compiled = function->compileCall();
+			auto compiled = function.function->compileCall();
 			if (compiled.type)
 			{
 				compiled.code.addBuffer(compiled.type->compileEndMove(with));
@@ -171,7 +171,7 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 			if (with->context->service)
 			{
 				with->context->service->files[with->scopeFile->name]
-					.functions.push_back(ScannedFunction(function, next,
+					.functions.push_back(ScannedFunction(function.function, next,
 						ScannedFunction::Kind::functionCall, argsEnd.position));
 			}
 #endif

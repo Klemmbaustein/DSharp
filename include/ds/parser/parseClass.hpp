@@ -59,7 +59,6 @@ namespace ds
 		TokenPos start;
 		TokenPos end;
 		TokenStream classStream;
-		size_t refVariableCount = 0;
 
 		std::map<Token, ParsedClassMember> members;
 		std::map<Token, ParsedClassMember> builtInMembers;
@@ -79,15 +78,27 @@ namespace ds
 
 		bool scanned = false;
 		bool isFileClass = false;
+		bool isInterface = false;
 
 		void registerType(ParseContext* context, ParsedFile* file);
 		void scanClass(ParseContext* context, ParsedFile* file);
 
 		void compile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
-
 		void scan(ErrorContext* errors, ParsedFile* file);
+
+	private:
+
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file);
+		void scanDerived(BytecodeOffset& position, std::vector<ClassMember>& members,
+			std::map<std::string, ClassMethod>& methods, ParseContext* context, ParsedFile* file);
 
 		void compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+		void compileBaseConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+		void compileConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+
+		void handleParentClass(BytecodeOffset& vTableIndex, ClassType* parent, ParseContext* context,
+			ErrorContext* errors, ParsedFile* file);
+		BytecodeOffset createInterfaceVTable(ClassType* interface, ParseContext* context,
+			ErrorContext* errors, ParsedFile* file);
 	};
 } // namespace ds

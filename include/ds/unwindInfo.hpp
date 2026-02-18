@@ -15,8 +15,8 @@ namespace ds
 	{
 		UnwindOp op = UnwindOp::popBytes;
 		uint16_t size = 0;
-		bytecodeOffset start = 0;
-		bytecodeOffset offset = 0;
+		BytecodeOffset start = 0;
+		BytecodeOffset offset = 0;
 	};
 
 	struct UnwindSection
