@@ -144,7 +144,7 @@ namespace ds
 		UnwindInfo unwindBuffer;
 		ReflectInfo* reflect = nullptr;
 		std::vector<ExternalFunctionPointer> externals;
-		std::vector<RuntimeFunction>* vTable = nullptr;
+		std::vector<RuntimeFunction> vTable;
 
 		LanguageRuntime(LanguageContext* from);
 		LanguageContext* language = nullptr;

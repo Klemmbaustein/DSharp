@@ -49,7 +49,6 @@ ds::LanguageRuntime::LanguageRuntime(LanguageContext* from)
 void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 {
 	this->bytecodeBuffer = &code->code;
-	this->vTable = &code->virtualTable;
 	this->debug = &code->debug;
 	this->unwindBuffer = code->unwind;
 	this->reflect = &code->reflect;
@@ -77,6 +76,24 @@ void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 		if (!found)
 		{
 			std::printf("Could not find function: %s\n", i.c_str());
+		}
+	}
+
+	this->vTable.clear();
+	this->vTable.reserve(code->virtualTable.size());
+	for (auto& [offset, native] : code->virtualTable)
+	{
+		if (native)
+		{
+			this->vTable.push_back(RuntimeFunction{
+				.nativeFn = externals[native]
+				});
+		}
+		else
+		{
+			this->vTable.push_back(RuntimeFunction{
+				.codeOffset = offset
+				});
 		}
 	}
 
@@ -356,7 +373,7 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			Size size = popValue<Size>();
 			Size typeId = *(Size*)&argumentBuffer[0];
 			BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(typeId)];
-			pushValue(RuntimeClass::allocateClass(size, typeId, vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr));
+			pushValue(RuntimeClass::allocateClass(size, typeId, vTableOffset != UINT32_MAX ? runtime->vTable.data() + vTableOffset : nullptr));
 			break;
 		}
 		case ds::BytecodeOp::implInterface: {
@@ -366,7 +383,7 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 
 			RuntimeClass* cls = reinterpret_cast<RuntimeClass*>(classPtr->getBody() + offset);
 			*cls = RuntimeClass{
-				.vtable = vTableOffset != UINT32_MAX ? runtime->vTable->data() + vTableOffset : nullptr,
+				.vtable = vTableOffset != UINT32_MAX ? runtime->vTable.data() + vTableOffset : nullptr,
 				.type = classPtr->type,
 				.references = offset,
 				.referencesAreOffset = true,

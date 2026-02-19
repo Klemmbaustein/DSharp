@@ -160,7 +160,6 @@ namespace ds
 
 		void addClassConstructor(ClassType* type, const NativeFunction& function);
 		void addClassMethod(ClassType* type, const NativeFunction& function);
-		void addStructMethod(ClassType* type, const NativeFunction& function);
 		void addClassVirtualMethod(ClassType* type, const NativeFunction& function, BytecodeOffset virtualId);
 
 		void addType(Type* newType)

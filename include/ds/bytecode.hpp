@@ -137,6 +137,12 @@ namespace ds
 		castInterface,
 	};
 
+	struct VTableFunction
+	{
+		BytecodeOffset codeOffset = UINT32_MAX;
+		uint32_t nativeFunction = 0;
+	};
+
 	/**
 	 * @brief
 	 * Contains executable bytecode.
@@ -152,6 +158,6 @@ namespace ds
 		UnwindInfo unwind;
 
 		std::vector<std::string> externalFunctions;
-		std::vector<RuntimeFunction> virtualTable;
+		std::vector<VTableFunction> virtualTable;
 	};
 } // namespace ds

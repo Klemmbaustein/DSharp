@@ -381,14 +381,38 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 
 	for (auto& i : virtualTable)
 	{
-		if (i && functions.find(i->getFullName()) != functions.end())
+		if (!i)
 		{
-			stream.virtualTable.push_back(RuntimeFunction{
-				.codeOffset = functions[i->getFullName()].offset });
+			stream.virtualTable.push_back(VTableFunction());
+			continue;
+		}
+
+		auto functionName = i->getFullName();
+		if (i && functions.find(functionName) != functions.end())
+		{
+			stream.virtualTable.push_back(VTableFunction{
+				.codeOffset = functions[functionName].offset });
 		}
 		else
 		{
-			stream.virtualTable.push_back(RuntimeFunction());
+			auto foundPosition = usedExternals.find(functionName);
+
+			uint32_t position = 0;
+
+			if (foundPosition == usedExternals.end())
+			{
+				position = uint32_t(externals.size());
+				externals.push_back(functionName);
+				usedExternals.insert({ functionName, position });
+			}
+			else
+			{
+				position = foundPosition->second;
+			}
+
+			stream.virtualTable.push_back(VTableFunction{
+				.nativeFunction = position,
+				});
 		}
 	}
 
