@@ -179,13 +179,16 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 					"Class " + Type::toString(foundClass) + " is not a subclass of " + Type::toString(expressionClass));
 			}
 
-			BinaryBuffer args;
-			args.addValue(foundType->id);
-
-			result.code.addOperation(BytecodeOp::classIs, args);
-			if (isNot)
+			if (!scope->context->service)
 			{
-				result.code.addOperation(BytecodeOp::boolNot, args);
+				BinaryBuffer args;
+				args.addValue(foundType->id);
+
+				result.code.addOperation(BytecodeOp::classIs, args);
+				if (isNot)
+				{
+					result.code.addOperation(BytecodeOp::boolNot, args);
+				}
 			}
 			result.type = scope->context->registry->getEntry<BoolType>();
 			continue;

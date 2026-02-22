@@ -28,7 +28,7 @@ namespace ds
 	// Either a constructor or destructor
 	struct ClassLifetimeFunction : public Function
 	{
-		BytecodeBuffer code;
+		BytecodeBuffer* code = nullptr;
 		ParsedClass* parent = nullptr;
 		bool isConstructor = true;
 
@@ -87,6 +87,8 @@ namespace ds
 		void scan(ErrorContext* errors, ParsedFile* file);
 
 	private:
+
+		void clearMethods();
 
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file);
 		void scanDerived(BytecodeOffset& position, std::vector<ClassMember>& members,

@@ -10,7 +10,7 @@ namespace ds
 	struct ScopeVariable
 	{
 		Token name;
-		std::shared_ptr<BytecodePushVariable> variableInstruction = nullptr;
+		BytecodePushVariable* variableInstruction = nullptr;
 		ParsedScope* ownedBy = nullptr;
 		size_t depth = 0;
 		Type* type = nullptr;
@@ -67,8 +67,8 @@ namespace ds
 		bool returnThis = false;
 		bool isLambda = false;
 
-		std::shared_ptr<BytecodeJumpLabel> breakTarget = nullptr;
-		std::shared_ptr<BytecodeJumpLabel> continueTarget = nullptr;
+		BytecodeJumpLabel* breakTarget = nullptr;
+		BytecodeJumpLabel* continueTarget = nullptr;
 		size_t breakContinueDepth = 0;
 		size_t functionDepth = 0;
 
@@ -92,8 +92,8 @@ namespace ds
 
 		std::optional<VariableInfo> parseVariableDefinition(TokenLine& line, ParsedFile* file, ErrorContext* errors, bool matchTypes = true);
 
-		void parseSubScope(ParsedFile* file, ErrorContext* errors, std::shared_ptr<BytecodeJumpLabel> breakTarget,
-			std::shared_ptr<BytecodeJumpLabel> continueTarget, size_t breakContinueDepth,
+		void parseSubScope(ParsedFile* file, ErrorContext* errors, BytecodeJumpLabel* breakTarget,
+			BytecodeJumpLabel* continueTarget, size_t breakContinueDepth,
 			ScopeOptions options = ScopeOptions{
 				.targetBuffer = nullptr,
 				.scopeTokens = nullptr,

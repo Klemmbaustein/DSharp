@@ -1,6 +1,7 @@
 #pragma once
 #include "function.hpp"
 #include "parseClass.hpp"
+#include <iostream>
 
 namespace ds
 {
@@ -12,7 +13,7 @@ namespace ds
 		TokenPos start;
 		TokenPos end;
 		ParsedClass* inClass = nullptr;
-		BytecodeFunction functionCode;
+		BytecodeFunction* functionCode = nullptr;
 		Module* functionModule = nullptr;
 		ParsedFile* functionFile = nullptr;
 		Type* returnType = nullptr;

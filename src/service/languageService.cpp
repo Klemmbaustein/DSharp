@@ -19,7 +19,6 @@ void ds::LanguageService::addString(const std::string& content, std::string name
 
 void ds::LanguageService::updateFile(const std::string& str, std::string fileName)
 {
-	this->files.erase(fileName);
 	this->parser->updateFile(str, fileName);
 	hasChanges = true;
 }
@@ -44,7 +43,6 @@ ParsedClass* ds::LanguageService::addClass(Token className, std::string moduleNa
 ParsedClass* ds::LanguageService::updateClass(Token className, std::string moduleName,
 	ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses)
 {
-	this->files.erase(fileName);
 	hasChanges = true;
 	return this->parser->updateClass(className, moduleName, body, fileName,
 		superClasses);
@@ -59,6 +57,16 @@ void ds::LanguageService::commitChanges()
 	hasChanges = false;
 	this->parser->resetModules(language);
 	this->parser->errors.reset();
+	for (auto& i : files)
+	{
+		i.second.functions.clear();
+		i.second.variables.clear();
+		i.second.types.clear();
+		i.second.accessibleEnums.clear();
+		i.second.accessibleFunctions.clear();
+		i.second.accessibleTypes.clear();
+		i.second.scopes.clear();
+	}
 	this->types.clear();
 	this->parser->compile();
 }
@@ -214,6 +222,15 @@ std::vector<AutoCompleteResult> ds::LanguageService::completeScopeContents(Scann
 	catch (std::out_of_range& e)
 	{
 
+	}
+	if (includes(options, CompletionType::enumValue))
+	{
+		for (auto& [name, module] : f->accessibleEnums)
+		{
+			result.push_back(AutoCompleteResult{ .name = name.string,
+				.completionModule = module,
+				.type = CompletionType::enumValue });
+		}
 	}
 
 	if (includes(options, CompletionType::function))

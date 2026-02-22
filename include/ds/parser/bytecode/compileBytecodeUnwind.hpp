@@ -9,14 +9,14 @@ namespace ds
 	class BytecodeUnwindClass : public BytecodeInstruction
 	{
 	public:
-		BytecodeUnwindClass(std::shared_ptr<BytecodePushVariable> variable);
+		BytecodeUnwindClass(BytecodePushVariable* variable);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
 		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
 
-		std::shared_ptr<BytecodePushVariable> variable;
+		BytecodePushVariable* variable;
 	};
 
 } // namespace ds

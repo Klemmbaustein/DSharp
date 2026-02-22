@@ -5,6 +5,7 @@
 #include <set>
 #include <ds/parser/error.hpp>
 #include <memory>
+#include <iostream>
 
 namespace ds
 {
@@ -24,6 +25,8 @@ namespace ds
 		virtual std::string toString() { return ""; }
 		virtual void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section);
 		std::string toStringDefault(const BinaryBuffer& arguments) const;
+
+		virtual ~BytecodeInstruction() = default;
 	};
 
 	class BytecodeOperation : public BytecodeInstruction

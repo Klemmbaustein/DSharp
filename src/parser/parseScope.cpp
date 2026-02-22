@@ -132,7 +132,7 @@ void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 }
 
 void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
-	std::shared_ptr<BytecodeJumpLabel> breakTarget, std::shared_ptr<BytecodeJumpLabel> continueTarget,
+	BytecodeJumpLabel* breakTarget, BytecodeJumpLabel* continueTarget,
 	size_t breakContinueDepth, ScopeOptions options)
 {
 	// Create a sub scope that optionally takes in the ScopeOptions
@@ -215,7 +215,7 @@ BytecodeBuffer ds::ParsedScope::addTemporaryVariable(Type* type)
 	this->variables.insert(
 	{Token(tempName), ScopeVariable{
 		.name = tempName,
-		.variableInstruction = instruction,
+		.variableInstruction = instruction.get(),
 		.ownedBy = this,
 		.depth = this->depth,
 		.type = type,
@@ -259,7 +259,7 @@ ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext
 	auto result = this->variables.insert({ name,
 		ScopeVariable{
 			.name = name,
-			.variableInstruction = instruction,
+			.variableInstruction = instruction.get(),
 			.ownedBy = this,
 			.depth = this->depth,
 			.type = type,
@@ -320,7 +320,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 	{
 		code.addBuffer(thisVariable->readValue(this));
 
-		if (inClass->baseDestructor.code.instructions.size())
+		if (inClass->baseDestructor.code && inClass->baseDestructor.code->instructions.size())
 		{
 			code.addBuffer(inClass->baseDestructor.compileCall().code);
 		}
@@ -511,7 +511,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		if (this->breakTarget)
 		{
 			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
-			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget.get());
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget);
 			return;
 		}
 	}
@@ -521,7 +521,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		if (this->continueTarget)
 		{
 			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
-			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget.get());
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget);
 			return;
 		}
 	}
@@ -548,7 +548,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 
 		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
 
-		parseSubScope(file, errors, endLabel, beginLabel, this->depth + 1);
+		parseSubScope(file, errors, endLabel.get(), beginLabel.get(), this->depth + 1);
 		this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel.get());
 
 		this->code->add(endLabel);
@@ -764,7 +764,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 	var->create(this, errors);
 
-	parseSubScope(file, errors, endLabel, continueLabel, this->depth + 1);
+	parseSubScope(file, errors, endLabel.get(), continueLabel.get(), this->depth + 1);
 
 	this->code->add(continueLabel);
 	code->addBuffer(compileScopeExit(this->depth, true));

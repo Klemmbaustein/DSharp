@@ -53,10 +53,11 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	newFunction.argumentTokens = argTokens;
 
 	newFunction.resolveTypes(with->context, errors);
+	newFunction.registerFunction(with->context);
 
 	with->parseSubScope(with->scopeFile, errors, nullptr, nullptr, with->depth,
 		ParsedScope::ScopeOptions{
-			.targetBuffer = &newFunction.functionCode,
+			.targetBuffer = newFunction.functionCode,
 			.scopeTokens = hasStream ? & stream : nullptr,
 			.scopeFunction = &newFunction,
 			.isLambda = true,
@@ -74,8 +75,6 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	}
 
 	result.type = FunctionType::getInstance(newFunction.returnType, args, with->context->registry);
-
-	newFunction.registerFunction(with->context);
 
 	std::vector<ScopeVariable*> variables;
 
@@ -132,7 +131,8 @@ ParsedFunction* ds::LambdaType::compileDestructorFor(std::vector<ScopeVariable*>
 	auto& newFunction = with->scopeFile->functions.emplace_back();
 	newFunction.name = Token(lambdaName.string + ".delete");
 	newFunction.functionModule = with->scopeFunction->functionModule;
-	newFunction.functionCode.name = newFunction.name.string;
-	newFunction.functionCode.instructions = code.instructions;
+	newFunction.registerFunction(with->context);
+	newFunction.functionCode->name = newFunction.name.string;
+	newFunction.functionCode->instructions = code.instructions;
 	return &newFunction;
 }

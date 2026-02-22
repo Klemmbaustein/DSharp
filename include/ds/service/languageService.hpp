@@ -16,21 +16,25 @@ namespace ds
 		std::vector<Token> types;
 		std::map<TypeId, std::string> accessibleTypes;
 		std::map<Token, std::string> accessibleFunctions;
+		std::map<Token, std::string> accessibleEnums;
 
 		std::vector<ScannedScope> scopes;
 	};
 
+	// clang-format off
 	enum class CompletionType
 	{
-		variable     = 0b000001,
-		member       = 0b000010,
-		function     = 0b000100,
-		method       = 0b001000,
-		type         = 0b010000,
-		keyword      = 0b100000,
-		classMembers = 0b001010,
+		variable     = 0b0000001,
+		member       = 0b0000010,
+		function     = 0b0000100,
+		method       = 0b0001000,
+		type         = 0b0010000,
+		keyword      = 0b0100000,
+		enumValue    = 0b1000000,
+		classMembers = 0b0001010,
 		all = 0xff
 	};
+	// clang-format on
 
 	struct AutoCompleteResult
 	{
@@ -91,7 +95,6 @@ namespace ds
 		std::map<TypeId, ScannedType> types;
 
 	private:
-
 		static bool includes(CompletionType a, CompletionType includes)
 		{
 			return (int(a) & int(includes)) != 0;

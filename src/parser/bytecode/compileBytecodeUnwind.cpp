@@ -2,7 +2,7 @@
 
 using namespace ds;
 
-ds::BytecodeUnwindClass::BytecodeUnwindClass(std::shared_ptr<BytecodePushVariable> variable)
+ds::BytecodeUnwindClass::BytecodeUnwindClass(BytecodePushVariable* variable)
 {
 	this->baseSize = 0;
 	this->variable = variable;

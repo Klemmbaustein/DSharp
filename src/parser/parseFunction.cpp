@@ -11,7 +11,7 @@ void ds::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorC
 {
 	ParsedScope functionScope;
 	functionScope.tokenStream = &functionStream;
-	functionScope.code = &functionCode;
+	functionScope.code = functionCode;
 	functionScope.scopeFunction = this;
 	functionScope.compileReturn = true;
 	functionScope.scopeFile = file;
@@ -30,8 +30,6 @@ void ds::ParsedFunction::compile(ParseContext* context, ParsedFile* file, ErrorC
 	addArguments(functionScope, errors);
 
 	functionScope.compile(context, file, errors);
-
-	registerFunction(context);
 }
 
 void ds::ParsedFunction::addArguments(ParsedScope& scope, ErrorContext* errors)
@@ -62,7 +60,7 @@ std::optional<SymbolDefinition> ds::ParsedFunction::getDefinition()
 void ds::ParsedFunction::registerFunction(ParseContext* context)
 {
 	auto& bytecodeFunction = context->compiler.functions[getFullName()];
-	bytecodeFunction = functionCode;
+	functionCode = &bytecodeFunction;
 	bytecodeFunction.isEntryPoint = getAttribute<modules::system::EntryPointAttribute>();
 }
 

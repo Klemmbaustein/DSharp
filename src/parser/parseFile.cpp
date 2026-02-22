@@ -225,6 +225,7 @@ void ds::ParsedFile::compile(ParseContext* context)
 			scanInfo->functions.push_back(ScannedFunction(&fn, fn.name, ScannedFunction::Kind::functionDefinition));
 		}
 #endif
+		fn.registerFunction(context);
 		fn.compile(context, this, &context->errors);
 	}
 }

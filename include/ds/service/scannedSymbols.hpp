@@ -87,6 +87,14 @@ namespace ds
 		std::vector<ScannedFunction> methods;
 	};
 
+	class ScannedEnum
+	{
+	public:
+		std::string name;
+		TypeId id = 0;
+		std::vector<std::string> values;
+	};
+
 	struct ScannedScopeVariable
 	{
 		std::string name;

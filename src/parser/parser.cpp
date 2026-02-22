@@ -284,6 +284,18 @@ void ds::ParseContext::emitServiceTypes()
 				}
 			}
 		}
+		for (auto& [_, enumEntry] : module->moduleEnums)
+		{
+			for (auto& [name, _1] : enumEntry->values)
+			{
+				std::string nameString = enumEntry->name + "::" + name.string;
+				auto found = f.accessibleEnums.find(nameString);
+				if (found == f.accessibleEnums.end() || (!isRecursing && !found->second.empty()))
+				{
+					f.accessibleEnums[nameString] = isRecursing ? module->name : "";
+				}
+			}
+		}
 
 		for (auto& [_, submodule] : module->submodules)
 		{
@@ -324,6 +336,9 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 
 void ds::ParseContext::resetModules(LanguageContext* context)
 {
+	this->virtualTable.clear();
+	this->compiler.functions.clear();
+
 	for (ParsedFile& file : this->files)
 	{
 		for (auto& i : file.classes)

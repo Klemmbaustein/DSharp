@@ -195,7 +195,7 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 			ClassMethod m = i.second;
 			if (classType->isInterface)
 				m.interfaceSource = classType;
-			methods.insert({i.first, m});
+			methods.insert({ i.first, m });
 		}
 		position += Size(classType->classSize);
 	}
@@ -244,10 +244,11 @@ Function* ds::ParsedClass::getDefaultConstructor()
 
 void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
+	BytecodeBuffer destructorCode;
 	ParsedScope destructorScope;
 	destructorScope.scopeFile = file;
 	destructorScope.context = context;
-	destructorScope.code = &this->baseDestructor.code;
+	destructorScope.code = &destructorCode;
 	destructorScope.setClass(this, false);
 
 	auto cleanupCode = BytecodeBuffer();
@@ -266,17 +267,18 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 
 	if (cleanupCode.instructions.size())
 	{
-		baseDestructor.code.addBuffer(cleanupCode);
-
-		destructorScope.code->addBuffer(destructorScope.compileScopeExit(0, false));
-		baseDestructor.code.addOperation(BytecodeOp::ret);
-
 		auto& destructorBytecode = context->compiler.functions[baseDestructor.getFullName()];
-		destructorBytecode.instructions = baseDestructor.code.instructions;
+		baseDestructor.code = &destructorBytecode;
+
+		baseDestructor.code->addBuffer(destructorCode);
+		baseDestructor.code->addBuffer(cleanupCode);
+
+		baseDestructor.code->addBuffer(destructorScope.compileScopeExit(0, false));
+		baseDestructor.code->addOperation(BytecodeOp::ret);
 	}
 	else
 	{
-		baseDestructor.code.instructions.clear();
+		baseDestructor.code = nullptr;
 		if (&baseDestructor == this->usedDestructor)
 		{
 			this->usedDestructor = nullptr;
@@ -287,10 +289,13 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 
 void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
+	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
+	this->constructor.code = &constructorBytecode;
+
 	ParsedScope constructorScope;
 	constructorScope.scopeFile = file;
 	constructorScope.context = context;
-	constructorScope.code = &this->constructor.code;
+	constructorScope.code = this->constructor.code;
 	auto& code = constructorScope.code;
 
 	if (thisType->parent && thisType->parent->baseConstructor)
@@ -350,9 +355,6 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 	code->addBuffer(constructorScope.compileScopeExit(0, false));
 	code->addOperation(BytecodeOp::ret);
 
-	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
-	constructorBytecode.instructions = constructor.code.instructions;
-
 	compileConstructor(context, errors, file);
 }
 
@@ -360,16 +362,17 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 {
 	for (auto& i : this->methods)
 	{
+		i->registerFunction(context);
 		if (i->name == "new")
 		{
 			// do not pop the return value of the base constructor, so we still have
 			// a pointer to this
-			i->functionCode.addNew<BytecodeCallFunction>(this->constructor.getFullName());
+			i->functionCode->addNew<BytecodeCallFunction>(this->constructor.getFullName());
 			for (auto& c : thisType->parent->constructors)
 			{
 				if (c->getArguments().empty())
 				{
-					i->functionCode.addBuffer(c->compileCall().code);
+					i->functionCode->addBuffer(c->compileCall().code);
 					break;
 				}
 			}
@@ -379,16 +382,13 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 				{
 					if (c->getArguments().empty())
 					{
-						i->functionCode.addBuffer(c->compileCall().code);
+						i->functionCode->addBuffer(c->compileCall().code);
 						break;
 					}
 				}
 			}
 		}
 		i->compile(context, file, errors);
-
-		auto& bytecodeFunction = context->compiler.functions[i->getFullName()];
-		bytecodeFunction.instructions = i->functionCode.instructions;
 	}
 }
 
@@ -470,7 +470,7 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 			args.addValue<Int>(thisType->getInterfaceOffset(interface));
 			args.addValue<Bool>(true);
 
-			i->functionCode.instructions.insert(i->functionCode.instructions.begin(),
+			i->functionCode->instructions.insert(i->functionCode->instructions.begin(),
 				std::make_shared<BytecodeOperation>(BytecodeOp::castInterface, args));
 			i->vTableOffset = vTableIndex++;
 			i->foundOverride = true;
@@ -521,11 +521,19 @@ bool ds::ClassLifetimeFunction::discardable() const
 
 ds::ParsedClass::~ParsedClass()
 {
+	clearMethods();
 	delete thisType;
+}
+
+void ds::ParsedClass::clearMethods()
+{
+	this->constructor = ClassLifetimeFunction();
+	this->baseDestructor = ClassLifetimeFunction();
 	for (ParsedFunction* i : this->methods)
 	{
 		delete i;
 	}
+	methods.clear();
 }
 
 void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
@@ -666,13 +674,12 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 				"Could not find any function that " + i->name.string + " can override.");
 		}
 	}
-
 }
 
 void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
 	this->members = this->builtInMembers;
-	this->methods.clear();
+	this->clearMethods();
 
 	thisType->parent = nullptr;
 	thisType->interfaces.clear();
