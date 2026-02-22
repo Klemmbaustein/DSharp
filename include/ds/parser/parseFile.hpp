@@ -19,6 +19,8 @@ namespace ds
 		ParseContext* context = nullptr;
 
 		std::string name;
+		// Usually the same as name, change this for code generated from another file.
+		std::string displayName;
 		std::string scopeName;
 
 		void loadAvailableTypes(ParseContext* context);

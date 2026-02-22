@@ -530,6 +530,12 @@ ds::ParsedClass::~ParsedClass()
 
 void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 {
+	if (thisType)
+	{
+		file->fileModule->moduleTypes.insert({ name.string, thisType });
+		return;
+	}
+
 	thisType = new ClassType();
 	thisType->from = name;
 	thisType->name = name.string;
@@ -538,7 +544,8 @@ void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 	thisType->applyName();
 	thisType->nullable->applyName();
 	thisType->isInterface = this->isInterface;
-	file->fileModule->moduleTypes.insert({ name.string, thisType });
+	if (file->fileModule)
+		file->fileModule->moduleTypes.insert({ name.string, thisType });
 }
 
 void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
@@ -666,6 +673,9 @@ void ds::ParsedClass::scan(ErrorContext* errors, ParsedFile* file)
 {
 	this->members = this->builtInMembers;
 	this->methods.clear();
+
+	thisType->parent = nullptr;
+	thisType->interfaces.clear();
 
 	this->classStream.reset();
 	this->usedDestructor = &baseDestructor;

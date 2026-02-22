@@ -1,9 +1,11 @@
 #pragma once
 #include <ds/parser/types/classType.hpp>
 
-#define DS_CREATE_STRUCT(type) new ::ds::NativeStructType(sizeof(type), # type)
-#define DS_STRUCT_MEMBER(x, type, name, memberType) x->members.emplace_back(# name, Size(offsetof(type, name)), memberType);
-#define DS_STRUCT_MEMBER_NAME(x, type, name, scriptName, memberType) x->members.emplace_back(#scriptName, Size(offsetof(type, name)), memberType);
+#define DS_CREATE_STRUCT(type) new ::ds::NativeStructType(sizeof(type), #type)
+#define DS_STRUCT_MEMBER(structValue, nativeStruct, name, memberType) \
+	structValue->members.emplace_back(#name, Size(offsetof(nativeStruct, name)), memberType);
+#define DS_STRUCT_MEMBER_NAME(structValue, nativeStruct, name, scriptName, memberType) \
+	structValue->members.emplace_back(#scriptName, Size(offsetof(nativeStruct, name)), memberType);
 
 namespace ds
 {
@@ -12,6 +14,8 @@ namespace ds
 	{
 	public:
 		NativeStructType(Size size, std::string name);
+
+		bool allowEmpty = true;
 
 		BytecodeBuffer compileUnref() override;
 		BytecodeBuffer compileMove(ParsedScope* with) override;
@@ -23,7 +27,9 @@ namespace ds
 			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
-			ErrorContext* errors, bool setMember, ParsedScope* with) override;;
+			ErrorContext* errors, bool setMember, ParsedScope* with) override;
+
+		ClassType* asClass() override;
 
 		void addConstructor(Function* newConstructor);
 

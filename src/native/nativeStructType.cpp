@@ -115,6 +115,13 @@ ExpressionResult ds::NativeStructType::compileValue(Token first, TokenLine& line
 	}
 	else if (constructors.empty())
 	{
+		if (!allowEmpty)
+		{
+			errors->error(ErrorCode::parseNoMatchingConstructor, first, "No matching constructor found.");
+			return ExpressionResult();
+		}
+		argsLine.expectEndOfLine(errors);
+
 		BinaryBuffer buffer;
 		for (Size i = 0; i < this->size; i++)
 		{
@@ -223,6 +230,11 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 	}
 
 	return ExpressionResult();
+}
+
+ClassType* ds::NativeStructType::asClass()
+{
+	return nullptr;
 }
 
 void ds::NativeStructType::addConstructor(Function* newConstructor)

@@ -86,6 +86,7 @@ EnumType* ds::NativeModule::createEnum(std::string name)
 	auto newType = new EnumType();
 	newType->name = name;
 	this->enums.push_back(newType);
+	this->types.push_back(newType);
 	return newType;
 }
 

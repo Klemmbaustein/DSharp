@@ -26,6 +26,7 @@ void ds::ParseContext::addFile(std::string filePath)
 	this->errors.currentFile = filePath;
 	auto& newFile = this->files.emplace_back();
 	newFile.stream.fromFile(filePath, &errors);
+	newFile.displayName = filePath;
 	newFile.name = filePath;
 	newFile.context = this;
 	newFile.scan(&errors);
@@ -36,6 +37,7 @@ void ds::ParseContext::addString(const std::string& str, std::string fileName)
 	this->errors.currentFile = fileName;
 	auto& newFile = this->files.emplace_back();
 	newFile.stream.fromString(str, fileName, &errors);
+	newFile.displayName = fileName;
 	newFile.name = fileName;
 	newFile.context = this;
 	newFile.scan(&errors);
@@ -47,6 +49,7 @@ ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleN
 	this->errors.currentFile = fileName;
 	auto& newFile = this->files.emplace_back();
 	newFile.name = fileName;
+	newFile.displayName = fileName;
 	newFile.context = this;
 	newFile.usings[Token(moduleName)] = nullptr;
 	newFile.scopeName = moduleName;
@@ -63,6 +66,7 @@ ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleN
 {
 	this->errors.currentFile = fileName;
 	auto& newFile = this->files.emplace_back();
+	newFile.displayName = fileName;
 	newFile.name = fileName;
 	newFile.context = this;
 	newFile.usings[Token(moduleName)] = nullptr;
@@ -123,7 +127,7 @@ ds::ParsedClass* ds::ParseContext::updateClass(Token className, std::string modu
 			return &newClass;
 		}
 	}
-	return nullptr;
+	return addClass(className, moduleName, stream, fileName, derived);
 }
 
 BytecodeStream ds::ParseContext::compile()

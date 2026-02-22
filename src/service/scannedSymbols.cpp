@@ -55,7 +55,7 @@ ds::ScannedVariable::ScannedVariable(ScopeVariable* from, Token atToken)
 	this->isThis = from->isThis;
 
 	definition = SymbolDefinition{
-		.file = from->ownedBy->scopeFile->name,
+		.file = from->ownedBy->scopeFile->displayName,
 		.at = from->name,
 	};
 
@@ -73,7 +73,7 @@ ds::ScannedVariable::ScannedVariable(ParsedClassMember* from, ClassType* inClass
 	this->name = from->name.string;
 
 	definition = SymbolDefinition{
-		.file = file ? file->name : "",
+		.file = file ? file->displayName : "",
 		.at = from->name,
 	};
 
@@ -92,7 +92,7 @@ ds::ScannedVariable::ScannedVariable(ClassMember* from, ClassType* inClass, Pars
 	this->name = from->name.string;
 
 	definition = SymbolDefinition{
-		.file = file ? file->name : "",
+		.file = file ? file->displayName : "",
 		.at = from->name,
 	};
 
