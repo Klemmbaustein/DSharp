@@ -16,6 +16,7 @@ namespace ds
 	 * Each instruction executes some logic in an interpreter context.
 	 *
 	 * @see InterpretContext
+	 * @see BytecodeInstruction
 	 */
 	enum class BytecodeOp : uint8_t
 	{
@@ -45,6 +46,8 @@ namespace ds
 		mulInt,
 		/// Divides the 2 topmost 32 bit ints on the stack and pushes the result.
 		divInt,
+		/// Takes the 2 topmost 32 bit ints on the stack and pushes a bool value that's true
+		/// if the first pushed (meaning lowest) int is bigger than the last pushed (meaning highest)
 		greaterInt,
 		/// Takes the topmost 32 bit int on the stack and pushes it's inverse value.
 		negativeInt,
@@ -70,7 +73,10 @@ namespace ds
 		intToFloat,
 		/// Takes the topmost float on the stack and pushes it's int equivalent.
 		floatToInt,
+		/// Pushes the variable stack by the given value
+		/// Arguments: 4 bytes push amount
 		pushVariable,
+		/// Stores a variable value to the variable stack.
 		storeVariable,
 		/// Reads a variable and pushes it's value on the stack.
 		/// Arguments: 4 bytes - size, 4 bytes - stack offset (from top).
