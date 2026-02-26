@@ -658,6 +658,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 	for (auto& i : this->methods)
 	{
+		i->registerFunction(context);
 		if (i->functionIsVirtual && !i->isOverride)
 		{
 			i->vTableOffset = vTableIterator++;
