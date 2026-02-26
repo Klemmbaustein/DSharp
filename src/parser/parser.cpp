@@ -137,7 +137,10 @@ BytecodeStream ds::ParseContext::compile()
 	if (!errors.isOk())
 	{
 #ifdef WITH_LANGUAGE_SERVICE
-		emitServiceTypes();
+		if (this->service)
+		{
+			emitServiceTypes();
+		}
 #endif
 		return BytecodeStream();
 	}
@@ -165,10 +168,10 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	// if (!this->service)
-	// {
-	//	this->compiler.printAssembly();
-	// }
+	 if (!this->service)
+	 {
+		this->compiler.printAssembly();
+	 }
 
 	if (!errors.isOk())
 	{
