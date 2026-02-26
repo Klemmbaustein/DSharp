@@ -10,11 +10,12 @@ and takes some additional inspiration from C++, Rust and JavaScript.
 
 - A simple C++ API to add functions and types to the language and to
   embed the scripts into another program.
-- A robust static type system that lets you write safer and faster code
+- A robust static type system with object oriented features that lets you write safer and faster code
   than alternatives like Lua.
 - Uses reference counting instead of Garbage Collection, so the language
   does not have garbage collection stutter problems, helping performance for
   games.
+- Only depends on the C++ standard library.
 
 ## Example
 
