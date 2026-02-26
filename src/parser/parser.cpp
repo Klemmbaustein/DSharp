@@ -136,6 +136,9 @@ BytecodeStream ds::ParseContext::compile()
 
 	if (!errors.isOk())
 	{
+#ifdef WITH_LANGUAGE_SERVICE
+		emitServiceTypes();
+#endif
 		return BytecodeStream();
 	}
 
