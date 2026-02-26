@@ -312,7 +312,10 @@ void ds::ParseContext::emitServiceTypes()
 
 		for (auto& [_, module] : file.usings)
 		{
-			processModule(module, file, false);
+			if (module)
+			{
+				processModule(module, file, false);
+			}
 		}
 	}
 }
