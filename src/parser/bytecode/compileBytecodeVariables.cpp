@@ -95,11 +95,16 @@ BytecodeOffset BytecodeStoreVariable::getArgsSize()
 	return sizeof(uint32_t) * 2;
 }
 
-ds::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit)
+ds::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit, bool isUnreachable)
 {
 	this->operation = BytecodeOp::popVariable;
 	this->isScopeExit = isScopeExit;
+	this->isUnreachable = isUnreachable;
 	popSize = size;
+	if (isUnreachable)
+	{
+		this->baseSize = 0;
+	}
 }
 
 std::string BytecodePopVariable::toString()
@@ -116,6 +121,10 @@ void BytecodePopVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compil
 	{
 		compiler->variableStackPosition -= this->popSize;
 	}
+	if (isUnreachable)
+	{
+		return;
+	}
 	stream.addValue<Size>(this->popSize);
 }
 
@@ -130,5 +139,5 @@ void ds::BytecodePopVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSe
 
 BytecodeOffset BytecodePopVariable::getArgsSize()
 {
-	return sizeof(Size);
+	return this->isUnreachable ? 0 : sizeof(Size);
 }

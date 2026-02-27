@@ -270,7 +270,8 @@ ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext
 	return result.first->second;
 }
 
-BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll)
+BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll,
+	bool unreachable)
 {
 	BytecodeBuffer code;
 	uint32_t size = 0;
@@ -291,7 +292,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 		bool varIsThis = &i.second == thisVariable;
 		bool shouldUnrefThis = ((!isDestructor && !returnThis) || isConstructor);
 
-		if (dereferenceAll && (!varIsThis || shouldUnrefThis) && this->taskVariable != &i.second)
+		if (dereferenceAll && !unreachable && (!varIsThis || shouldUnrefThis) && this->taskVariable != &i.second)
 		{
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
@@ -332,7 +333,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 
 	if (size)
 	{
-		code.addNew<BytecodePopVariable>(size, !isEnd);
+		code.addNew<BytecodePopVariable>(size, !isEnd, unreachable);
 
 		this->variableStackPosition -= size;
 	}
@@ -385,12 +386,16 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 		compileLine(nextLine, file, errors);
 	}
 
+#ifdef WITH_LANGUAGE_SERVICE
+	serializeScope();
+#endif
+
 	if (code->instructions.size() && (*code->instructions.rbegin())->operation == BytecodeOp::ret)
 	{
+		// Still pop the variable stack even if this scope ends with a return.
+		code->addBuffer(compileScopeExit(this->depth, true, true, true));
 		return;
 	}
-
-	serializeScope();
 
 	code->addBuffer(compileScopeExit(this->depth, true));
 	if (compileReturn || this->isLambda)

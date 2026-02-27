@@ -58,7 +58,8 @@ namespace ds
 
 		void pushVariableValue(Type* type, bool copy);
 		ScopeVariable& addVariable(Token name, Type* type, ErrorContext* errors);
-		BytecodeBuffer compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll = true);
+		BytecodeBuffer compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll = true,
+			bool unreachable = false);
 
 		uint32_t variableStackPosition = 0;
 		uint32_t lambdaOffset = 0;

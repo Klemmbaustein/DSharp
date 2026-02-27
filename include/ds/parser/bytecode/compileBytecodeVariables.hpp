@@ -45,7 +45,7 @@ namespace ds
 	class BytecodePopVariable : public BytecodeInstruction
 	{
 	public:
-		BytecodePopVariable(uint32_t size, bool isScopeExit);
+		BytecodePopVariable(uint32_t size, bool isScopeExit, bool isUnreachable);
 
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section) override;
@@ -54,6 +54,7 @@ namespace ds
 
 		uint32_t popSize = 0;
 		bool isScopeExit = false;
+		bool isUnreachable = false;
 	};
 
 } // namespace ds

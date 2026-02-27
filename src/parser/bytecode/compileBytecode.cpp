@@ -412,7 +412,7 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 
 			stream.virtualTable.push_back(VTableFunction{
 				.nativeFunction = position,
-				});
+			});
 		}
 	}
 
@@ -429,10 +429,10 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 		for (auto& instr : code->instructions)
 		{
 			instr->addUnwindInfo(this, s);
+			argsBuffer.clear();
+			instr->getArgs(argsBuffer, this);
 			if (instr->baseSize != 0)
 			{
-				argsBuffer.clear();
-				instr->getArgs(argsBuffer, this);
 				if (argsBuffer.buffer.size() != instr->getArgsSize())
 				{
 					abort();
