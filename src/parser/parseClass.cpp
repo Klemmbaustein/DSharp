@@ -3,6 +3,7 @@
 #include <ds/parser/parseScope.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/parser/parseExpression.hpp>
+#include <cassert>
 using namespace ds;
 
 bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file)
@@ -167,6 +168,11 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 				auto [value, success] = this->members.insert(m);
 				value->second.isDerived = true;
 			}
+		}
+
+		for (auto& i : classType->interfaces)
+		{
+			this->thisType->interfaces.insert(i);
 		}
 
 		if (classType->isInterface)
@@ -402,6 +408,11 @@ void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* 
 			continue;
 		}
 
+		if (m.second.interfaceSource != nullptr)
+		{
+			continue;
+		}
+
 		bool found = false;
 
 		for (auto& i : this->methods)
@@ -481,7 +492,7 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 		{
 			continue;
 		}
-		context->virtualTable.push_back(m.second.function);
+		context->virtualTable.push_back(thisType->methods.at(m.first).function);
 		vTableIndex++;
 	}
 
@@ -615,7 +626,15 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 		}
 		else
 		{
-			methods.insert({ i->name.string, ClassMethod(i) });
+			auto found = methods.find(i->name.string);
+			if (found != methods.end())
+			{
+				found->second = ClassMethod(i, found->second.interfaceSource);
+			}
+			else
+			{
+				methods.insert({ i->name.string, ClassMethod(i) });
+			}
 		}
 	}
 
@@ -648,7 +667,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 	compileDestructor(context, errors, file);
 
 	this->thisType->vTableOffset = BytecodeOffset(context->virtualTable.size());
-	BytecodeOffset vTableIterator = 1;
+	BytecodeOffset vTableIterator = this->thisType->vTableOffset + 1;
 	context->virtualTable.push_back(usedDestructor);
 
 	if (thisType->parent)
@@ -658,6 +677,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 	for (auto& i : this->methods)
 	{
+		i->registerFunction(context);
 		if (i->functionIsVirtual && !i->isOverride)
 		{
 			i->vTableOffset = vTableIterator++;

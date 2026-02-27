@@ -2,7 +2,7 @@
 #include <ds/parser/error.hpp>
 #include <ds/parser/types/type.hpp>
 
-void ds::ExpressionResult::discard(Token at, ErrorContext* errors)
+void ds::ExpressionResult::discard(Token at, ErrorContext* errors) const
 {
 	if (this->discardable || !this->type)
 	{

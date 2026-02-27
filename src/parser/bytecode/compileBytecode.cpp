@@ -336,7 +336,7 @@ void ds::BytecodeCompiler::printAssembly()
 	}
 }
 
-void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors)
+void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable)
 {
 	BytecodeOffset bytecodePos = stream.code.streamPos;
 
@@ -372,9 +372,7 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 				{
 					abort();
 				}
-				bytecodePos +=
-					/* operation */ sizeof(BytecodeOp) + /* arguments size */ sizeof(uint8_t) +
-					/* arguments */ instr->getArgsSize();
+				bytecodePos += instr->baseSize + instr->getArgsSize();
 			}
 		}
 	}

@@ -14,12 +14,36 @@ namespace ds
 	class ClassType;
 	class Function;
 
+	/**
+	 * @brief
+	 * Base bytecode instruction class.
+	 *
+	 * Holds logic on how to convert this instruction to into bytecode.
+	 * For example, a function call might need to know it's target bytecode offset, which won't be known
+	 * until all the bytecode has been generated and put together.
+	 *
+	 * @see BytecodeOp
+	 */
 	class BytecodeInstruction
 	{
 	public:
-		size_t baseSize = 3;
+		/// The base size of this operation in bytes usually 2 bytes
+		/// (1 byte instruction id, 1 byte arguments size) or 0 bytes (no size, this instruction is only really a marker, like a jump label etc.).
+		size_t baseSize = sizeof(BytecodeOp) + sizeof(uint8_t);
+		/// The operation of this instruction. Is ignored if the base size is 0.
 		BytecodeOp operation = BytecodeOp::push;
+		/// The offset (in bytes) this instruction has in the compiled program. This is only initialized when getArgs() is called
 		BytecodeOffset offset = 0;
+		/**
+		 * @brief
+		 * Gets the argument bytes of this instruction.
+		 *
+		 * @param stream
+		 * The binary stream to write the bytes to.
+		 *
+		 * @param compiler
+		 * The bytecode compiler calling this function.,
+		 */
 		virtual void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) = 0;
 		virtual BytecodeOffset getArgsSize() = 0;
 		virtual std::string toString() { return ""; }
@@ -29,6 +53,10 @@ namespace ds
 		virtual ~BytecodeInstruction() = default;
 	};
 
+	/**
+	 * @brief
+	 * Any raw bytecode operation with arguments.
+	 */
 	class BytecodeOperation : public BytecodeInstruction
 	{
 	public:
@@ -164,8 +192,18 @@ namespace ds
 		std::map<std::string, uint32_t> usedExternals;
 		uint32_t variableStackPosition = 0;
 
+		/// Prints an assembly-like debug listing of all functions, labels and instructions in this program.
 		void printAssembly();
 
-		void compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, ErrorContext* errors);
+		/**
+		 * @brief
+		 * Compiles the functions of this program into the given stream.
+		 *
+		 * @param stream
+		 * THe stream to compile to
+		 * @param virtualTable
+		 * The virtual table to reference when compiling virtual functions.
+		 */
+		void compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable);
 	};
 } // namespace ds

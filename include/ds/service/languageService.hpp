@@ -43,10 +43,23 @@ namespace ds
 		CompletionType type = CompletionType::variable;
 	};
 
+	/**
+	 * @brief
+	 * A class giving information about parsed scripts.
+	 *
+	 * Useful for implementing a LSP or having an integrated editor with syntax highlighting, auto complete etc.
+	 */
 	class LanguageService
 	{
 	public:
+		/**
+		 * @brief
+		 * Initializes a language service
+		 * @param context
+		 */
 		LanguageService(LanguageContext* context);
+
+		~LanguageService();
 
 		std::vector<std::string> scopeKeywords = {
 			"return",
@@ -76,17 +89,83 @@ namespace ds
 			"override"
 		};
 
-		void addString(const std::string& content, std::string name);
+		/**
+		 * @brief
+		 * Adds a file to this service's script context.
+		 * @param content
+		 * The content of the file.
+		 * @param name
+		 * The name of the file.
+		 */
+		void addFile(const std::string& content, std::string name);
+
+		/**
+		 * @brief
+		 * Updates an existing file with the given new content.
+		 *
+		 * The file must already exist in this context for this to work.
+		 *
+		 * @param content
+		 * The content of the file
+		 * @param name
+		 * The name of the file to replace
+		 */
 		void updateFile(const std::string& content, std::string name);
+
+		/**
+		 * @brief
+		 * Removes a file from this context.
+		 * @param name
+		 * The name of this file.
+		 */
 		void removeFile(std::string name);
 
+		/**
+		 * @brief
+		 * Adds a class body to this service's script context.
+		 *
+		 * This is meant to be used to embed the scripting language into other languages.
+		 *
+		 * @param className
+		 * The name of the class to add.
+		 * @param moduleName
+		 * The name of the module this class is in.
+		 * @param body
+		 * The body of this class, containing method definitions etc.
+		 * @param fileName
+		 * The name of the file this class is defined in.
+		 * @param superClasses
+		 * The tokens containing the classes this class derives from.
+		 * @return
+		 * A pointer to the new parsed class.
+		 */
 		ParsedClass* addClass(Token className, std::string moduleName,
 			ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses);
 		ParsedClass* updateClass(Token className, std::string moduleName,
 			ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses);
 
+		// TODO: remove classes
+
+		/**
+		 * @brief
+		 * Commits any changes made by the add/update/remove functions, recompiling the scripts.
+		 */
 		void commitChanges();
 
+		/**
+		 * @brief
+		 * Tries to give possible values to autocomplete at a given character position.
+		 * @param f
+		 * The file that the completion should occur in.
+		 * @param character
+		 * The character where the completion should occur at.
+		 * @param line
+		 * The line where the completion should occur at.
+		 * @param type
+		 * A filter for the possible results of this function.
+		 * @return
+		 * A list of all possible completions at the given position the service could find.
+		 */
 		std::vector<AutoCompleteResult> completeAt(ScannedFile* f, size_t character, size_t line,
 			CompletionType type);
 

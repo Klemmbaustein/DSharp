@@ -20,6 +20,11 @@ namespace ds
 
 	struct ClassMethod
 	{
+		ClassMethod()
+		{
+
+		}
+
 		ClassMethod(Function* fn)
 		{
 			function = fn;

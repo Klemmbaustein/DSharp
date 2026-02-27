@@ -52,7 +52,7 @@ ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleN
 	newFile.displayName = fileName;
 	newFile.context = this;
 	newFile.usings[Token(moduleName)] = nullptr;
-	newFile.scopeName = moduleName;
+	newFile.moduleName = moduleName;
 
 	ParsedClass& newClass = newFile.classes.emplace_back(&newFile);
 	newClass.name = className;
@@ -70,7 +70,7 @@ ds::ParsedClass* ds::ParseContext::addClass(Token className, std::string moduleN
 	newFile.name = fileName;
 	newFile.context = this;
 	newFile.usings[Token(moduleName)] = nullptr;
-	newFile.scopeName = moduleName;
+	newFile.moduleName = moduleName;
 
 	ParsedClass& newClass = newFile.classes.emplace_back(&newFile);
 	newClass.name = className;
@@ -117,7 +117,7 @@ ds::ParsedClass* ds::ParseContext::updateClass(Token className, std::string modu
 			i.name = fileName;
 			i.context = this;
 			i.usings[Token(moduleName)] = nullptr;
-			i.scopeName = moduleName;
+			i.moduleName = moduleName;
 
 			ParsedClass& newClass = i.classes.emplace_back(&i);
 			newClass.name = className;
@@ -136,6 +136,12 @@ BytecodeStream ds::ParseContext::compile()
 
 	if (!errors.isOk())
 	{
+#ifdef WITH_LANGUAGE_SERVICE
+		if (this->service)
+		{
+			emitServiceTypes();
+		}
+#endif
 		return BytecodeStream();
 	}
 
@@ -153,7 +159,7 @@ BytecodeStream ds::ParseContext::compile()
 		{
 			return BytecodeStream();
 		}
-		this->compiler.compileTo(initialCode, virtualTable, &errors);
+		this->compiler.compileTo(initialCode, virtualTable);
 	}
 #ifdef WITH_LANGUAGE_SERVICE
 	else
@@ -309,7 +315,10 @@ void ds::ParseContext::emitServiceTypes()
 
 		for (auto& [_, module] : file.usings)
 		{
-			processModule(module, file, false);
+			if (module)
+			{
+				processModule(module, file, false);
+			}
 		}
 	}
 }
@@ -378,7 +387,6 @@ void ds::ParseContext::resetModules(LanguageContext* context)
 void ds::ParseContext::scanModules()
 {
 	// Create global module
-	// TODO: Somehow clear out the functions for repeated scans
 	auto& globalModule = this->programModules[""];
 	globalModule = {};
 
@@ -386,8 +394,8 @@ void ds::ParseContext::scanModules()
 	for (ParsedFile& file : this->files)
 	{
 		this->errors.currentFile = file.name;
-		Module& mod = this->programModules[file.scopeName];
-		mod.name = file.scopeName;
+		Module& mod = this->programModules[file.moduleName];
+		mod.name = file.moduleName;
 		file.fileModule = &mod;
 
 		for (auto& function : file.functions)
