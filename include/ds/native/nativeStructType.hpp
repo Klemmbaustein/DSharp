@@ -1,6 +1,7 @@
 #pragma once
 #include <ds/parser/types/classType.hpp>
 
+// Some utility macros.
 #define DS_CREATE_STRUCT(type) new ::ds::NativeStructType(sizeof(type), #type)
 #define DS_STRUCT_MEMBER(structValue, nativeStruct, name, memberType) \
 	structValue->members.emplace_back(#name, Size(offsetof(nativeStruct, name)), memberType);
@@ -9,12 +10,20 @@
 
 namespace ds
 {
-
+	/**
+	 * @brief
+	 * A class representing a native data structure as a pass-by-value object.
+	 */
 	class NativeStructType : public ClassType
 	{
 	public:
 		NativeStructType(Size size, std::string name);
 
+		/**
+		 * @brief
+		 * Allow the struct to be initialized as empty,
+		 * leaving all it's members at 0 without calling a constructor.
+		 */
 		bool allowEmpty = true;
 
 		BytecodeBuffer compileUnref() override;
@@ -29,10 +38,20 @@ namespace ds
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 
-		ClassType* asClass() override;
-
+		/**
+		 * @brief
+		 * Adds a constructor to this struct
+		 * @param newConstructor
+		 * The new constructor to add.
+		 */
 		void addConstructor(Function* newConstructor);
 
+		/**
+		 * @brief
+		 * List of operator functions that will be called when an operator is used.
+		 * For example s1 + s2 would be handled by the first function in this list
+		 * that supports s2 (s1 will always be of this type)
+		 */
 		std::vector<std::pair<Operator, Function*>> operators;
 	};
 } // namespace ds

@@ -510,11 +510,11 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 
 		ExpressionResult callCode = Expression::parseFunctionArguments(memberName, generic.args,
 			argsLine, errors, true, with);
-		callCode.code.addBuffer(value.code);
 		if (function.interfaceSource)
 		{
-			callCode = toInterface(value, function.interfaceSource);
+			value = toInterface(value, function.interfaceSource);
 		}
+		callCode.code.addBuffer(value.code);
 
 		callCode.code.addBuffer(generic.code);
 		callCode.code.addBuffer(getClassGenericCode());

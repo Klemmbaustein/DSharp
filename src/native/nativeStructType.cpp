@@ -232,11 +232,6 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 	return ExpressionResult();
 }
 
-ClassType* ds::NativeStructType::asClass()
-{
-	return this;
-}
-
 void ds::NativeStructType::addConstructor(Function* newConstructor)
 {
 	this->constructors.push_back(newConstructor);

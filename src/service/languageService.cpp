@@ -11,7 +11,12 @@ ds::LanguageService::LanguageService(LanguageContext* context)
 	this->language = context;
 }
 
-void ds::LanguageService::addString(const std::string& content, std::string name)
+ds::LanguageService::~LanguageService()
+{
+	delete this->parser;
+}
+
+void ds::LanguageService::addFile(const std::string& content, std::string name)
 {
 	this->parser->addString(content, name);
 	hasChanges = true;

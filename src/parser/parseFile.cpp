@@ -4,13 +4,9 @@
 
 using namespace ds;
 
-void ds::ParsedFile::loadAvailableTypes(ParseContext* context)
-{
-}
-
 void ds::ParsedFile::scan(ErrorContext* errors)
 {
-	this->scopeName = "";
+	this->moduleName = "";
 	this->usings.clear();
 	this->enums.clear();
 	this->attributes.clear();
@@ -18,9 +14,6 @@ void ds::ParsedFile::scan(ErrorContext* errors)
 	this->classes.clear();
 	std::vector<AttribInfo> currentAttributes;
 	while (scanLine(currentAttributes, errors)) {}
-}
-ds::ParsedFile::~ParsedFile()
-{
 }
 
 void ds::ParsedFile::updateUsings()
@@ -64,7 +57,7 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 	{
 		this->addAttributes(currentAttributes);
 		currentAttributes.clear();
-		this->scopeName = currentLine.get().string;
+		this->moduleName = currentLine.get().string;
 		return true;
 	}
 
@@ -89,6 +82,7 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 		currentAttributes.push_back(AttribInfo(attribTokens));
 		return true;
 	}
+	// Class or interface (compiled similarly)
 	if (first == "class" || first == "interface")
 	{
 		scanClass(currentLine, first == "interface", errors).addAttributes(currentAttributes);
@@ -96,6 +90,7 @@ bool ds::ParsedFile::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorC
 		return true;
 	}
 
+	// Enum
 	if (first == "enum")
 	{
 		scanEnum(currentLine, errors).addAttributes(currentAttributes);
@@ -183,6 +178,7 @@ ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, bool isInterface, 
 
 ParsedEnum& ds::ParsedFile::scanEnum(TokenLine currentLine, ErrorContext* errors)
 {
+	// TODO: Complete
 	ParsedEnum& newEnum = this->enums.emplace_back();
 	newEnum.name = currentLine.get();
 	newEnum.name.checkIsName(errors);
