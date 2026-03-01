@@ -17,7 +17,7 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 		result.type = firstCopy.type;
 		return firstCopy.type->compileOperator(operatorType, firstCopy, second, with);
 	}
-	else if (!with->context->registry->ifTypeIs<IntType>(second.type))
+	else if (second.type && !with->context->registry->ifTypeIs<IntType>(second.type))
 	{
 		return ExpressionResult();
 	}
