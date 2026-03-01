@@ -33,5 +33,7 @@ void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* wi
 		return;
 	}
 
+	cast.type = target;
+
 	*this = cast;
 }
