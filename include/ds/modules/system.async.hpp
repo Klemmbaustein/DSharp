@@ -22,7 +22,7 @@ namespace ds::modules::system
 			};
 			TaskCallback awaitNative;
 			uint8_t* resultBuffer;
-			std::mutex taskMutex;
+			std::mutex* taskMutex;
 		};
 
 		void pushTaskResult(Task* target, size_t size, InterpretContext* to);

@@ -429,7 +429,6 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 		ExpressionResult result;
 		result.valid = true;
 		result.type = i.type;
-		BinaryBuffer args;
 		result.code.addBuffer(value.code);
 		result.code.pushInt(i.offset);
 		result.code.pushInt(i.type->size);
@@ -442,18 +441,16 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 			{
 				result.setCode->addBuffer(result.code);
 				result.setCode->addOperation(
-					i.isPointerMember ? BytecodeOp::classMemberPtr : BytecodeOp::classMember,
-					args);
+					i.isPointerMember ? BytecodeOp::classMemberPtr : BytecodeOp::classMember);
 				result.setCode->addBuffer(unrefCode);
 			}
 
 			result.setCode->addBuffer(result.code);
 			result.setCode->addOperation(
-				i.isPointerMember ? BytecodeOp::setClassMemberPtr : BytecodeOp::setClassMember,
-				args);
+				i.isPointerMember ? BytecodeOp::setClassMemberPtr : BytecodeOp::setClassMember);
 		}
 
-		result.code.addOperation(i.isPointerMember ? BytecodeOp::classMemberPtr : BytecodeOp::classMember, args);
+		result.code.addOperation(i.isPointerMember ? BytecodeOp::classMemberPtr : BytecodeOp::classMember);
 
 		return result;
 	}
