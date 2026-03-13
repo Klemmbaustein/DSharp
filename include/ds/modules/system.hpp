@@ -160,26 +160,5 @@ namespace ds::modules
 		}
 		RuntimeClass* createMapObject();
 
-		template <typename T>
-		RuntimeClass* createMap(T* items, Size length, bool isType)
-		{
-			size_t sizeInBytes = length * sizeof(T);
-			void* buffer = malloc(sizeInBytes);
-
-			if (!buffer)
-			{
-				abort();
-			}
-
-			memcpy(buffer, items, sizeInBytes);
-
-			RuntimeClass* array = createMapObject();
-			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
-			data->data = buffer;
-			data->length = length;
-			data->isType = isType;
-			return array;
-		}
-
 	} // namespace system
 } // namespace ds::modules
