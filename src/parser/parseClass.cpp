@@ -319,6 +319,9 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 		code->addOperation(BytecodeOp::implInterface, args);
 		if (interface->baseConstructor)
 			code->addBuffer(interface->baseConstructor->compileCall().code);
+		args.clear();
+		args.addValue<Size>(sizeof(RuntimeClass*));
+		code->addOperation(BytecodeOp::pop, args);
 	}
 
 	for (auto& [name, member] : this->members)
