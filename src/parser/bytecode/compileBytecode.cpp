@@ -51,6 +51,7 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::pop, "POP" },
 		{ BytecodeOp::call, "CALL" },
 		{ BytecodeOp::jump, "JUMP" },
+		{ BytecodeOp::jumpIf, "JUMP_IF" },
 		{ BytecodeOp::jumpIfNot, "JUMP_IF_NOT" },
 		{ BytecodeOp::callExternal, "CALL_EXTERNAL" },
 		{ BytecodeOp::ret, "RETURN" },

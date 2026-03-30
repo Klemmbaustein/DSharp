@@ -29,6 +29,8 @@ namespace ds
 		call,
 		/// Sets the current instruction position to the given argument.
 		jump,
+		/// Sets the current instruction position to the given argument if the topmost bool on the stack is true.
+		jumpIf,
 		/// Sets the current instruction position to the given argument if the topmost bool on the stack is not true.
 		jumpIfNot,
 		/// Calls an external function in the BytecodeStream::externalFunctions list
