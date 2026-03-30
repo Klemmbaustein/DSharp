@@ -425,6 +425,29 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		return result;
 	}
 
+	auto constant = scope->scopeFile->getConstant(value, errors);
+
+	if (constant.valid)
+	{
+#ifdef WITH_LANGUAGE_SERVICE
+		if (scope->context->service)
+		{
+			auto var = ScannedVariable();
+
+			var.kind = ScannedVariable::Kind::constant;
+			var.at = value;
+			var.name = value.string;
+			var.typeId = constant.type->id;
+			var.type = Type::toString(constant.type);
+
+			scope->context->service->files[scope->scopeFile->name]
+				.variables.push_back(var);
+		}
+#endif
+
+		return constant;
+	}
+
 	auto prevPos = currentLine.savePosition();
 	Function* function = scope->scopeFile->getMethod(value, currentLine, errors);
 	if (function)

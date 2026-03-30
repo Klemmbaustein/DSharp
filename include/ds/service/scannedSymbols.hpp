@@ -54,6 +54,7 @@ namespace ds
 		{
 			localVariable,
 			classMember,
+			constant,
 		};
 
 		Kind kind = Kind::localVariable;

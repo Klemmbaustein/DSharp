@@ -1,6 +1,7 @@
 #include <ds/parser/bytecode/compileBytecode.hpp>
 #include <ds/parser/types/classType.hpp>
 #include <ds/native/nativeModule.hpp>
+#include <ds/parser/bytecode/constantEvaluate.hpp>
 #include <print>
 #include <stdlib.h>
 using namespace ds;
@@ -25,6 +26,22 @@ BytecodeOffset ds::BytecodeOperation::getArgsSize()
 
 void ds::BytecodeInstruction::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
 {
+}
+
+bool ds::BytecodeOperation::constantEvaluate(ConstantEvaluate* evaluator)
+{
+	switch (this->operation)
+	{
+	case BytecodeOp::push: {
+		evaluator->pushBytes(arguments);
+		return true;
+	}
+	case BytecodeOp::boolNot: {
+		evaluator->pushValue<Bool>(!evaluator->popValue<Bool>());
+		return true;
+	}
+	}
+	return false;
 }
 
 std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments) const

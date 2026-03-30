@@ -6,6 +6,25 @@
 #include <ds/parser/parser.hpp>
 using namespace ds;
 
+ExpressionResult ds::Module::getConstant(Token name, ErrorContext* errors)
+{
+	auto foundValue = this->moduleConstants.find(name.string);
+
+	if (foundValue != this->moduleConstants.end())
+	{
+		return foundValue->second;
+	}
+
+	Module* foundModule = checkForSubmodule(name.string);
+
+	if (foundModule)
+	{
+		return foundModule->getConstant(name.string, errors);
+	}
+
+	return ExpressionResult();
+}
+
 Function* ds::Module::getMethod(Token name, TokenLine& from, ErrorContext* errors)
 {
 	auto foundFunction = this->moduleFunctions.find(name.string);
