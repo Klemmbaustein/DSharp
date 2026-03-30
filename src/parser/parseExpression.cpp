@@ -202,13 +202,21 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 			bool isNullable = foundType && typeid(*foundType) == typeid(NullableClassType);
 			ClassType* foundClass = foundType ? foundType->asClass() : nullptr;
 
-			if (!foundClass)
+			ClassType* expressionClass = result.type ? result.type->asClass() : nullptr;
+
+			if (!foundClass || !expressionClass)
 			{
-				errors->error(ErrorCode::parseInvalidType, nextToken,
-					"Type " + Type::toString(foundType) + " is not a class");
+				if (foundType)
+				{
+					result.compileToType(nextToken, foundType, scope, errors);
+				}
+				else
+				{
+					errors->error(ErrorCode::parseInvalidType, nextToken,
+						"Type " + Type::toString(foundType) + " is not a class");
+				}
 				return result;
 			}
-			ClassType* expressionClass = result.type ? result.type->asClass() : nullptr;
 
 			if (!expressionClass)
 			{

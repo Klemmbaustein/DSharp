@@ -204,6 +204,14 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
 			break;
 		}
+		case ds::BytecodeOp::jumpIf: {
+			Bool cond = popValue<Bool>();
+			if (cond)
+			{
+				code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+			}
+			break;
+		}
 		case ds::BytecodeOp::jumpIfNot: {
 			Bool cond = popValue<Bool>();
 			if (!cond)
@@ -212,7 +220,6 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			}
 			break;
 		}
-
 		case ds::BytecodeOp::addInt:
 			pushValue(popValue<Int>() + popValue<Int>());
 			break;
