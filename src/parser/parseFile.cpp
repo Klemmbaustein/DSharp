@@ -239,6 +239,23 @@ Function* ParsedFile::getMethod(TokenLine& from, ErrorContext* errors)
 	return nullptr;
 }
 
+ExpressionResult ds::ParsedFile::getConstant(Token name, ErrorContext* errors)
+{
+	ExpressionResult found = this->fileModule->getConstant(name, errors);
+	if (found.valid)
+		return found;
+
+	for (auto& i : this->usings)
+	{
+		if (!i.second)
+			continue;
+		found = i.second->getConstant(name, errors);
+		if (found.valid)
+			return found;
+	}
+	return ExpressionResult();
+}
+
 Function* ds::ParsedFile::getMethod(Token name, TokenLine& from, ErrorContext* errors)
 {
 	auto pos = from.savePosition();

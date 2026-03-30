@@ -13,6 +13,7 @@ namespace ds
 	struct NativeFunction;
 	class ClassType;
 	class Function;
+	class ConstantEvaluate;
 
 	/**
 	 * @brief
@@ -50,6 +51,16 @@ namespace ds
 		virtual void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section);
 		std::string toStringDefault(const BinaryBuffer& arguments) const;
 
+		/**
+		 * @brief
+		 * Tries to evaluate this instruction at compile time
+		 * @return False if it cannot be evaluated at compile time.
+		 */
+		virtual bool constantEvaluate(ConstantEvaluate* evaluator)
+		{
+			return false;
+		}
+
 		virtual ~BytecodeInstruction() = default;
 	};
 
@@ -65,6 +76,7 @@ namespace ds
 		void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) override;
 		BytecodeOffset getArgsSize() override;
 		std::string toString() override;
+		bool constantEvaluate(ConstantEvaluate* evaluator) override;
 
 		BinaryBuffer arguments;
 	};
