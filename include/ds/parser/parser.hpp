@@ -19,10 +19,17 @@ namespace ds
 	struct ScopeVariable;
 	class LanguageService;
 
+	struct ParserOptions
+	{
+		bool printAssembly : 1 = false;
+	};
+
 	struct ParseContext
 	{
-		ParseContext(LanguageContext* context);
+		ParseContext(LanguageContext* context, ParserOptions options);
 		~ParseContext();
+
+		ParserOptions options;
 
 		void addFile(std::string filePath);
 		void addString(const std::string& str, std::string fileName);

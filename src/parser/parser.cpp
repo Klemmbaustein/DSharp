@@ -10,9 +10,10 @@
 #include <ds/parser/parseFunction.hpp>
 using namespace ds;
 
-ds::ParseContext::ParseContext(LanguageContext* context)
+ds::ParseContext::ParseContext(LanguageContext* context, ParserOptions options)
 {
 	resetModules(context);
+	this->options = options;
 	this->registry = new TypeRegistry(*context->registry);
 }
 
@@ -168,10 +169,10 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	// if (!this->service)
-	// {
-	//	this->compiler.printAssembly();
-	// }
+	if (this->options.printAssembly)
+	{
+		this->compiler.printAssembly();
+	}
 
 	if (!errors.isOk())
 	{
