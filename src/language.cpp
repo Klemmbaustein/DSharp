@@ -6,9 +6,9 @@ LanguageRuntime* ds::LanguageContext::createRuntime()
 	return new LanguageRuntime(this);
 }
 
-ParseContext* ds::LanguageContext::createCompiler()
+ParseContext* ds::LanguageContext::createCompiler(ParserOptions options)
 {
-	return new ParseContext(this);
+	return new ParseContext(this, options);
 }
 
 #ifdef WITH_LANGUAGE_SERVICE
