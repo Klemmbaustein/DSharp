@@ -450,8 +450,8 @@ void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* 
 BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, ParseContext* context,
 	ErrorContext* errors, ParsedFile* file)
 {
-	BytecodeOffset vTableIndex = BytecodeOffset(context->virtualTable.size());
-	BytecodeOffset initialIndex = vTableIndex;
+	BytecodeOffset vTableIndex = 1;
+	BytecodeOffset initialIndex = BytecodeOffset(context->virtualTable.size());
 
 	context->virtualTable.push_back(usedDestructor);
 
@@ -671,6 +671,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 	this->thisType->vTableOffset = BytecodeOffset(context->virtualTable.size());
 	BytecodeOffset vTableIterator = this->thisType->vTableOffset + 1;
+	BytecodeOffset vTableIndex = 1;
 	context->virtualTable.push_back(usedDestructor);
 
 	if (thisType->parent)
@@ -683,7 +684,8 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 		i->registerFunction(context);
 		if (i->functionIsVirtual && !i->isOverride)
 		{
-			i->vTableOffset = vTableIterator++;
+			i->vTableOffset = vTableIndex++;
+			vTableIterator++;
 			context->virtualTable.push_back(i);
 		}
 	}
