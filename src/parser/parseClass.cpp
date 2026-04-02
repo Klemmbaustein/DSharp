@@ -377,12 +377,15 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 			// do not pop the return value of the base constructor, so we still have
 			// a pointer to this
 			i->functionCode->addNew<BytecodeCallFunction>(this->constructor.getFullName());
-			for (auto& c : thisType->parent->constructors)
+			if (thisType->parent)
 			{
-				if (c->getArguments().empty())
+				for (auto& c : thisType->parent->constructors)
 				{
-					i->functionCode->addBuffer(c->compileCall().code);
-					break;
+					if (c->getArguments().empty())
+					{
+						i->functionCode->addBuffer(c->compileCall().code);
+						break;
+					}
 				}
 			}
 			for (auto& [_, p] : this->thisType->interfaces)
