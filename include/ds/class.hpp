@@ -74,7 +74,7 @@ namespace ds
 		 * You shouldn't call this function directly, use InterpretContext::destruct() to properly
 		 * de reference and destruct an object, as that will automatically also call it's destructors.
 		 */
-		static RuntimeFunction unref(RuntimeClass* object)
+		static RuntimeFunction unref(RuntimeClass*& object)
 		{
 			if (!object)
 			{
@@ -108,7 +108,10 @@ namespace ds
 					free(object->getBasePtr());
 				}
 				else
+				{
+					object = object->getBasePtr();
 					return object->vtable[0];
+				}
 			}
 			return RuntimeFunction();
 		}
