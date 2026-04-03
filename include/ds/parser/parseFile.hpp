@@ -34,6 +34,8 @@ namespace ds
 		Function* getMethod(TokenLine& from, ErrorContext* errors);
 		/// Parses a method from this file, using the modules in `usings`.
 		Function* getMethod(Token name, TokenLine& from, ErrorContext* errors);
+		/// Parses a constant from this file, using the modules in `usings`.
+		ExpressionResult getConstant(Token name, ErrorContext* errors);
 		/// Parses a type from this file, using the modules in `usings`.
 		Type* getType(TokenLine& from, ErrorContext* errors);
 		/// Parses an attribute from this file, using the modules in `usings`.

@@ -204,6 +204,14 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
 			break;
 		}
+		case ds::BytecodeOp::jumpIf: {
+			Bool cond = popValue<Bool>();
+			if (cond)
+			{
+				code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+			}
+			break;
+		}
 		case ds::BytecodeOp::jumpIfNot: {
 			Bool cond = popValue<Bool>();
 			if (!cond)
@@ -212,7 +220,6 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			}
 			break;
 		}
-
 		case ds::BytecodeOp::addInt:
 			pushValue(popValue<Int>() + popValue<Int>());
 			break;
@@ -649,11 +656,20 @@ void ds::InterpretContext::destruct(RuntimeClass* classObject)
 
 void ds::InterpretContext::copyFrom(InterpretContext* other)
 {
-	memcpy(this->stack.data(), other->stack.data(), STACK_SIZE);
+	if (other->stackPos)
+	{
+		memcpy(this->stack.data(), other->stack.data(), other->stackPos);
+	}
 	this->stackPos = other->stackPos;
-	this->variableStack = other->variableStack;
+	if (other->variableStackPos)
+	{
+		memcpy(this->variableStack.data(), other->variableStack.data(), other->variableStackPos);
+	}
 	this->variableStackPos = other->variableStackPos;
-	memcpy(this->callStack.data(), other->callStack.data(), other->callStackPos);
+	if (other->callStackPos)
+	{
+		memcpy(this->callStack.data(), other->callStack.data(), other->callStackPos);
+	}
 	this->callStackPos = other->callStackPos;
 
 	this->code = other->code;

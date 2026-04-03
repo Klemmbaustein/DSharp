@@ -319,6 +319,9 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 		code->addOperation(BytecodeOp::implInterface, args);
 		if (interface->baseConstructor)
 			code->addBuffer(interface->baseConstructor->compileCall().code);
+		args.clear();
+		args.addValue<Size>(sizeof(RuntimeClass*));
+		code->addOperation(BytecodeOp::pop, args);
 	}
 
 	for (auto& [name, member] : this->members)
@@ -374,12 +377,15 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 			// do not pop the return value of the base constructor, so we still have
 			// a pointer to this
 			i->functionCode->addNew<BytecodeCallFunction>(this->constructor.getFullName());
-			for (auto& c : thisType->parent->constructors)
+			if (thisType->parent)
 			{
-				if (c->getArguments().empty())
+				for (auto& c : thisType->parent->constructors)
 				{
-					i->functionCode->addBuffer(c->compileCall().code);
-					break;
+					if (c->getArguments().empty())
+					{
+						i->functionCode->addBuffer(c->compileCall().code);
+						break;
+					}
 				}
 			}
 			for (auto& [_, p] : this->thisType->interfaces)
@@ -447,8 +453,8 @@ void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* 
 BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, ParseContext* context,
 	ErrorContext* errors, ParsedFile* file)
 {
-	BytecodeOffset vTableIndex = BytecodeOffset(context->virtualTable.size());
-	BytecodeOffset initialIndex = vTableIndex;
+	BytecodeOffset vTableIndex = 1;
+	BytecodeOffset initialIndex = BytecodeOffset(context->virtualTable.size());
 
 	context->virtualTable.push_back(usedDestructor);
 
@@ -668,6 +674,7 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 	this->thisType->vTableOffset = BytecodeOffset(context->virtualTable.size());
 	BytecodeOffset vTableIterator = this->thisType->vTableOffset + 1;
+	BytecodeOffset vTableIndex = 1;
 	context->virtualTable.push_back(usedDestructor);
 
 	if (thisType->parent)
@@ -680,7 +687,8 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 		i->registerFunction(context);
 		if (i->functionIsVirtual && !i->isOverride)
 		{
-			i->vTableOffset = vTableIterator++;
+			i->vTableOffset = vTableIndex++;
+			vTableIterator++;
 			context->virtualTable.push_back(i);
 		}
 	}

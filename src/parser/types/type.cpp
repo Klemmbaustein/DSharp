@@ -17,7 +17,7 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 		result.type = firstCopy.type;
 		return firstCopy.type->compileOperator(operatorType, firstCopy, second, with);
 	}
-	else if (!with->context->registry->ifTypeIs<IntType>(second.type))
+	else if (second.type && !with->context->registry->ifTypeIs<IntType>(second.type))
 	{
 		return ExpressionResult();
 	}
@@ -354,33 +354,92 @@ ExpressionResult ds::FloatType::compileToString(ExpressionResult thisValue, Erro
 ExpressionResult ds::BoolType::compileOperator(Operator operatorType,
 	ExpressionResult& first, ExpressionResult& second, ParsedScope* with)
 {
-	ExpressionResult result;
-
-	result.code.addBuffer(first.code);
-
 	if (second.type && !second.type->sameAs(this))
 	{
 		return ExpressionResult();
 	}
+
+	ExpressionResult result;
+
+	// Short circuiting "and" operator. Evaluate expression 1, if true return expression 2
+	if (operatorType == Operator::logicalAnd && second.type)
+	{
+		auto labelFail = std::make_shared<BytecodeJumpLabel>("andShortCircuit");
+		auto labelSuccess = std::make_shared<BytecodeJumpLabel>("andSuccess");
+		result.code.addBuffer(first.code);
+		result.code.addNew<BytecodeJump>(BytecodeOp::jumpIfNot, labelFail.get());
+
+		result.code.addBuffer(second.code);
+		result.code.addNew<BytecodeJump>(BytecodeOp::jump, labelSuccess.get());
+
+		// When jumping to "andShortCircuit", return false. (First condition failed so the result is known to be false)
+		result.code.add(labelFail);
+		BinaryBuffer falseBuffer;
+		falseBuffer.addValue<Bool>(false);
+		result.code.addOperation(BytecodeOp::push, falseBuffer);
+		// Otherwise use the result from the second expression.
+		result.code.add(labelSuccess);
+		result.valid = true;
+		result.type = this;
+
+		return result;
+	}
+
+	if (operatorType == Operator::logicalOr && second.type)
+	{
+		auto labelSuccess = std::make_shared<BytecodeJumpLabel>("orShortCircuit");
+		auto labelFail = std::make_shared<BytecodeJumpLabel>("orFail");
+		result.code.addBuffer(first.code);
+		result.code.addNew<BytecodeJump>(BytecodeOp::jumpIf, labelFail.get());
+
+		result.code.addBuffer(second.code);
+		result.code.addNew<BytecodeJump>(BytecodeOp::jump, labelSuccess.get());
+
+		// When jumping to "orShortCircuit", return true. (First condition succeeded so the result is known to be true)
+		result.code.add(labelFail);
+		BinaryBuffer trueBuffer;
+		trueBuffer.addValue<Bool>(true);
+		result.code.addOperation(BytecodeOp::push, trueBuffer);
+		// Otherwise use the result from the second expression.
+		result.code.add(labelSuccess);
+		result.valid = true;
+		result.type = this;
+
+		return result;
+	}
+
+	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
 
+	if (second.type)
+	{
+		switch (operatorType)
+		{
+		case ds::Operator::logicalAnd:
+			result.code.addOperation(BytecodeOp::boolAnd);
+			break;
+		case ds::Operator::logicalOr:
+			result.code.addOperation(BytecodeOp::boolOr);
+			break;
+		default:
+			return ExpressionResult();
+		}
+
+		result.type = this;
+		result.valid = true;
+		return result;
+	}
 	switch (operatorType)
 	{
-	case ds::Operator::logicalAnd:
-		result.code.addOperation(BytecodeOp::boolAnd);
-		break;
 	case ds::Operator::logicalNot:
-		result.code.addOperation(BytecodeOp::boolNot);
-		break;
-	case ds::Operator::logicalOr:
 		result.code.addOperation(BytecodeOp::boolOr);
 		break;
 	default:
 		return ExpressionResult();
 	}
 
-	result.type = this;
 	result.valid = true;
+	result.type = this;
 	return result;
 }
 

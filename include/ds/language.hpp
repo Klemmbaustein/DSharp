@@ -39,7 +39,7 @@ namespace ds
 		 * @see ParseContext::compile()
 		 * @see InterpretContext
 		 */
-		ParseContext* createCompiler();
+		ParseContext* createCompiler(ParserOptions options = {});
 
 #ifdef WITH_LANGUAGE_SERVICE
 		LanguageService* startService();

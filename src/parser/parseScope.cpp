@@ -5,6 +5,7 @@
 #include <ds/parser/types/lambdaType.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/parser/parseExpression.hpp>
+#include <ds/parser/bytecode/constantEvaluate.hpp>
 using namespace ds;
 
 void ds::ParsedScope::returnCompletedTask(TaskType* taskType)
@@ -635,10 +636,14 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 
 void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
-	// if [expr] [
+	// if [const?] [expr] [
 	//     [scope]
 	// }
 	// else ...
+
+	// If the if statement is const, it is a compile time condition
+	bool isConst = line.peek() == "const" && (line.get(), true);
+
 	auto conditionLine = line.getUntil("{", errors);
 
 	TokenLine conditionTokens;
@@ -647,15 +652,55 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 	auto condition = Expression::pushExpression(conditionTokens, errors, false, nullptr, this);
 	conditionTokens.expectEndOfLine(errors);
 	condition.compileToType(conditionTokens.previous(), file->context->registry->getEntry<BoolType>(), this, errors);
-	this->code->addBuffer(condition.code);
+
+	bool constValue = false;
+
+	if (!isConst)
+	{
+		this->code->addBuffer(condition.code);
+	}
+	else if (condition.valid)
+	{
+		ConstantEvaluate evaluator;
+		if (evaluator.run(condition.code))
+		{
+			constValue = evaluator.popValue<Bool>();
+		}
+		else
+		{
+			errors->error(ErrorCode::parseNotConst, conditionTokens.previous(),
+				"'if const' expression is not a constant");
+		}
+	}
+
+#ifdef WITH_LANGUAGE_SERVICE
+	// Still parse the scope if running with a language service so we still get syntax highlighting
+	const bool isService = file->context->service;
+#else
+	const bool isService = false;
+#endif
 
 	// The end of the if-statement scope, might also be the start of an else statement if there is one
-	auto endLabel = std::make_shared<BytecodeJumpLabel>("endif");
+	auto endLabel = isConst ? nullptr : std::make_shared<BytecodeJumpLabel>("endif");
 
-	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
-
-	parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
-
+	if (isConst)
+	{
+		if (constValue || isService)
+		{
+			parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+		}
+		else
+		{
+			// Ignore the next scope
+			TokenStream stream;
+			this->tokenStream->getScope(stream, errors);
+		}
+	}
+	else
+	{
+		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
+		parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+	}
 	auto nextLine = this->tokenStream->peek(errors);
 
 	if (nextLine.peek() == "else")
@@ -663,26 +708,55 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 		this->tokenStream->next(errors);
 
 		nextLine.get();
+		auto endElseLabel = isConst ? nullptr : std::make_shared<BytecodeJumpLabel>("endElseLabel");
 
-		// Jump to the end of the else statement if the initial condition was true
-		auto endElseLabel = std::make_shared<BytecodeJumpLabel>("endElseLabel");
-		this->code->addNew<BytecodeJump>(BytecodeOp::jump, endElseLabel.get());
-
+		if (!isConst)
+		{
+			// Jump to the end of the else statement if the initial condition was true
+			this->code->addNew<BytecodeJump>(BytecodeOp::jump, endElseLabel.get());
+		}
 		if (nextLine.peek() == "if")
 		{
 			nextLine.get();
-			this->code->add(endLabel);
-			compileIf(nextLine, file, errors);
-			this->code->add(endElseLabel);
+			if (isConst)
+			{
+				if (!constValue || isService)
+				{
+					compileIf(nextLine, file, errors);
+				}
+				else
+				{
+					TokenStream stream;
+					this->tokenStream->getScope(stream, errors);
+				}
+			}
+			else
+			{
+				this->code->add(endLabel);
+				compileIf(nextLine, file, errors);
+				this->code->add(endElseLabel);
+			}
 		}
 		else
 		{
-			this->code->add(endLabel);
-			parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
-			this->code->add(endElseLabel);
+			if (!isConst)
+			{
+				this->code->add(endLabel);
+				parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+				this->code->add(endElseLabel);
+			}
+			else if (!constValue || isService)
+			{
+				parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+			}
+			else
+			{
+				TokenStream stream;
+				this->tokenStream->getScope(stream, errors);
+			}
 		}
 	}
-	else
+	else if (endLabel)
 	{
 		this->code->add(endLabel);
 	}

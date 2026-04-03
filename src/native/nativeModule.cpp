@@ -154,6 +154,16 @@ Module ds::NativeModule::create() const
 	{
 		outModule.moduleEnums.insert({ i->name, i });
 	}
+	for (auto& [name, constant] : this->constants)
+	{
+		ExpressionResult code;
+
+		code.code.addOperation(BytecodeOp::push, constant.second);
+		code.valid = true;
+		code.type = constant.first;
+
+		outModule.moduleConstants.insert({ name, code });
+	}
 
 	return outModule;
 }

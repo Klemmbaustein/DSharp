@@ -1,6 +1,7 @@
 #include <ds/parser/bytecode/compileBytecode.hpp>
 #include <ds/parser/types/classType.hpp>
 #include <ds/native/nativeModule.hpp>
+#include <ds/parser/bytecode/constantEvaluate.hpp>
 #include <print>
 #include <stdlib.h>
 using namespace ds;
@@ -27,6 +28,22 @@ void ds::BytecodeInstruction::addUnwindInfo(BytecodeCompiler* compiler, UnwindSe
 {
 }
 
+bool ds::BytecodeOperation::constantEvaluate(ConstantEvaluate* evaluator)
+{
+	switch (this->operation)
+	{
+	case BytecodeOp::push: {
+		evaluator->pushBytes(arguments);
+		return true;
+	}
+	case BytecodeOp::boolNot: {
+		evaluator->pushValue<Bool>(!evaluator->popValue<Bool>());
+		return true;
+	}
+	}
+	return false;
+}
+
 std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& arguments) const
 {
 	static std::map<BytecodeOp, const char*> operations = {
@@ -34,6 +51,7 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::pop, "POP" },
 		{ BytecodeOp::call, "CALL" },
 		{ BytecodeOp::jump, "JUMP" },
+		{ BytecodeOp::jumpIf, "JUMP_IF" },
 		{ BytecodeOp::jumpIfNot, "JUMP_IF_NOT" },
 		{ BytecodeOp::callExternal, "CALL_EXTERNAL" },
 		{ BytecodeOp::ret, "RETURN" },

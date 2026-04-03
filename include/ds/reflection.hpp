@@ -29,7 +29,7 @@ namespace ds
 		size_t bodySize = 0;
 
 		std::vector<TypeMember> members;
-		TypeId superClass;
+		TypeId superClass = 0;
 		std::map<TypeId, BytecodeOffset> interfaces;
 
 		RuntimeClass* create(InterpretContext* context) const;
