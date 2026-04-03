@@ -18,6 +18,7 @@ namespace ds
 		std::map<std::string, Function*> moduleFunctions;
 		std::map<std::string, Attribute*> moduleAttributes;
 		std::map<std::string, EnumType*> moduleEnums;
+		std::map<std::string, ExpressionResult> moduleConstants;
 
 		struct SubmoduleData
 		{
@@ -29,6 +30,7 @@ namespace ds
 
 		void addModule(const std::string& name, Module* module);
 
+		ExpressionResult getConstant(Token name, ErrorContext* errors);
 		Function* getMethod(Token name, TokenLine& from, ErrorContext* errors);
 		Type* getType(Token name, TokenLine& from, ErrorContext* errors, ParsedFile* file, ParseContext* context);
 		Attribute* getAttribute(Token name, TokenLine& from, ParsedFile* file, ParseContext* context);

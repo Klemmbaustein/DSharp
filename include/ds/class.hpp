@@ -43,6 +43,15 @@ namespace ds
 			getReferences()++;
 		}
 
+		RuntimeClass* getBasePtr()
+		{
+			if (referencesAreOffset)
+			{
+				return ((RuntimeClass*)((uint8_t*)this - sizeof(RuntimeClass) - references))->getBasePtr();
+			}
+			return this;
+		}
+
 		Size& getReferences()
 		{
 			if (referencesAreOffset)
@@ -84,8 +93,8 @@ namespace ds
 
 			if (ref == 0)
 			{
-				classRefCount--;
-				free(object);
+				ref--;
+				free(object->getBasePtr());
 				return RuntimeFunction();
 			}
 
@@ -95,8 +104,8 @@ namespace ds
 			{
 				if (!object->vtable || !bool(object->vtable[0]))
 				{
-					classRefCount--;
-					free(object);
+					ref--;
+					free(object->getBasePtr());
 				}
 				else
 					return object->vtable[0];

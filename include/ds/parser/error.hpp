@@ -42,12 +42,14 @@ namespace ds
 		parseExpectedName = 3011,
 		/// E3012 Override does not override an existing function or there's a type mismatch.
 		parseInvalidOverride = 3012,
-		/// E3013 Variable redefinition
+		/// E3013 Variable redefinition.
 		parseVariableRedefinition = 3013,
-		/// E3014 No matching constructor
+		/// E3014 No matching constructor.
 		parseNoMatchingConstructor = 3014,
-		/// E3014 Await can only be used in async functions
+		/// E3014 Await can only be used in async functions.
 		parseInvalidAwait = 3015,
+		/// E3014 Expression is not const.
+		parseNotConst = 3015,
 		/// E4000 NoDiscard function return value discarded.
 		returnValueDiscarded = 4000,
 	};

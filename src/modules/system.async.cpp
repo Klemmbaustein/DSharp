@@ -28,6 +28,11 @@ static void task_delete(InterpretContext* context)
 	{
 		delete task->resultBuffer;
 	}
+
+	if (task->taskMutex)
+	{
+		delete task->taskMutex;
+	}
 }
 
 static RuntimeFunction task_vTable = RuntimeFunction{
@@ -86,6 +91,7 @@ RuntimeClass* ds::modules::system::async::emptyTask()
 	c->completed = false;
 	c->awaiter = nullptr;
 	c->resultBuffer = nullptr;
+	c->taskMutex = new std::mutex();
 
 	return c.classPtr;
 }
@@ -106,7 +112,7 @@ RuntimeClass* ds::modules::system::async::completedTask()
 void ds::modules::system::async::completeTaskWithBuffer(ClassRef<Task> task, size_t size, InterpretContext* context)
 {
 	{
-		std::unique_lock l{ task->taskMutex };
+		std::unique_lock l{ *task->taskMutex };
 
 		if (task->awaiter && size)
 			pushTaskResult(task.get(), size, task->awaiter);
@@ -124,9 +130,9 @@ void ds::modules::system::async::completeTaskWithBuffer(ClassRef<Task> task, siz
 void ds::modules::system::async::completeTask(ClassRef<Task> task, InterpretContext* context)
 {
 	{
-		task->taskMutex.lock();
+		task->taskMutex->lock();
 		task->completed = true;
-		task->taskMutex.unlock();
+		task->taskMutex->unlock();
 	}
 	if (task->awaitNative)
 	{

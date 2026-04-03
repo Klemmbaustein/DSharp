@@ -10,9 +10,10 @@
 #include <ds/parser/parseFunction.hpp>
 using namespace ds;
 
-ds::ParseContext::ParseContext(LanguageContext* context)
+ds::ParseContext::ParseContext(LanguageContext* context, ParserOptions options)
 {
 	resetModules(context);
+	this->options = options;
 	this->registry = new TypeRegistry(*context->registry);
 }
 
@@ -168,10 +169,10 @@ BytecodeStream ds::ParseContext::compile()
 	}
 #endif
 
-	// if (!this->service)
-	// {
-	//	this->compiler.printAssembly();
-	// }
+	if (this->options.printAssembly)
+	{
+		this->compiler.printAssembly();
+	}
 
 	if (!errors.isOk())
 	{
@@ -300,6 +301,14 @@ void ds::ParseContext::emitServiceTypes()
 				{
 					f.accessibleEnums[nameString] = isRecursing ? module->name : "";
 				}
+			}
+		}
+		for (auto& [name, constant] : module->moduleConstants)
+		{
+			auto found = f.accessibleEnums.find(name);
+			if (found == f.accessibleEnums.end() || (!isRecursing && !found->second.empty()))
+			{
+				f.accessibleEnums[name] = isRecursing ? module->name : "";
 			}
 		}
 
@@ -466,6 +475,7 @@ void ds::ParseContext::scanModules()
 		for (auto& i : file.classes)
 		{
 			i.scanClass(this, &file);
+			i.resolveAttributes(&file, &errors);
 		}
 		for (auto& function : file.functions)
 		{

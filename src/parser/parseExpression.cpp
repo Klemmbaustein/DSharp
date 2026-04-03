@@ -202,13 +202,21 @@ ExpressionResult ds::Expression::getExpressionValue(TokenLine& currentLine, Erro
 			bool isNullable = foundType && typeid(*foundType) == typeid(NullableClassType);
 			ClassType* foundClass = foundType ? foundType->asClass() : nullptr;
 
-			if (!foundClass)
+			ClassType* expressionClass = result.type ? result.type->asClass() : nullptr;
+
+			if (!foundClass || !expressionClass)
 			{
-				errors->error(ErrorCode::parseInvalidType, nextToken,
-					"Type " + Type::toString(foundType) + " is not a class");
+				if (foundType)
+				{
+					result.compileToType(nextToken, foundType, scope, errors);
+				}
+				else
+				{
+					errors->error(ErrorCode::parseInvalidType, nextToken,
+						"Type " + Type::toString(foundType) + " is not a class");
+				}
 				return result;
 			}
-			ClassType* expressionClass = result.type ? result.type->asClass() : nullptr;
 
 			if (!expressionClass)
 			{
@@ -423,6 +431,29 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		}
 #endif
 		return result;
+	}
+
+	auto constant = scope->scopeFile->getConstant(value, errors);
+
+	if (constant.valid)
+	{
+#ifdef WITH_LANGUAGE_SERVICE
+		if (scope->context->service)
+		{
+			auto var = ScannedVariable();
+
+			var.kind = ScannedVariable::Kind::constant;
+			var.at = value;
+			var.name = value.string;
+			var.typeId = constant.type->id;
+			var.type = Type::toString(constant.type);
+
+			scope->context->service->files[scope->scopeFile->name]
+				.variables.push_back(var);
+		}
+#endif
+
+		return constant;
 	}
 
 	auto prevPos = currentLine.savePosition();

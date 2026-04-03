@@ -146,6 +146,16 @@ namespace ds
 			return cls;
 		}
 
+		template <typename T>
+		void addConstant(std::string name, Type* type, T value)
+		{
+			BinaryBuffer buf;
+
+			buf.addValue<T>(value);
+
+			this->constants.insert({ name, { type, buf } });
+		}
+
 		EnumType* createEnum(std::string name);
 
 		void addEnumIntValue(EnumType* type, std::string name, int value);
@@ -181,5 +191,6 @@ namespace ds
 		std::vector<Attribute*> attributes;
 		std::vector<Type*> types;
 		std::vector<EnumType*> enums;
+		std::map<std::string, std::pair<Type*, BinaryBuffer>> constants;
 	};
 } // namespace ds
