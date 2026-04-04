@@ -93,7 +93,7 @@ namespace ds
 
 			if (ref == 0)
 			{
-				ref--;
+				classRefCount--;
 				free(object->getBasePtr());
 				return RuntimeFunction();
 			}
@@ -104,7 +104,7 @@ namespace ds
 			{
 				if (!object->vtable || !bool(object->vtable[0]))
 				{
-					ref--;
+					classRefCount--;
 					free(object->getBasePtr());
 				}
 				else

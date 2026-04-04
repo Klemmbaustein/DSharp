@@ -432,7 +432,7 @@ ExpressionResult ds::BoolType::compileOperator(Operator operatorType,
 	switch (operatorType)
 	{
 	case ds::Operator::logicalNot:
-		result.code.addOperation(BytecodeOp::boolOr);
+		result.code.addOperation(BytecodeOp::boolNot);
 		break;
 	default:
 		return ExpressionResult();
