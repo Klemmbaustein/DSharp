@@ -13,7 +13,7 @@ class BaseClass
 
 class Derived : BaseClass
 {
-	virtual fn f()
+	override fn f()
 	{
 		writeln("Derived function")
 	}

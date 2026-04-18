@@ -673,13 +673,12 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 	compileDestructor(context, errors, file);
 
 	this->thisType->vTableOffset = BytecodeOffset(context->virtualTable.size());
-	BytecodeOffset vTableIterator = this->thisType->vTableOffset + 1;
 	BytecodeOffset vTableIndex = 1;
 	context->virtualTable.push_back(usedDestructor);
 
 	if (thisType->parent)
 	{
-		handleParentClass(vTableIterator, thisType->parent, context, errors, file);
+		handleParentClass(vTableIndex, thisType->parent, context, errors, file);
 	}
 
 	for (auto& i : this->methods)
@@ -688,7 +687,6 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 		if (i->functionIsVirtual && !i->isOverride)
 		{
 			i->vTableOffset = vTableIndex++;
-			vTableIterator++;
 			context->virtualTable.push_back(i);
 		}
 	}

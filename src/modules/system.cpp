@@ -54,6 +54,55 @@ static void string_compare(InterpretContext* context)
 	context->pushValue(cmp);
 }
 
+static void string_concat(InterpretContext* context)
+{
+	auto second = context->popRuntimeStringRef();
+	auto first = context->popRuntimeStringRef();
+
+	Size newSize = first.length() + second.length();
+	// Space for null terminator
+	Size contentSize = newSize + 1;
+
+	RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t),
+		first.classPtr->type, 0);
+
+	(*(Size*)newClass->getBody()) = newSize;
+	char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
+	memcpy(strBegin, first.ptr(), first.length());
+	memcpy(strBegin + first.length(), second.ptr(), second.length());
+	strBegin[first.length() + second.length()] = 0;
+	context->pushValue<Pointer>(Pointer(newClass));
+}
+
+static void string_indexString(InterpretContext* context)
+{
+	auto index = context->popValue<int32_t>();
+	auto first = context->popRuntimeString();
+	context->pushValue<Char>(Char(first.ptr()[index]));
+}
+
+static void string_setIndexCopy(InterpretContext* context)
+{
+	auto index = context->popValue<int32_t>();
+	auto str = context->popRuntimeString();
+	Char newChar = context->popValue<Char>();
+	str.classPtr->addRef();
+
+	// Space for null terminator
+	Size strLength = str.length();
+	Size contentSize = str.length() + 1;
+
+	RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(Size),
+		str.classPtr->type, 0);
+
+	(*(Size*)newClass->getBody()) = strLength;
+	char* strBegin = (char*)(newClass->getBody() + sizeof(Size));
+	memcpy(strBegin, str.ptr(), strLength);
+	strBegin[index] = newChar;
+	std::puts(strBegin);
+	context->pushValue<Pointer>(Pointer(newClass));
+}
+
 static void int_toString(InterpretContext* context)
 {
 	auto str = std::to_string(context->popValue<Int>());
@@ -164,7 +213,7 @@ static void map_at(InterpretContext* context)
 	}
 	else
 	{
-		context->runtimePanic(RuntimeStr("Map.at failed. No such key."));
+		context->runtimePanic("Map.at failed. No such key.");
 	}
 
 	return;
@@ -266,7 +315,7 @@ void ds::modules::system::MapData::remove(uint8_t* key, GenericData keyType, Int
 	}
 	else
 	{
-		context->runtimePanic(RuntimeStr("Map.remove failed. No such key."));
+		context->runtimePanic("Map.remove failed. No such key.");
 	}
 }
 
@@ -479,7 +528,7 @@ static void fn_call(InterpretContext* context)
 
 static void fn_new_bytecode(InterpretContext* context)
 {
-	auto offset = context->popValue<BytecodeOffset>();
+	auto offset = context->popValue<Pointer>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
@@ -501,7 +550,7 @@ static void fn_delete_lambda(InterpretContext* context)
 
 static void fn_new_lambda(InterpretContext* context)
 {
-	auto offset = context->popValue<BytecodeOffset>();
+	auto offset = context->popValue<Pointer>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete_lambda;
@@ -509,7 +558,7 @@ static void fn_new_lambda(InterpretContext* context)
 
 	int32_t size = context->popValue<BytecodeOffset>();
 
-	auto deref = context->popValue<BytecodeOffset>();
+	auto deref = context->popValue<Pointer>();
 	entries[2].codeOffset = deref;
 
 	auto cls = RuntimeClass::allocateClass(size + 4, 0, entries);
@@ -585,8 +634,12 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 		"fn.new.lambda", &fn_new_lambda));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(stringType, Token("str")) }, stringType,
-		"format", &string_format));
+		{ FunctionArgument(stringType, "str") }, stringType,
+		"string.format", &string_format));
+
+	out.addFunction(NativeFunction(
+		{ }, nullptr,
+		"string.concat", &string_concat));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(stringType, Token("str1")),

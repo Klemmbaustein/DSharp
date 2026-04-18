@@ -58,6 +58,9 @@ ExpressionResult ds::IntType::compileOperator(Operator operatorType,
 		result.code.addOperation(BytecodeOp::negativeInt);
 		break;
 	case ds::Operator::modulo:
+		result.code.addOperation(BytecodeOp::modInt);
+		break;
+
 	case ds::Operator::unknown:
 	default:
 		return ExpressionResult();
@@ -173,8 +176,10 @@ ExpressionResult ds::Type::compileEqualsTo(ExpressionResult first, ExpressionRes
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
 
-	result.code.pushInt(first.type->size);
-	result.code.addOperation(BytecodeOp::equals);
+	BinaryBuffer args;
+	args.addValue(first.type->size);
+
+	result.code.addOperation(BytecodeOp::equals, args);
 
 	return result;
 }

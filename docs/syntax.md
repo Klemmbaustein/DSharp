@@ -58,16 +58,16 @@ A module in D# is similar to a namespace in C++. All classes and functions in th
 A function in D# has the form:
 
 ```
-[modifier] fn [name] ([arguments]) [scope]
+[<modifier>...] fn <name> ([<arguments...>]) <scope>
 ```
 
 or if the function has a return type:
 
 ```
-[modifier] fn [name] ([arguments]) -> [returnType] [scope]
+[<modifier>...] fn <name> ([<arguments...>]) -> <returnType> <scope>
 ```
 
-- [modifier] can be either `virtual` or `overriode` if the function
+- [modifier] can be `async`. It can also be `virtual` or `overriode` if the function
   is a class method.
   For more information see the Class methods section.
 - [name] can be any valid name. A name can't start wit a digit and
@@ -98,7 +98,7 @@ So for example: `a \n b` isn't a single statement, but `a ( \n b )` is.
 
 Types of statements are:
 
-- ### If-statements: `if [condition] [scope]`
+- ### If-statements: `if <condition> <scope>`
   
   [condition] is an expression evaluating to the `bool` type. If this condition evaluates to `true`,
   the scope will be run.
@@ -120,7 +120,7 @@ Types of statements are:
   }
   ```
 
-- ### While-statements `while [condition] [scope]`
+- ### While-statements `while <condition> <scope>`
   
   Like an if-statement, [condition] is an expression evaluating to the `bool` type. If this condition evaluates
   to `true`, the scope will be run.
@@ -128,13 +128,16 @@ Types of statements are:
   At the end of the scope, the statement will be repeated. If [condition] still evaluates to `true`, the scope
   will be run again.
 
-- ### Variable definition statements `[type] [name]` or `[type] [name] = [value]`
+- ### Variable definition statements `<type> <name>` or `<type> <name> = <value>` or `[var|const] <name> = <value>`
   
   A variable definition defines a variable in the scope.
 
-- ### For-statements `for [varDef] [scope]`
+- ### For-statements `for <varDef with value> <scope>`
 
-  TODO:
+  Runs the scope n times, where n is the length of the value container. The variable will have
+  the value of the n'th item in the container for each iteration.
+  value must be an array, and the variable must have a type that's compatible with the container's item type.
+
 - ### Expression statements
   A statement can also just be an [expression](#expressions).
   
@@ -196,14 +199,14 @@ Types of expressions are:
 ### Discardable expressions
 
 An expression is discardable if it doesn't have any resulting type (such as functions returning no type)
-or if it is a function or variable marked with the `[system::Discard]` attribute.
+or if it is a function marked with the `[system::Discard]` attribute.
 
 ## Classes
 
 A class in D# has the form
 
 ```
-class [name] : [superClass]
+class <name> [: <superClass>] [is <interface1>, <Interface2>]
 {
     [methods or members]
 }
@@ -230,5 +233,14 @@ class X
 }
 ```
 
-However, in a class method, any expression that does not have another meaning will implicitly be interpreted
+In a class method, any expression that does not have another meaning will implicitly be interpreted
 as a member of the `this` variable.
+
+```
+this.number += 1
+```
+and
+```
+number += 1
+```
+have the same meaning in the previous example.

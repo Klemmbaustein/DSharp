@@ -22,6 +22,8 @@ namespace ds
 	{
 		/// Pushes the argument on the stack.
 		push,
+		/// Pushes an address of a function on the stack.
+		pushAddr,
 		/// Pops n bytes off of the stack, where n is the argument.
 		pop,
 		/// Same as BytecodeOp::jump, but pushes the current instruction position
@@ -48,6 +50,8 @@ namespace ds
 		mulInt,
 		/// Divides the 2 topmost 32 bit ints on the stack and pushes the result.
 		divInt,
+		/// Takes the modulo value of the two topmost ints
+		modInt,
 		/// Takes the 2 topmost 32 bit ints on the stack and pushes a bool value that's true
 		/// if the first pushed (meaning lowest) int is bigger than the last pushed (meaning highest)
 		greaterInt,
@@ -111,14 +115,6 @@ namespace ds
 		/// Will push the pointer of the class again after the set operation
 		/// Arguments: 4 bytes offset, 4 bytes size
 		setClassMemberPushAgain,
-		/// Concatenates 2 strings from the stack into a single string and pushes the result to the stack.
-		concatString,
-		/// Pushes the char at the given index from the given string onto the stack.
-		indexString,
-		/// Creates a new string in which a single character is different. Used for:
-		/// string x = "hello world"
-		/// x[0] = 'h'
-		setStringIndexCopy,
 		/// Calls a virtual function.
 		virtualCall,
 		/// Verifies that the current pointer on the stack is not null.
@@ -147,7 +143,7 @@ namespace ds
 
 	struct VTableFunction
 	{
-		BytecodeOffset codeOffset = UINT32_MAX;
+		Pointer codeOffset = UINTPTR_MAX;
 		uint32_t nativeFunction = 0;
 	};
 

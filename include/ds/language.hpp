@@ -27,7 +27,7 @@ namespace ds
 			delete registry;
 		}
 
-		LanguageRuntime* createRuntime();
+		LanguageRuntime* createRuntime(RuntimeOptions options = {});
 
 		/**
 		 * @brief
