@@ -16,10 +16,12 @@ fn example()
 
 	writeInt(reference.call())
 
+	int result = 10
+
 	// Lambda
 	reference = fn() -> int
 	{
-		return 10
+		return result
 	}
 
 	writeInt(reference.call())

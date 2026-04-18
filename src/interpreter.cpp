@@ -1,111 +1,20 @@
 #include <ds/interpreter.hpp>
-#include <ds/language.hpp>
 #include <ds/bytecode.hpp>
 #include <ds/class.hpp>
 #include <ds/modules/system.async.hpp>
-#include <print>
+#include <ds/language.hpp>
 #include <vector>
 #include <cstring>
 
-std::mutex threadsMutex;
+using namespace ds;
 
-ds::LanguageRuntime::~LanguageRuntime()
+ds::RuntimeInterpretContext::RuntimeInterpretContext(LanguageRuntime* runtime)
 {
-	std::map<size_t, std::thread*> threadsCopy;
-	{
-		std::lock_guard l{ threadsMutex };
-		threadsCopy = this->backgroundThreads;
-	}
-	for (auto& [_, i] : threadsCopy)
-	{
-		i->join();
-	}
+	this->runtime = runtime;
+	this->usedVTable = &runtime->vTable;
 }
 
-void ds::LanguageRuntime::defaultCreateBackgroundThread(std::function<void()> f)
-{
-	static size_t id = 0;
-
-	size_t thisThreadId = id++;
-
-	std::lock_guard l{ threadsMutex };
-	auto t = new std::thread([this, f, thisThreadId] {
-		f();
-
-		std::lock_guard l{ threadsMutex };
-		this->backgroundThreads.erase(thisThreadId);
-	});
-
-	backgroundThreads.insert({ thisThreadId, t });
-}
-
-ds::LanguageRuntime::LanguageRuntime(LanguageContext* from)
-{
-	createBackgroundThread = std::bind(&LanguageRuntime::defaultCreateBackgroundThread, this, std::placeholders::_1);
-	this->language = from;
-	baseContext.runtime = this;
-}
-
-void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
-{
-	this->bytecodeBuffer = &code->code;
-	this->debug = &code->debug;
-	this->unwindBuffer = code->unwind;
-	this->reflect = &code->reflect;
-
-	this->externals.clear();
-	this->externals.reserve(code->externalFunctions.size());
-	for (auto& i : code->externalFunctions)
-	{
-		size_t lastColon = i.find_last_of(':');
-
-		std::string first = i.substr(0, lastColon - 1);
-		std::string second = i.substr(lastColon + 1);
-
-		bool found = false;
-		for (auto& fn : this->language->languageModules[first]->getFunctions())
-		{
-			if (fn->getFullName() == i)
-			{
-				this->externals.push_back(fn->function);
-				found = true;
-				break;
-			}
-		}
-
-		if (!found)
-		{
-			std::printf("Could not find function: %s\n", i.c_str());
-		}
-	}
-
-	this->vTable.clear();
-	this->vTable.reserve(code->virtualTable.size());
-	for (auto& [offset, native] : code->virtualTable)
-	{
-		if (native)
-		{
-			this->vTable.push_back(RuntimeFunction{
-				.nativeFn = externals[native]
-				});
-		}
-		else
-		{
-			this->vTable.push_back(RuntimeFunction{
-				.codeOffset = offset
-				});
-		}
-	}
-
-	this->baseContext.code.buf = this->bytecodeBuffer;
-}
-
-void ds::LanguageRuntime::run(BytecodeOffset position)
-{
-	baseContext.run(position);
-}
-
-void ds::InterpretContext::run(BytecodeOffset position)
+void ds::RuntimeInterpretContext::run(Pointer position)
 {
 	callStack[callStackPos++] = BytecodeOffset(code.streamPos);
 	BytecodeOffset baseCallStackPos = this->callStackPos;
@@ -118,7 +27,19 @@ void ds::InterpretContext::run(BytecodeOffset position)
 	}
 }
 
-void ds::InterpretContext::doUnwind()
+bool ds::RuntimeInterpretContext::resumeSuspend()
+{
+	if (suspended)
+	{
+		BytecodeOffset pos = suspendStackPos;
+		suspended = false;
+		runLoop(pos);
+		return true;
+	}
+	return false;
+}
+
+void ds::RuntimeInterpretContext::doUnwind()
 {
 	auto& buffer = runtime->unwindBuffer;
 
@@ -136,7 +57,7 @@ void ds::InterpretContext::doUnwind()
 			continue;
 		}
 
-		for (auto p : tbl->parts)
+		for (auto& p : tbl->parts)
 		{
 			if (p.offset < codePos)
 			{
@@ -171,7 +92,7 @@ void ds::InterpretContext::doUnwind()
 	code.streamPos = SIZE_MAX;
 }
 
-void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
+void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 {
 	std::array<uint8_t, 255> argumentBuffer{};
 
@@ -188,6 +109,7 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 
 		switch (op)
 		{
+		case ds::BytecodeOp::pushAddr:
 		case ds::BytecodeOp::push:
 			pushBytes(argumentBuffer.data(), Size(argsSize));
 			break;
@@ -236,6 +158,11 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			pushValue(popValue<Int>() / first);
 			break;
 		}
+		case ds::BytecodeOp::modInt: {
+			Int first = popValue<Int>();
+			pushValue(popValue<Int>() % first);
+			break;
+		}
 		case ds::BytecodeOp::negativeInt: {
 			pushValue(-popValue<Int>());
 			break;
@@ -246,7 +173,7 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			break;
 		}
 		case ds::BytecodeOp::equals: {
-			Size size = popValue<Size>();
+			Size size = *(Size*)&argumentBuffer[0];
 			Bool same = memcmp(
 							&this->stack[stackPos - size],
 							&this->stack[stackPos - size * 2], size) == 0;
@@ -327,13 +254,8 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 					code.streamPos = newPos;
 					return;
 				}
-				auto& rt = this->runtime->asyncContexts.emplace_back();
-				rt.copyFrom(this);
-				rt.canAwait = true;
-				task->awaiter = &rt;
-				rt.suspended = true;
-				rt.suspendStackPos = callStackPos;
-				rt.code.streamPos = newPos;
+				auto& rt = this->runtime->asyncContexts.emplace_back(createSuspendedCopy(callStackPos, newPos));
+				task->awaiter = rt;
 				pushValue(returnTask);
 			}
 			break;
@@ -466,53 +388,6 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 
 			break;
 		}
-		case ds::BytecodeOp::concatString: {
-			auto second = popRuntimeStringRef();
-			auto first = popRuntimeStringRef();
-
-			Size newSize = first.length() + second.length();
-			// Space for null terminator
-			Size contentSize = newSize + 1;
-
-			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t),
-				first.classPtr->type, 0);
-
-			(*(Size*)newClass->getBody()) = newSize;
-			char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
-			memcpy(strBegin, first.ptr(), first.length());
-			memcpy(strBegin + first.length(), second.ptr(), second.length());
-			strBegin[first.length() + second.length()] = 0;
-			pushValue<Pointer>(Pointer(newClass));
-
-			break;
-		}
-		case ds::BytecodeOp::indexString: {
-			auto index = popValue<int32_t>();
-			auto first = popRuntimeString();
-			pushValue<Char>(Char(first.ptr()[index]));
-			break;
-		}
-		case ds::BytecodeOp::setStringIndexCopy: {
-			auto index = popValue<int32_t>();
-			auto str = popRuntimeString();
-			Char newChar = popValue<Char>();
-			str.classPtr->addRef();
-
-			// Space for null terminator
-			Size strLength = str.length();
-			Size contentSize = str.length() + 1;
-
-			RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(Size),
-				str.classPtr->type, 0);
-
-			(*(Size*)newClass->getBody()) = strLength;
-			char* strBegin = (char*)(newClass->getBody() + sizeof(Size));
-			memcpy(strBegin, str.ptr(), strLength);
-			strBegin[index] = newChar;
-			std::puts(strBegin);
-			pushValue<Pointer>(Pointer(newClass));
-			break;
-		}
 		case ds::BytecodeOp::virtualCall: {
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
 			BytecodeOffset called = *(BytecodeOffset*)&argumentBuffer[0];
@@ -534,7 +409,7 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			Pointer ptr = popValue<Pointer>();
 			if (!ptr) [[unlikely]]
 			{
-				runtimePanic(RuntimeStr("Attempted to use null reference"));
+				runtimePanic("Attempted to use null reference");
 				return;
 			}
 			pushValue(ptr);
@@ -610,13 +485,13 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			}
 			if (!isNullable && !ptr)
 			{
-				runtimePanic(RuntimeStr("Non nullable cast failed."));
+				runtimePanic("Non nullable cast failed.");
 			}
 			pushValue(ptr);
 			break;
 		}
 		case ds::BytecodeOp::noReturn: {
-			runtimePanic(RuntimeStr("Function did not return"));
+			runtimePanic("Function did not return");
 			return;
 		}
 		case ds::BytecodeOp::castInterface: {
@@ -643,61 +518,91 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 	}
 }
 
-void ds::InterpretContext::destruct(RuntimeClass* classObject)
+void ds::RuntimeInterpretContext::loadBytecode(BytecodeStream* code)
 {
-	auto ptr = RuntimeClass::unref(classObject);
+	runtime->bytecodeBuffer = &code->code;
+	runtime->debug = &code->debug;
+	runtime->unwindBuffer = code->unwind;
+	runtime->reflect = &code->reflect;
 
-	if (ptr)
+	runtime->externals.clear();
+	runtime->externals.reserve(code->externalFunctions.size());
+	for (auto& i : code->externalFunctions)
 	{
-		pushValue(classObject);
-		virtualCall(ptr);
-	}
-}
+		size_t lastColon = i.find_last_of(':');
 
-void ds::InterpretContext::copyFrom(InterpretContext* other)
-{
-	if (other->stackPos)
+		std::string first = i.substr(0, lastColon - 1);
+		std::string second = i.substr(lastColon + 1);
+
+		bool found = false;
+		for (auto& fn : runtime->language->languageModules[first]->getFunctions())
+		{
+			if (fn->getFullName() == i)
+			{
+				runtime->externals.push_back(fn->function);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			std::printf("Could not find function: %s\n", i.c_str());
+		}
+	}
+
+	runtime->vTable.clear();
+	runtime->vTable.reserve(code->virtualTable.size());
+	for (auto& [offset, native] : code->virtualTable)
 	{
-		memcpy(this->stack.data(), other->stack.data(), other->stackPos);
+		if (native)
+		{
+			runtime->vTable.push_back(RuntimeFunction{
+				.nativeFn = runtime->externals[native] });
+		}
+		else
+		{
+			runtime->vTable.push_back(RuntimeFunction{
+				.codeOffset = offset });
+		}
 	}
-	this->stackPos = other->stackPos;
-	if (other->variableStackPos)
+
+	this->code.buf = runtime->bytecodeBuffer;
+}
+
+InterpretContext* ds::RuntimeInterpretContext::createCopy()
+{
+	auto other = new RuntimeInterpretContext(runtime);
+	if (stackPos)
 	{
-		memcpy(this->variableStack.data(), other->variableStack.data(), other->variableStackPos);
+		memcpy(other->stack.data(), stack.data(), stackPos);
 	}
-	this->variableStackPos = other->variableStackPos;
-	if (other->callStackPos)
+	other->stackPos = stackPos;
+	if (variableStackPos)
 	{
-		memcpy(this->callStack.data(), other->callStack.data(), other->callStackPos);
+		memcpy(other->variableStack.data(), variableStack.data(), variableStackPos);
 	}
-	this->callStackPos = other->callStackPos;
+	other->variableStackPos = variableStackPos;
+	if (callStackPos)
+	{
+		memcpy(other->callStack.data(), callStack.data(), callStackPos * sizeof(BytecodeOffset));
+	}
+	other->callStackPos = callStackPos;
+	other->code = code;
+	return other;
 
-	this->code = other->code;
-	this->runtime = other->runtime;
 }
-
-std::string ds::InterpretContext::popString()
+InterpretContext* RuntimeInterpretContext::createSuspendedCopy(BytecodeOffset stackOffset, size_t streamPosition)
 {
-	RuntimeClass* ptr = popValue<RuntimeClass*>();
-
-	std::string out = { (const char*)(ptr->getBody() + sizeof(Size)),
-		*(Size*)ptr->getBody() };
-	RuntimeClass::unref(ptr);
-	return out;
+	auto other = reinterpret_cast<RuntimeInterpretContext*>(createCopy());
+	other->suspended = true;
+	other->suspendStackPos = stackOffset;
+	other->code.streamPos = streamPosition;
+	other->canAwait = true;
+	return other;
 }
 
-void ds::InterpretContext::pushRuntimeString(RuntimeStr str)
-{
-	str.classPtr->addRef();
-	pushValue<RuntimeClass*>(str.classPtr);
-}
-
-ds::RuntimeStr ds::InterpretContext::popRuntimeString()
-{
-	return RuntimeStr(popValue<RuntimeClass*>());
-}
-
-std::vector<ds::DebugSection*> ds::InterpretContext::getStackTrace() const
+std::vector<ds::DebugSection*> ds::RuntimeInterpretContext::getStackTrace() const
 {
 	std::vector<DebugSection*> result;
 	result.push_back(runtime->debug->getSectionAt(uint32_t(code.streamPos)));
@@ -707,69 +612,4 @@ std::vector<ds::DebugSection*> ds::InterpretContext::getStackTrace() const
 	}
 
 	return result;
-}
-
-void ds::InterpretContext::virtualCall(RuntimeFunction target)
-{
-	if (!target)
-	{
-		return;
-	}
-
-	if (target.nativeFn)
-	{
-		target.nativeFn(this);
-	}
-	else
-	{
-		run(target.codeOffset);
-	}
-}
-
-bool ds::InterpretContext::resumeSuspend()
-{
-	if (suspended)
-	{
-		BytecodeOffset pos = suspendStackPos;
-		suspended = false;
-		runLoop(pos);
-		return true;
-	}
-	return false;
-}
-
-void ds::InterpretContext::runtimePanic(RuntimeStr message)
-{
-	std::vector<DebugSection*> stack = getStackTrace();
-
-	std::string errorString = message.ptr();
-	errorString.push_back('\n');
-
-	for (DebugSection* i : stack)
-	{
-		if (i)
-		{
-			errorString += "\t" + i->name + "()\n";
-		}
-		else
-		{
-			errorString += "\t<unknown stack frame>\n";
-		}
-	}
-
-	if (runtime->writeError)
-	{
-		runtime->writeError(errorString.c_str());
-	}
-	else
-	{
-		std::printf("%s", errorString.c_str());
-	}
-
-	doUnwind();
-}
-
-ds::RuntimeStrRef ds::InterpretContext::popRuntimeStringRef()
-{
-	return RuntimeStrRef(popValue<RuntimeClass*>());
 }

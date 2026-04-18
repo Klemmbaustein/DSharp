@@ -23,12 +23,12 @@ namespace ds
 
 	struct RuntimeFunction
 	{
-		BytecodeOffset codeOffset = UINT32_MAX;
+		Pointer codeOffset = UINTPTR_MAX;
 		void (*nativeFn)(InterpretContext*) = nullptr;
 
 		operator bool()
 		{
-			return codeOffset != UINT32_MAX || bool(nativeFn);
+			return (codeOffset != UINTPTR_MAX && codeOffset != 240) || bool(nativeFn);
 		}
 	};
 

@@ -20,7 +20,7 @@ ExpressionResult ds::StringType::compileOperator(Operator operatorType, Expressi
 	ExpressionResult result;
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
-	result.code.addOperation(BytecodeOp::concatString);
+	result.code.addNew<BytecodeCallNative>("system::string.concat");
 	result.code.addBuffer(this->compileEndMove(with));
 	result.type = this;
 	result.valid = true;
@@ -61,7 +61,7 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 	result.valid = true;
 	result.code.addBuffer(thisValue.code);
 	result.code.addBuffer(indexValue.code);
-	result.code.addOperation(BytecodeOp::indexString);
+	result.code.addNew<BytecodeCallNative>("system::string.index");
 
 	if (setMember)
 	{
@@ -71,7 +71,7 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 		BinaryBuffer args;
 		args.addValue<uint32_t>(this->size);
 		result.setCode->addBuffer(indexValue.code);
-		result.setCode->addOperation(BytecodeOp::setStringIndexCopy);
+		result.code.addNew<BytecodeCallNative>("system::string.setIndexCopy");
 		result.setCode->addBuffer(*thisValue.setCode);
 	}
 
@@ -89,10 +89,11 @@ ExpressionResult ds::StringType::compileEqualsTo(ExpressionResult first, Express
 
 	// compare value, if compareString returns 0 they're the same
 	first.code.pushInt(0);
-	// compare size
-	first.code.pushInt(sizeof(uint32_t));
 
-	first.code.addOperation(BytecodeOp::equals);
+	BinaryBuffer args;
+	args.addValue(sizeof(uint32_t));
+
+	first.code.addOperation(BytecodeOp::equals, args);
 	first.valid = true;
 	first.type = with->context->registry->getEntry<BoolType>();
 	return first;
@@ -183,7 +184,7 @@ ExpressionResult ds::StringType::compileFormatString(Token first, TokenLine& lin
 	ExpressionResult result = compileStringValue(resultString, with);
 	result.code.addBuffer(compileMove(with));
 	result.code.addBuffer(varArgs::writeVarArgs(formatArguments));
-	result.code.addNew<BytecodeCallNative>("system::format");
+	result.code.addNew<BytecodeCallNative>("system::string.format");
 	result.code.addBuffer(compileEndMove(with));
 	return result;
 }

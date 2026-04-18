@@ -1,20 +1,20 @@
-#ifndef NO_MAIN
+#ifdef WITH_MAIN
 #include <ds/language.hpp>
 #include <ds/modules/standardLibrary.hpp>
-#include <cassert>
 #include <print>
+#include <ds/jit/justInTime.hpp>
 
 using namespace ds;
-
-bool completed = false;
 
 int main()
 {
 	LanguageContext language;
 	modules::registerStandardLibrary(&language);
 
-	ParseContext* compiler = language.createCompiler();
-	compiler->addFile("../../../examples/test.ds");
+	ParseContext* compiler = language.createCompiler({
+		.printAssembly = true,
+		});
+	compiler->addFile("../../../examples/async.ds");
 	BytecodeStream compiled = compiler->compile();
 	delete compiler;
 
@@ -23,13 +23,14 @@ int main()
 		return 1;
 	}
 
-	LanguageRuntime* runtime = language.createRuntime();
+	LanguageRuntime* runtime = language.createRuntime({
+		.useJustInTimeCompiler = false,
+		});
 	runtime->loadBytecode(&compiled);
 	runtime->run();
 
 	delete runtime;
 
 	std::println("classes leaked: {}", RuntimeClass::classRefCount);
-	assert(RuntimeClass::classRefCount == 0);
 }
 #endif

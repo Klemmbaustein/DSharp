@@ -1,0 +1,19 @@
+using system::io
+using system
+
+module helloWorld
+
+async fn doAsyncStuff()
+{
+	await async::sleep()
+
+	writeInt(2)
+}
+
+[EntryPoint]
+fn main()
+{
+	_ = doAsyncStuff()
+
+	writeInt(1)
+}

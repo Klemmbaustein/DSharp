@@ -213,7 +213,6 @@ ExpressionResult ds::NativeStructType::compileMember(ExpressionResult value, Tok
 			}
 #endif
 
-
 			result.valid = true;
 			result.setCode = {};
 			if (setMember && value.setCode)

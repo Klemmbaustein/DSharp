@@ -10,11 +10,13 @@ using namespace std::chrono;
 static void async_sleepAndReturn(InterpretContext* context)
 {
 	ClassRef<Task> task = emptyTask();
+	task.classPtr->addRef();
 
 	context->runtime->createBackgroundThread([task, context] {
-		std::this_thread::sleep_for(milliseconds(250));
+		std::this_thread::sleep_for(milliseconds(1000));
 
 		completeTask(task, context);
+		context->destruct(task.classPtr);
 	});
 
 	context->pushValue(task);

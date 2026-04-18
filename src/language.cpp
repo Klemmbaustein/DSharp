@@ -1,9 +1,9 @@
 #include <ds/language.hpp>
 using namespace ds;
 
-LanguageRuntime* ds::LanguageContext::createRuntime()
+LanguageRuntime* ds::LanguageContext::createRuntime(RuntimeOptions options)
 {
-	return new LanguageRuntime(this);
+	return new LanguageRuntime(this, options);
 }
 
 ParseContext* ds::LanguageContext::createCompiler(ParserOptions options)

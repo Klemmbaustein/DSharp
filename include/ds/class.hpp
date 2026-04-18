@@ -113,7 +113,7 @@ namespace ds
 					return object->vtable[0];
 				}
 			}
-			return RuntimeFunction();
+			return RuntimeFunction{ .codeOffset = UINT64_MAX };
 		}
 
 		/**
@@ -124,7 +124,7 @@ namespace ds
 		 * It's actual class data follows it right after in memory, and this function returns a pointer to that.
 		 *
 		 * @return
-		 * The body
+		 * The actual class data body.
 		 */
 		inline uint8_t* getBody()
 		{

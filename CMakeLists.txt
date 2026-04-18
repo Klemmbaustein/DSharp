@@ -52,7 +52,12 @@ endif()
 
 target_include_directories(DSharp PUBLIC "include")
 
+set(ASMJIT_STATIC ON)
+add_subdirectory("dependencies/asmjit")
+target_link_libraries(DSharp PUBLIC asmjit::asmjit)
+
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	add_executable(TestInterpreter "src/main.cpp")
+	target_compile_definitions(TestInterpreter PRIVATE WITH_MAIN)
 	target_link_libraries(TestInterpreter PUBLIC DSharp)
 endif()

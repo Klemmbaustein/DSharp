@@ -66,7 +66,7 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::subFloat, "SUB_F32" },
 		{ BytecodeOp::mulFloat, "MUL_F32" },
 		{ BytecodeOp::divFloat, "DIV_F32" },
-		{ BytecodeOp::greaterInt, "GREATER_F32" },
+		{ BytecodeOp::greaterFloat, "GREATER_F32" },
 		{ BytecodeOp::intToFloat, "INT_TO_FLOAT" },
 		{ BytecodeOp::floatToInt, "FLOAT_TO_INT" },
 		{ BytecodeOp::boolAnd, "BOOL_AND" },
@@ -84,9 +84,6 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::classMemberPtr, "CLASS_MEMBER_PTR" },
 		{ BytecodeOp::setClassMember, "SET_CLASS_MEMBER" },
 		{ BytecodeOp::setClassMemberPushAgain, "SET_CLASS_MEMBER_PUSH" },
-		{ BytecodeOp::concatString, "CONCAT_STRING" },
-		{ BytecodeOp::indexString, "INDEX_STRING" },
-		{ BytecodeOp::setStringIndexCopy, "SET_STR_AT" },
 		{ BytecodeOp::nullCheck, "CHECK_NOT_NULL" },
 		{ BytecodeOp::getStructMember, "GET_STRUCT_MEMBER" },
 		{ BytecodeOp::setStructMember, "SET_STRUCT_MEMBER" },
@@ -143,14 +140,14 @@ BytecodeOffset ds::BytecodeCallFunction::getArgsSize()
 
 ds::BytecodeFunctionAddress::BytecodeFunctionAddress(std::string callName, bool native)
 {
-	this->operation = BytecodeOp::push;
+	this->operation = BytecodeOp::pushAddr;
 	this->callName = callName;
 	this->native = native;
 }
 
 std::string BytecodeFunctionAddress::toString()
 {
-	return "\tPUSH ADDROFF {}" + this->callName;
+	return "\tPUSH ADDROFF " + this->callName;
 }
 
 void ds::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
@@ -172,17 +169,17 @@ void ds::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler
 			position = foundPosition->second;
 		}
 
-		stream.addValue(position);
+		stream.addValue<Pointer>(position);
 	}
 	else
 	{
-		stream.addValue(compiler->functions[this->callName].offset);
+		stream.addValue<Pointer>(compiler->functions[this->callName].offset);
 	}
 }
 
 BytecodeOffset ds::BytecodeFunctionAddress::getArgsSize()
 {
-	return sizeof(BytecodeOffset);
+	return sizeof(Pointer);
 }
 
 // ------------- //
