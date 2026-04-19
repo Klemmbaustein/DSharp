@@ -246,14 +246,14 @@ void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			}
 			else
 			{
-				if (canAwait)
-				{
-					suspended = true;
-					suspendStackPos = baseCallStackPos;
-					task->awaiter = this;
-					code.streamPos = newPos;
-					return;
-				}
+				//if (canAwait)
+				//{
+				//	suspended = true;
+				//	suspendStackPos = baseCallStackPos;
+				//	task->awaiter = this;
+				//	code.streamPos = newPos;
+				//	return;
+				//}
 				auto& rt = this->runtime->asyncContexts.emplace_back(createSuspendedCopy(callStackPos, newPos));
 				task->awaiter = rt;
 				pushValue(returnTask);
@@ -262,10 +262,6 @@ void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 		}
 		case ds::BytecodeOp::returnAsync: {
 			ClassRef<modules::system::async::Task> task = popValue<RuntimeClass*>();
-			if (!task->awaiter && !task->awaitNative)
-			{
-				task.classPtr->addRef();
-			}
 			pushValue(task);
 		}
 			[[fallthrough]];

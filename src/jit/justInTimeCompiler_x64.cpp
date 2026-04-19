@@ -63,12 +63,12 @@ static void jit_awaitTask(RuntimeClass* task, RuntimeClass* returnTask, JustInTi
 {
 	ClassRef<modules::system::async::Task> taskObj = task;
 
-	if (rt->canAwait)
-	{
-		rt->suspendLocation = location;
-		taskObj->awaiter = rt;
-		return;
-	}
+	//if (rt->canAwait)
+	//{
+	//	rt->suspendLocation = location;
+	//	taskObj->awaiter = rt;
+	//	return;
+	//}
 	auto& newRuntime = rt->runtime->asyncContexts.emplace_back(rt->createSuspendedCopy(location));
 	taskObj->awaiter = newRuntime;
 	rt->pushValue(returnTask);

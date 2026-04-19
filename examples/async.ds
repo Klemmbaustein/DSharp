@@ -1,19 +1,24 @@
+using system::async
 using system::io
 using system
 
 module helloWorld
 
-async fn doAsyncStuff()
+async fn doAsyncStuff(int i)
 {
-	await async::sleep()
+	if i == 0
+	{
+		return
+	}
 
-	writeInt(2)
+	await sleep()
+	writeInt(i)
+
+	await doAsyncStuff(i - 1)
 }
 
 [EntryPoint]
 fn main()
 {
-	_ = doAsyncStuff()
-
-	writeInt(1)
+	_ = doAsyncStuff(5)
 }
