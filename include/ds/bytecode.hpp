@@ -125,8 +125,6 @@ namespace ds
 		suspend,
 		/// Suspends the current context, resumed when a given task finishes.
 		awaitTask,
-		/// Returns from an async function.
-		returnAsync,
 		/// Unwinds the stack, destructing all objects on the way.
 		unwind,
 		/// Checks if a class has the given type.

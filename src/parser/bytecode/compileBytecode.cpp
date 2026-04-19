@@ -91,7 +91,6 @@ std::string ds::BytecodeInstruction::toStringDefault(const BinaryBuffer& argumen
 		{ BytecodeOp::awaitTask, "AWAIT_TASK" },
 		{ BytecodeOp::unwind, "UNWIND" },
 		{ BytecodeOp::castInterface, "CAST_INTERFACE" },
-		{ BytecodeOp::returnAsync, "RETURN_ASYNC" },
 		{ BytecodeOp::noReturn, "NO_RETURN" },
 	};
 

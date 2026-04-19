@@ -24,7 +24,7 @@ int main()
 	}
 
 	LanguageRuntime* runtime = language.createRuntime({
-		.useJustInTimeCompiler = false,
+		.useJustInTimeCompiler = true,
 		});
 	runtime->loadBytecode(&compiled);
 	runtime->run();
