@@ -67,7 +67,7 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 	size_t callStackPos = callAddresses.size();
 
-	for (int32_t i = callStackPos - 1; i >= 0; i--)
+	for (int32_t i = 0; i < callStackPos; i++)
 	{
 		Pointer codePos = callAddresses[i];
 
