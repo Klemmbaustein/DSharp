@@ -9,15 +9,20 @@ static std::mutex threadsMutex;
 
 ds::LanguageRuntime::~LanguageRuntime()
 {
-	std::map<size_t, std::thread*> threadsCopy;
+	do
 	{
-		std::lock_guard l{ threadsMutex };
-		threadsCopy = this->backgroundThreads;
-	}
-	for (auto& [_, i] : threadsCopy)
-	{
-		i->join();
-	}
+		std::map<size_t, std::thread*> threadsCopy;
+		{
+			std::lock_guard l{ threadsMutex };
+			threadsCopy = this->backgroundThreads;
+		}
+		for (auto& [_, i] : threadsCopy)
+		{
+			i->join();
+		}
+	} while (backgroundThreads.size());
+
+	delete this->baseContext;
 }
 
 void ds::LanguageRuntime::defaultCreateBackgroundThread(std::function<void()> f)

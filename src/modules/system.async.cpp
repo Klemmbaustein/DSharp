@@ -11,12 +11,28 @@ static void async_sleepAndReturn(InterpretContext* context)
 {
 	ClassRef<Task> task = emptyTask();
 	task.classPtr->addRef();
-
-	context->runtime->createBackgroundThread([task, context] {
-		std::this_thread::sleep_for(milliseconds(1000));
+	context->runtime->createBackgroundThread([task = task, context] {
+		std::this_thread::sleep_for(milliseconds(250));
 
 		completeTask(task, context);
-		context->destruct(task.classPtr);
+		auto classPtr = task.classPtr;
+
+		auto fn = RuntimeClass::unref(classPtr);
+
+		if (fn)
+		{
+			if (task->resultBuffer)
+			{
+				delete task->resultBuffer;
+			}
+
+			if (task->taskMutex)
+			{
+				delete task->taskMutex;
+			}
+
+			RuntimeClass::unref(classPtr);
+		}
 	});
 
 	context->pushValue(task);
