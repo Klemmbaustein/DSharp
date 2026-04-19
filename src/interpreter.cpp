@@ -260,11 +260,6 @@ void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			}
 			break;
 		}
-		case ds::BytecodeOp::returnAsync: {
-			ClassRef<modules::system::async::Task> task = popValue<RuntimeClass*>();
-			pushValue(task);
-		}
-			[[fallthrough]];
 		case ds::BytecodeOp::ret:
 			if (callStackPos == baseCallStackPos)
 			{

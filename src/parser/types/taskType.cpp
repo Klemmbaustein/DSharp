@@ -42,7 +42,7 @@ ExpressionResult ds::TaskType::compileAwait(ExpressionResult taskExpr, Expressio
 
 	returnTaskExpr.code.addNew<BytecodeAwait>(Size(baseType ? baseType->size : 0), endLabel.get());
 	returnTaskExpr.code.addBuffer(with->compileScopeExit(with->functionDepth, false, false));
-	returnTaskExpr.code.addOperation(BytecodeOp::returnAsync);
+	returnTaskExpr.code.addOperation(BytecodeOp::ret);
 	returnTaskExpr.code.add(endLabel);
 
 	returnTaskExpr.type = baseType;

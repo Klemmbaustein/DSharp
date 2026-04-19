@@ -74,16 +74,6 @@ static void jit_awaitTask(RuntimeClass* task, RuntimeClass* returnTask, JustInTi
 	rt->pushValue(returnTask);
 }
 
-static RuntimeClass* jit_returnTask(RuntimeClass* task, JustInTimeRuntime* rt)
-{
-	ClassRef<modules::system::async::Task> taskObj = task;
-	if (!taskObj->awaiter && !taskObj->awaitNative)
-	{
-		task->addRef();
-	}
-	return task;
-}
-
 JustInTimeCode* ds::jit::JustInTimeCompiler::compileBytecode(BinaryBuffer& code,
 	const std::vector<ds::ExternalFunctionPointer>& pointers,
 	std::vector<ds::RuntimeFunction>& vTable, ReflectInfo& reflect, UnwindInfo& unwind)
@@ -578,15 +568,6 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 
 			changeStackBy(size * -2 + sizeof(Bool));
 			break;
-		}
-		case ds::BytecodeOp::returnAsync: {
-			compilePopValueToRegister(argumentRegisters[0], false);
-
-			assembler->call(jit_returnTask);
-			restoreRegisters();
-
-			compilePushValue(returnValueRegister);
-			[[fallthrough]];
 		}
 		case ds::BytecodeOp::ret:
 			flushStack();
