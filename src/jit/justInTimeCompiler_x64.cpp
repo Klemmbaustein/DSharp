@@ -63,12 +63,12 @@ static void jit_awaitTask(RuntimeClass* task, RuntimeClass* returnTask, JustInTi
 {
 	ClassRef<modules::system::async::Task> taskObj = task;
 
-	//if (rt->canAwait)
+	// if (rt->canAwait)
 	//{
 	//	rt->suspendLocation = location;
 	//	taskObj->awaiter = rt;
 	//	return;
-	//}
+	// }
 	auto& newRuntime = rt->runtime->asyncContexts.emplace_back(rt->createSuspendedCopy(location));
 	taskObj->awaiter = newRuntime;
 	rt->pushValue(returnTask);
@@ -1119,12 +1119,20 @@ void ds::jit::JustInTimeCompiler::buildProlog()
 	assembler->mov(rbp, rsp);
 	assembler->sub(rsp, 64 + 16);
 	assembler->mov(ptr_64(rsp, 64), MANAGED_STACK_BEGIN_MARKER);
+#if _WIN32 // The windows x64 calling convention makes rsi and rdi nonvolatile, meaning they have to be saved.
+	assembler->push(rsi);
+	assembler->push(rdi);
+#endif
 
 	assembler->mov(rax, argumentRegisters[0]);
 	assembler->mov(runtime, argumentRegisters[1]);
 
 	restoreRegisters();
 	assembler->call(rax);
+#if _WIN32
+	assembler->pop(rdi);
+	assembler->pop(rsi);
+#endif
 	assembler->leave();
 	assembler->ret();
 
@@ -1135,12 +1143,22 @@ void ds::jit::JustInTimeCompiler::buildProlog()
 	assembler->mov(rbp, rsp);
 	assembler->sub(rsp, 64 + 16);
 	assembler->mov(ptr_64(rsp, 64), MANAGED_STACK_BEGIN_MARKER);
+#if _WIN32
+	assembler->push(rsi);
+	assembler->push(rdi);
+#endif
 
 	assembler->mov(rax, argumentRegisters[0]);
 	assembler->mov(runtime, argumentRegisters[1]);
 
 	restoreRegisters();
+	assembler->push(rbp);
+	assembler->mov(rbp, rsp);
 	assembler->jmp(rax);
+#if _WIN32
+	assembler->pop(rdi);
+	assembler->pop(rsi);
+#endif
 	assembler->leave();
 	assembler->ret();
 
