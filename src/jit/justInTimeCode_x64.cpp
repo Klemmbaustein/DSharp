@@ -52,7 +52,11 @@ void ds::jit::JustInTimeCode::getUnwindData(void* atPtr, std::vector<Pointer>& o
 		outPointers.push_back(*functionPtr);
 		// Move 80 bytes down the stack, which is where the next call location will be.
 		functionPtr += 10;
+#if _WIN32
+	} while (*(functionPtr + 11) != JustInTimeCompiler::MANAGED_STACK_BEGIN_MARKER);
+#else
 	} while (*(functionPtr + 9) != JustInTimeCompiler::MANAGED_STACK_BEGIN_MARKER);
+#endif
 }
 
 void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
