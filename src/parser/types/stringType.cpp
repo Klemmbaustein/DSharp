@@ -1,8 +1,29 @@
 #include <ds/parser/types/stringType.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/varArgs.hpp>
+#include <ds/parser/types/builtinClassFunction.hpp>
 #include <ds/parser/parseExpression.hpp>
 using namespace ds;
+
+ds::StringType::StringType(TypeRegistry* registry)
+{
+	this->name = "string";
+	this->size = sizeof(Pointer);
+	this->vTableOffset = UINT32_MAX;
+	applyName();
+
+	auto intType = registry->getEntry<IntType>();
+
+	this->members.push_back(ClassMember{
+		.name = "length",
+		.offset = 0,
+		.type = registry->getEntry<IntType>(),
+	});
+
+	this->methods.insert({ "substr",
+		new BuiltinClassFunction({ FunctionArgument(intType, Token("start")), FunctionArgument(intType, Token("count")) },
+			this, "system::string.substr", "substr") });
+}
 
 ExpressionResult ds::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
@@ -38,7 +59,6 @@ ExpressionResult ds::StringType::compileValue(Token first, TokenLine& line,
 	if (first.unquoteString())
 	{
 		return compileStringValue(first.string, with);
-
 	}
 	return ExpressionResult();
 }

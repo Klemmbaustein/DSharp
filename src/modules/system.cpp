@@ -103,6 +103,40 @@ static void string_setIndexCopy(InterpretContext* context)
 	context->pushValue<Pointer>(Pointer(newClass));
 }
 
+static void string_substr(InterpretContext* context)
+{
+	RuntimeStrRef baseStr = context->popRuntimeStringRef();
+	Int count = context->popValue<Int>();
+	Int start = context->popValue<Int>();
+
+	if (start < 0 || count < 0)
+	{
+		context->runtimePanic("Invalid negative string.substr() argument");
+		return;
+	}
+
+	Int length = baseStr.length();
+
+	if (start == 0 && length <= count)
+	{
+		baseStr.classPtr->addRef();
+		context->pushValue(baseStr);
+		return;
+	}
+
+	if (start >= length)
+	{
+		context->pushValue(RuntimeStrRef(nullptr, 0));
+		return;
+	}
+
+	RuntimeStr str = RuntimeStr(baseStr.ptr() + start, std::min(count, length - start));
+
+	str.classPtr->addRef();
+
+	context->pushValue(str);
+}
+
 static void int_toString(InterpretContext* context)
 {
 	auto str = std::to_string(context->popValue<Int>());
@@ -591,13 +625,6 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	auto stringType = to->registry->getEntry<StringType>();
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(intType, Token("position")), FunctionArgument(intType, Token("length")) }, stringType,
-		"string.substr",
-		[](InterpretContext* context) {
-			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
-		}));
-
-	out.addFunction(NativeFunction(
 		{ FunctionArgument(intType, Token("intValue")) }, stringType,
 		"int.toString", &int_toString));
 
@@ -638,8 +665,12 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 		"string.format", &string_format));
 
 	out.addFunction(NativeFunction(
-		{ }, nullptr,
+		{}, nullptr,
 		"string.concat", &string_concat));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.substr", &string_substr));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(stringType, Token("str1")),
@@ -650,6 +681,9 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	out.addAttribute(new EntryPointAttribute());
 	out.addAttribute(new DiscardAttribute());
 	out.addAttribute(new ReflectAttribute());
+
+	out.addConstant("INT_MAX", intType, std::numeric_limits<Int>::max());
+	out.addConstant("INT_MIN", intType, std::numeric_limits<Int>::min());
 
 	auto mapType = out.createGenericClass<MapData>("Map", { GenericArgument("K"), GenericArgument("V") });
 

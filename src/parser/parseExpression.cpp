@@ -474,6 +474,11 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			ExpressionResult callCode = parseFunctionArguments(value, generic.args,
 				argsLine, errors, true, scope);
 
+			if (!callCode.valid)
+			{
+				return ExpressionResult();
+			}
+
 #ifdef WITH_LANGUAGE_SERVICE
 			if (scope->context->service)
 			{
