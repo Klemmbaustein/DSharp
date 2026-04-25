@@ -1152,13 +1152,24 @@ void ds::jit::JustInTimeCompiler::buildProlog()
 	assembler->mov(runtime, argumentRegisters[1]);
 
 	restoreRegisters();
-	assembler->push(rbp);
-	assembler->mov(rbp, rsp);
-	assembler->jmp(rax);
+
+	auto resumeProcLabel = assembler->new_label();
+
+	assembler->call(resumeProcLabel);
+
 #if _WIN32
 	assembler->pop(rdi);
 	assembler->pop(rsi);
 #endif
+	assembler->leave();
+	assembler->ret();
+
+	assembler->bind(resumeProcLabel);
+	assembler->push(rbp);
+	assembler->mov(rbp, rsp);
+	assembler->sub(rsp, 64);
+	assembler->mov(runtime, runtimeRegister);
+	assembler->jmp(rax);
 	assembler->leave();
 	assembler->ret();
 
