@@ -24,7 +24,7 @@ fn testPrime(int number) -> bool
 [EntryPoint]
 fn main()
 {
-	int max = 1000000
+	int max = 10000
 
 	int i = 0
 

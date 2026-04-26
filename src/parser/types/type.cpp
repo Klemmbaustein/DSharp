@@ -113,10 +113,17 @@ ExpressionResult ds::IntType::compileValue(Token first, TokenLine& line,
 
 ExpressionResult ds::IntType::compileCast(ExpressionResult value, ParsedScope* with)
 {
-	auto floatValue = dynamic_cast<FloatType*>(value.type);
-	if (floatValue)
+	if (with->context->registry->ifTypeIs<FloatType>(value.type))
 	{
 		value.code.addOperation(BytecodeOp::floatToInt);
+		return value;
+	}
+
+	if (with->context->registry->ifTypeIs<CharType>(value.type))
+	{
+		BinaryBuffer args;
+		args.buffer.resize(sizeof(Int) - sizeof(Char));
+		value.code.addOperation(BytecodeOp::push, args);
 		return value;
 	}
 
@@ -249,8 +256,7 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 	{
 		result.code.addBuffer(first.code);
 		result.code.addBuffer(second.code);
-		auto intValue = dynamic_cast<IntType*>(second.type);
-		if (intValue)
+		if (with->context->registry->ifTypeIs<IntType>(second.type))
 		{
 			result.code.addOperation(BytecodeOp::intToFloat);
 		}
@@ -258,8 +264,7 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 	else
 	{
 		result.code.addBuffer(second.code);
-		auto intValue = dynamic_cast<IntType*>(second.type);
-		if (intValue)
+		if (with->context->registry->ifTypeIs<IntType>(second.type))
 		{
 			result.code.addOperation(BytecodeOp::intToFloat);
 		}
@@ -337,8 +342,7 @@ ExpressionResult ds::FloatType::compileValue(Token first, TokenLine& line,
 
 ExpressionResult ds::FloatType::compileCast(ExpressionResult value, ParsedScope* with)
 {
-	auto intValue = dynamic_cast<IntType*>(value.type);
-	if (intValue)
+	if (with->context->registry->ifTypeIs<IntType>(value.type))
 	{
 		value.code.addOperation(BytecodeOp::intToFloat);
 		return value;
@@ -516,5 +520,6 @@ ExpressionResult ds::CharType::compileValue(Token first, TokenLine& line,
 
 ExpressionResult ds::CharType::compileCast(ExpressionResult value, ParsedScope* with)
 {
+
 	return ExpressionResult();
 }
