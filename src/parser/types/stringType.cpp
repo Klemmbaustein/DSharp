@@ -77,7 +77,7 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 	}
 
 	ExpressionResult result;
-	result.type = CharType::getInstance();
+	result.type = with->context->registry->getEntry<CharType>();
 	result.valid = true;
 	result.code.addBuffer(thisValue.code);
 	result.code.addBuffer(indexValue.code);
@@ -91,7 +91,7 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 		BinaryBuffer args;
 		args.addValue<uint32_t>(this->size);
 		result.setCode->addBuffer(indexValue.code);
-		result.code.addNew<BytecodeCallNative>("system::string.setIndexCopy");
+		result.setCode->addNew<BytecodeCallNative>("system::string.setIndexCopy");
 		result.setCode->addBuffer(*thisValue.setCode);
 	}
 

@@ -40,7 +40,7 @@ fn helloWorld()
 }
 ```
 
-For more examples see the `examples/` directory.
+For more examples see the `test/` directory.
 
 ## Documentation
 

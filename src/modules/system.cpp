@@ -78,6 +78,7 @@ static void string_indexString(InterpretContext* context)
 {
 	auto index = context->popValue<int32_t>();
 	auto first = context->popRuntimeString();
+	first.classPtr->addRef();
 	context->pushValue<Char>(Char(first.ptr()[index]));
 }
 
@@ -85,6 +86,7 @@ static void string_setIndexCopy(InterpretContext* context)
 {
 	auto index = context->popValue<int32_t>();
 	auto str = context->popRuntimeString();
+	str.classPtr->addRef();
 	Char newChar = context->popValue<Char>();
 	str.classPtr->addRef();
 
@@ -99,7 +101,6 @@ static void string_setIndexCopy(InterpretContext* context)
 	char* strBegin = (char*)(newClass->getBody() + sizeof(Size));
 	memcpy(strBegin, str.ptr(), strLength);
 	strBegin[index] = newChar;
-	std::puts(strBegin);
 	context->pushValue<Pointer>(Pointer(newClass));
 }
 
@@ -671,6 +672,14 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"string.substr", &string_substr));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.index", &string_indexString));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.setIndexCopy", &string_setIndexCopy));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(stringType, Token("str1")),
