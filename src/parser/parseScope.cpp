@@ -158,7 +158,17 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
 	for (auto& i : this->variables)
 	{
 		if (i.second.ownedBy && !(i.second.isInternal && options.isLambda))
-			conditionScope.variables.insert(i);
+		{
+			auto [inserted, _] = conditionScope.variables.insert(i);
+			if (&i.second == this->taskVariable)
+			{
+				conditionScope.taskVariable = &inserted->second;
+			}
+			if (&i.second == this->thisVariable)
+			{
+				conditionScope.thisVariable = &inserted->second;
+			}
+		}
 	}
 
 	TokenStream localStream;
@@ -168,7 +178,6 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
 		options.scopeTokens = &localStream;
 	}
 
-	conditionScope.thisVariable = this->thisVariable;
 	conditionScope.variableStackPosition = this->variableStackPosition;
 	conditionScope.tokenStream = options.scopeTokens;
 
@@ -291,9 +300,10 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 		bool isDestructor = scopeFunction && scopeFunction->name == "delete";
 		bool isConstructor = scopeFunction && scopeFunction->name == "new";
 		bool varIsThis = &i.second == thisVariable;
+		bool varIsThisTask = &i.second == taskVariable;
 		bool shouldUnrefThis = ((!isDestructor && !returnThis) || isConstructor);
 
-		if (dereferenceAll && !unreachable && (!varIsThis || shouldUnrefThis) && this->taskVariable != &i.second)
+		if (dereferenceAll && !unreachable && !varIsThisTask && (!varIsThis || shouldUnrefThis))
 		{
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
@@ -359,6 +369,7 @@ void ds::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 void ds::ParsedScope::addTask(TaskType* taskType)
 {
 	this->code->addBuffer(taskType->compileTask().code);
+	this->code->addBuffer(taskType->compileMove(this));
 	pushVariableValue(taskType, false);
 	this->taskVariable = &addVariable(Token(".task" + std::to_string(tempCounter++)), taskType, nullptr);
 	this->taskVariable->isInternal = true;

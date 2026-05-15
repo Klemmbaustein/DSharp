@@ -54,6 +54,90 @@ static void string_compare(InterpretContext* context)
 	context->pushValue(cmp);
 }
 
+static void string_concat(InterpretContext* context)
+{
+	auto second = context->popRuntimeStringRef();
+	auto first = context->popRuntimeStringRef();
+
+	Size newSize = first.length() + second.length();
+	// Space for null terminator
+	Size contentSize = newSize + 1;
+
+	RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(uint32_t),
+		first.classPtr->type, 0);
+
+	(*(Size*)newClass->getBody()) = newSize;
+	char* strBegin = (char*)(newClass->getBody() + sizeof(uint32_t));
+	memcpy(strBegin, first.ptr(), first.length());
+	memcpy(strBegin + first.length(), second.ptr(), second.length());
+	strBegin[first.length() + second.length()] = 0;
+	context->pushValue<Pointer>(Pointer(newClass));
+}
+
+static void string_indexString(InterpretContext* context)
+{
+	auto index = context->popValue<int32_t>();
+	auto first = context->popRuntimeString();
+	first.classPtr->addRef();
+	context->pushValue<Char>(Char(first.ptr()[index]));
+}
+
+static void string_setIndexCopy(InterpretContext* context)
+{
+	auto index = context->popValue<int32_t>();
+	auto str = context->popRuntimeString();
+	str.classPtr->addRef();
+	Char newChar = context->popValue<Char>();
+	str.classPtr->addRef();
+
+	// Space for null terminator
+	Size strLength = str.length();
+	Size contentSize = str.length() + 1;
+
+	RuntimeClass* newClass = RuntimeClass::allocateClass(contentSize + sizeof(Size),
+		str.classPtr->type, 0);
+
+	(*(Size*)newClass->getBody()) = strLength;
+	char* strBegin = (char*)(newClass->getBody() + sizeof(Size));
+	memcpy(strBegin, str.ptr(), strLength);
+	strBegin[index] = newChar;
+	context->pushValue<Pointer>(Pointer(newClass));
+}
+
+static void string_substr(InterpretContext* context)
+{
+	RuntimeStrRef baseStr = context->popRuntimeStringRef();
+	Int count = context->popValue<Int>();
+	Int start = context->popValue<Int>();
+
+	if (start < 0 || count < 0)
+	{
+		context->runtimePanic("Invalid negative string.substr() argument");
+		return;
+	}
+
+	Int length = baseStr.length();
+
+	if (start == 0 && length <= count)
+	{
+		baseStr.classPtr->addRef();
+		context->pushValue(baseStr);
+		return;
+	}
+
+	if (start >= length)
+	{
+		context->pushValue(RuntimeStrRef(nullptr, 0));
+		return;
+	}
+
+	RuntimeStr str = RuntimeStr(baseStr.ptr() + start, std::min(count, length - start));
+
+	str.classPtr->addRef();
+
+	context->pushValue(str);
+}
+
 static void int_toString(InterpretContext* context)
 {
 	auto str = std::to_string(context->popValue<Int>());
@@ -164,7 +248,7 @@ static void map_at(InterpretContext* context)
 	}
 	else
 	{
-		context->runtimePanic(RuntimeStr("Map.at failed. No such key."));
+		context->runtimePanic("Map.at failed. No such key.");
 	}
 
 	return;
@@ -266,7 +350,7 @@ void ds::modules::system::MapData::remove(uint8_t* key, GenericData keyType, Int
 	}
 	else
 	{
-		context->runtimePanic(RuntimeStr("Map.remove failed. No such key."));
+		context->runtimePanic("Map.remove failed. No such key.");
 	}
 }
 
@@ -479,7 +563,7 @@ static void fn_call(InterpretContext* context)
 
 static void fn_new_bytecode(InterpretContext* context)
 {
-	auto offset = context->popValue<BytecodeOffset>();
+	auto offset = context->popValue<Pointer>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
@@ -501,7 +585,7 @@ static void fn_delete_lambda(InterpretContext* context)
 
 static void fn_new_lambda(InterpretContext* context)
 {
-	auto offset = context->popValue<BytecodeOffset>();
+	auto offset = context->popValue<Pointer>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete_lambda;
@@ -509,7 +593,7 @@ static void fn_new_lambda(InterpretContext* context)
 
 	int32_t size = context->popValue<BytecodeOffset>();
 
-	auto deref = context->popValue<BytecodeOffset>();
+	auto deref = context->popValue<Pointer>();
 	entries[2].codeOffset = deref;
 
 	auto cls = RuntimeClass::allocateClass(size + 4, 0, entries);
@@ -540,13 +624,6 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 
 	auto intType = to->registry->getEntry<IntType>();
 	auto stringType = to->registry->getEntry<StringType>();
-
-	out.addFunction(NativeFunction(
-		{ FunctionArgument(intType, Token("position")), FunctionArgument(intType, Token("length")) }, stringType,
-		"string.substr",
-		[](InterpretContext* context) {
-			std::puts(std::to_string(context->popValue<int32_t>()).c_str());
-		}));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(intType, Token("intValue")) }, stringType,
@@ -585,8 +662,24 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 		"fn.new.lambda", &fn_new_lambda));
 
 	out.addFunction(NativeFunction(
-		{ FunctionArgument(stringType, Token("str")) }, stringType,
-		"format", &string_format));
+		{ FunctionArgument(stringType, "str") }, stringType,
+		"string.format", &string_format));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.concat", &string_concat));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.substr", &string_substr));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.index", &string_indexString));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"string.setIndexCopy", &string_setIndexCopy));
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(stringType, Token("str1")),
@@ -597,6 +690,9 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	out.addAttribute(new EntryPointAttribute());
 	out.addAttribute(new DiscardAttribute());
 	out.addAttribute(new ReflectAttribute());
+
+	out.addConstant("INT_MAX", intType, std::numeric_limits<Int>::max());
+	out.addConstant("INT_MIN", intType, std::numeric_limits<Int>::min());
 
 	auto mapType = out.createGenericClass<MapData>("Map", { GenericArgument("K"), GenericArgument("V") });
 

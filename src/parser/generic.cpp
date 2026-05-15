@@ -69,9 +69,10 @@ bool ds::checkGenericArguments(std::vector<GenericArgument> args, std::vector<Ty
 				errors->error(ErrorCode::parseInvalidType, at, "Invalid type");
 			}
 
-			else if (!foundClass->isSubclassOf(args[i].baseClassType))
+			else if (!foundClass->isSubclassOf(args[i].baseClassType) && !foundClass->sameAs(args[i].baseClassType))
 			{
-				errors->error(ErrorCode::parseInvalidType, at, "Invalid type");
+				errors->error(ErrorCode::parseInvalidType, at, "Invalid type " + Type::toString(foundClass) +
+					" is not a subclass of " + Type::toString(args[i].baseClassType));
 			}
 		}
 	}

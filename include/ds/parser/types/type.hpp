@@ -189,18 +189,6 @@ namespace ds
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
-
-		static CharType* getInstance()
-		{
-			if (!instance)
-			{
-				instance = new CharType();
-			}
-			return instance;
-		}
-
-	private:
-		static inline CharType* instance = nullptr;
 	};
 
 	class FloatType : public PrimitiveType

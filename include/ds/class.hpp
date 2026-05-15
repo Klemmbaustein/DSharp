@@ -74,7 +74,7 @@ namespace ds
 		 * You shouldn't call this function directly, use InterpretContext::destruct() to properly
 		 * de reference and destruct an object, as that will automatically also call it's destructors.
 		 */
-		static RuntimeFunction unref(RuntimeClass* object)
+		static RuntimeFunction unref(RuntimeClass*& object)
 		{
 			if (!object)
 			{
@@ -93,7 +93,7 @@ namespace ds
 
 			if (ref == 0)
 			{
-				ref--;
+				classRefCount--;
 				free(object->getBasePtr());
 				return RuntimeFunction();
 			}
@@ -104,13 +104,16 @@ namespace ds
 			{
 				if (!object->vtable || !bool(object->vtable[0]))
 				{
-					ref--;
+					classRefCount--;
 					free(object->getBasePtr());
 				}
 				else
+				{
+					object = object->getBasePtr();
 					return object->vtable[0];
+				}
 			}
-			return RuntimeFunction();
+			return RuntimeFunction{ .codeOffset = UINT64_MAX };
 		}
 
 		/**
@@ -121,7 +124,7 @@ namespace ds
 		 * It's actual class data follows it right after in memory, and this function returns a pointer to that.
 		 *
 		 * @return
-		 * The body
+		 * The actual class data body.
 		 */
 		inline uint8_t* getBody()
 		{

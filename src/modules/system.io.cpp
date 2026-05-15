@@ -73,7 +73,7 @@ static void io_file_construct(InterpretContext* context)
 
 	if (!thisPtr->handle)
 	{
-		context->runtimePanic(RuntimeStr(std::strerror(errno)));
+		context->runtimePanic(std::strerror(errno));
 	}
 
 	context->pushValue(thisPtr);
@@ -126,7 +126,7 @@ static void io_popen(InterpretContext* context)
 
 	if (!newFile->handle)
 	{
-		context->runtimePanic(RuntimeStr(std::strerror(errno)));
+		context->runtimePanic(std::strerror(errno));
 	}
 
 	context->pushValue(newFile);

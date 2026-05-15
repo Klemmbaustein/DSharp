@@ -365,8 +365,10 @@ ExpressionResult ds::ClassType::compileEqualsTo(ExpressionResult first, Expressi
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
 
-	result.code.pushInt(first.type->size);
-	result.code.addOperation(BytecodeOp::equals);
+	BinaryBuffer args;
+	args.addValue(first.type->size);
+
+	result.code.addOperation(BytecodeOp::equals, args);
 
 	return result;
 }

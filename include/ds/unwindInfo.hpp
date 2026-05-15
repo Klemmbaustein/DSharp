@@ -15,19 +15,19 @@ namespace ds
 	{
 		UnwindOp op = UnwindOp::popBytes;
 		uint16_t size = 0;
-		BytecodeOffset start = 0;
-		BytecodeOffset offset = 0;
+		Pointer start = 0;
+		Pointer offset = 0;
 	};
 
 	struct UnwindSection
 	{
-		uint32_t offset = 0;
+		Pointer offset = 0;
 		std::vector<UnwindPart> parts;
 	};
 
 	struct UnwindInfo
 	{
 		std::vector<UnwindSection> sections;
-		UnwindSection* getSectionAt(uint32_t offset);
+		UnwindSection* getSectionAt(Pointer offset);
 	};
 }

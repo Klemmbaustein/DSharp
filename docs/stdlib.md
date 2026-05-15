@@ -19,19 +19,17 @@ The D# standard library is made up of multiple modules.
   On anything else it doesn't have any effect.
 - `Reflect`:
   Tells the compiler to store reflection metadata for this function.
+- `Discard`:
+  Makes this function implicitly discardable.
 
 ### Functions
 
-- `fn format(string fmt, vararg string[] args) -> string`:
-  Uses the string `fmt` and the arguments `args` to generate a new string.
-  
-  For simple formatting, use the string interpolation syntax.
-  It internally generates a call to the `format` function.
-  
-  The function will replace all occurrences of `{}` with strings from `args`. If not enough
-  strings were provided, it throws an error.
 - `fn compareString(string str1, string str2) -> int`:
   Works like the C [strcmp](https://cplusplus.com/reference/cstring/strcmp/) function.
+
+### Classes
+
+- `class Map<K, V>` A tree-map that maps a value of type K to a value of type V
 
 ### Notes
 
