@@ -616,8 +616,8 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			break;
 		}
 		case ds::BytecodeOp::noReturn: {
-			runtimePanic(RuntimeStr("Function did not return"));
-			return;
+			runtimePanic("Function did not return");
+			break;
 		}
 		case ds::BytecodeOp::castInterface: {
 			Int offset = *(Int*)&argumentBuffer[0];
@@ -631,9 +631,7 @@ void ds::InterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			{
 				classPtr = (RuntimeClass*)((uint8_t*)classPtr + offset + sizeof(RuntimeClass));
 			}
-			RuntimeClass* ptr = (RuntimeClass*)classPtr;
-
-			pushValue(ptr);
+			pushValue(classPtr);
 			break;
 		}
 		default:
