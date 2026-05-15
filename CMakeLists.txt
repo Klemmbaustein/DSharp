@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for DSharp, include source and define
 # project specific logic here.
 #
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(CMAKE_CXX_STANDARD 23)
@@ -52,7 +52,11 @@ endif()
 
 target_include_directories(DSharp PUBLIC "include")
 
+set(ASMJIT_STATIC ON)
+add_subdirectory("dependencies/asmjit")
+target_link_libraries(DSharp PUBLIC asmjit::asmjit)
+
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-	add_executable(TestInterpreter "src/main.cpp")
-	target_link_libraries(TestInterpreter PUBLIC DSharp)
+	enable_testing()
+	add_subdirectory("test/runner")
 endif()

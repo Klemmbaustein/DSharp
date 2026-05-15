@@ -10,11 +10,29 @@ using namespace std::chrono;
 static void async_sleepAndReturn(InterpretContext* context)
 {
 	ClassRef<Task> task = emptyTask();
-
-	context->runtime->createBackgroundThread([task, context] {
+	task.classPtr->addRef();
+	context->runtime->createBackgroundThread([task = task, context] {
 		std::this_thread::sleep_for(milliseconds(250));
 
 		completeTask(task, context);
+		auto classPtr = task.classPtr;
+
+		auto fn = RuntimeClass::unref(classPtr);
+
+		if (fn)
+		{
+			if (task->resultBuffer)
+			{
+				delete task->resultBuffer;
+			}
+
+			if (task->taskMutex)
+			{
+				delete task->taskMutex;
+			}
+
+			RuntimeClass::unref(classPtr);
+		}
 	});
 
 	context->pushValue(task);

@@ -1,0 +1,31 @@
+using system
+using system::io
+using system::err
+
+fn expect(string s1, string s2)
+{
+	if s1 != s2
+	{
+		writeln($"{s1} doesn't match {s2}")
+		abort()
+	}
+}
+
+fn expectChar(char c1, char c2)
+{
+	if c1 != c2
+	{
+		abort()
+	}
+}
+
+[EntryPoint]
+fn main()
+{
+	expect("abcdef".substr(0, 3), "abc")
+	expect("abcdef".substr(3, INT_MAX), "def")
+	expectChar("abcdef"[0], 'a')
+
+	string str = "abcddf"
+	str[4] = 'e'
+}

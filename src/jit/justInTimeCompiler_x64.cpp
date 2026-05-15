@@ -1368,7 +1368,7 @@ void ds::jit::JustInTimeCompiler::changeStackBy(int32_t amount)
 		assembler->sub(stackRegister, -amount);
 	}
 
-#if 1 // stack sanity check
+#if 0 // stack sanity check
 	assembler->cmp(stackPos, 0);
 	auto okay = assembler->new_label();
 	assembler->jge(okay);

@@ -2,7 +2,7 @@
 
 using namespace ds;
 
-UnwindSection* ds::UnwindInfo::getSectionAt(uint32_t offset)
+UnwindSection* ds::UnwindInfo::getSectionAt(Pointer offset)
 {
 	if (offset == SIZE_MAX)
 	{

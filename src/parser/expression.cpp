@@ -16,6 +16,8 @@ void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* wi
 {
 	if (!type)
 	{
+		errors->error(ErrorCode::parseInvalidType, at,
+			"Type mismatch. Expected " + Type::toString(target) + ", got " + Type::toString(type) + " and no cast is possible.");
 		return;
 	}
 

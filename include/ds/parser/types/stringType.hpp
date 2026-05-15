@@ -6,19 +6,7 @@ namespace ds
 	class StringType : public ClassType
 	{
 	public:
-		StringType(TypeRegistry* registry)
-		{
-			this->name = "string";
-			this->size = sizeof(Pointer);
-			this->vTableOffset = UINT32_MAX;
-			applyName();
-
-			this->members.push_back(ClassMember{
-				.name = "length",
-				.offset = 0,
-				.type = registry->getEntry<IntType>(),
-				});
-		}
+		StringType(TypeRegistry* registry);
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;

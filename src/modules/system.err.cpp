@@ -10,7 +10,7 @@ static void err_getStackTrace()
 
 static void err_abort(InterpretContext* context)
 {
-	context->runtimePanic(RuntimeStr("Aborted"));
+	context->runtimePanic("Aborted");
 }
 
 NativeModule err::createModule()

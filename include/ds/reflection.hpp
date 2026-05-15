@@ -25,7 +25,7 @@ namespace ds
 		TypeId hash = 0;
 		std::string name;
 		Size vTableOffset = 0;
-		BytecodeOffset constructor = 0;
+		Pointer constructor = 0;
 		size_t bodySize = 0;
 
 		std::vector<TypeMember> members;

@@ -20,7 +20,10 @@ namespace ds
 
 			(*(Size*)this->classPtr->getBody()) = Size(stringLength);
 			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(Size));
-			memcpy(strBegin, stringPtr, stringLength);
+			if (stringLength)
+			{
+				memcpy(strBegin, stringPtr, stringLength);
+			}
 		}
 
 		explicit RuntimeStr(const char* stringPtr)
@@ -67,7 +70,10 @@ namespace ds
 
 			(*(Size*)this->classPtr->getBody()) = Size(stringLength);
 			char* strBegin = (char*)(this->classPtr->getBody() + sizeof(Size));
-			memcpy(strBegin, stringPtr, stringLength);
+			if (stringLength)
+			{
+				memcpy(strBegin, stringPtr, stringLength);
+			}
 		}
 
 

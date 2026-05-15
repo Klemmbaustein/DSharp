@@ -1,8 +1,29 @@
 #include <ds/parser/types/stringType.hpp>
 #include <ds/parser/parseScope.hpp>
 #include <ds/parser/varArgs.hpp>
+#include <ds/parser/types/builtinClassFunction.hpp>
 #include <ds/parser/parseExpression.hpp>
 using namespace ds;
+
+ds::StringType::StringType(TypeRegistry* registry)
+{
+	this->name = "string";
+	this->size = sizeof(Pointer);
+	this->vTableOffset = UINT32_MAX;
+	applyName();
+
+	auto intType = registry->getEntry<IntType>();
+
+	this->members.push_back(ClassMember{
+		.name = "length",
+		.offset = 0,
+		.type = registry->getEntry<IntType>(),
+	});
+
+	this->methods.insert({ "substr",
+		new BuiltinClassFunction({ FunctionArgument(intType, Token("start")), FunctionArgument(intType, Token("count")) },
+			this, "system::string.substr", "substr") });
+}
 
 ExpressionResult ds::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
@@ -20,7 +41,7 @@ ExpressionResult ds::StringType::compileOperator(Operator operatorType, Expressi
 	ExpressionResult result;
 	result.code.addBuffer(first.code);
 	result.code.addBuffer(second.code);
-	result.code.addOperation(BytecodeOp::concatString);
+	result.code.addNew<BytecodeCallNative>("system::string.concat");
 	result.code.addBuffer(this->compileEndMove(with));
 	result.type = this;
 	result.valid = true;
@@ -38,7 +59,6 @@ ExpressionResult ds::StringType::compileValue(Token first, TokenLine& line,
 	if (first.unquoteString())
 	{
 		return compileStringValue(first.string, with);
-
 	}
 	return ExpressionResult();
 }
@@ -57,11 +77,11 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 	}
 
 	ExpressionResult result;
-	result.type = CharType::getInstance();
+	result.type = with->context->registry->getEntry<CharType>();
 	result.valid = true;
 	result.code.addBuffer(thisValue.code);
 	result.code.addBuffer(indexValue.code);
-	result.code.addOperation(BytecodeOp::indexString);
+	result.code.addNew<BytecodeCallNative>("system::string.index");
 
 	if (setMember)
 	{
@@ -71,7 +91,7 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 		BinaryBuffer args;
 		args.addValue<uint32_t>(this->size);
 		result.setCode->addBuffer(indexValue.code);
-		result.setCode->addOperation(BytecodeOp::setStringIndexCopy);
+		result.setCode->addNew<BytecodeCallNative>("system::string.setIndexCopy");
 		result.setCode->addBuffer(*thisValue.setCode);
 	}
 
@@ -89,10 +109,11 @@ ExpressionResult ds::StringType::compileEqualsTo(ExpressionResult first, Express
 
 	// compare value, if compareString returns 0 they're the same
 	first.code.pushInt(0);
-	// compare size
-	first.code.pushInt(sizeof(uint32_t));
 
-	first.code.addOperation(BytecodeOp::equals);
+	BinaryBuffer args;
+	args.addValue(sizeof(uint32_t));
+
+	first.code.addOperation(BytecodeOp::equals, args);
 	first.valid = true;
 	first.type = with->context->registry->getEntry<BoolType>();
 	return first;
@@ -183,7 +204,7 @@ ExpressionResult ds::StringType::compileFormatString(Token first, TokenLine& lin
 	ExpressionResult result = compileStringValue(resultString, with);
 	result.code.addBuffer(compileMove(with));
 	result.code.addBuffer(varArgs::writeVarArgs(formatArguments));
-	result.code.addNew<BytecodeCallNative>("system::format");
+	result.code.addNew<BytecodeCallNative>("system::string.format");
 	result.code.addBuffer(compileEndMove(with));
 	return result;
 }
