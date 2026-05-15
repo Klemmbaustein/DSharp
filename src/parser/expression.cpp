@@ -14,10 +14,19 @@ void ds::ExpressionResult::discard(Token at, ErrorContext* errors) const
 
 void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* with, ErrorContext* errors)
 {
+	if (!valid)
+	{
+		return;
+	}
+
 	if (!type)
 	{
-		errors->error(ErrorCode::parseInvalidType, at,
-			"Type mismatch. Expected " + Type::toString(target) + ", got " + Type::toString(type) + " and no cast is possible.");
+		if (errors)
+		{
+			errors->error(ErrorCode::parseInvalidType, at,
+				"Type mismatch. Expected " + Type::toString(target) + ", got " + Type::toString(type) + " and no cast is possible.");
+		}
+		this->valid = false;
 		return;
 	}
 
