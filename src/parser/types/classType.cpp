@@ -251,6 +251,11 @@ ExpressionResult ds::ClassType::compileOperator(Operator operatorType,
 ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 	ErrorContext* errors, ParsedScope* with, Type* hintType)
 {
+	if (isInterface)
+	{
+		return ExpressionResult();
+	}
+
 	ExpressionResult result;
 
 	auto constructorArgs = line.getInBraces(errors);
