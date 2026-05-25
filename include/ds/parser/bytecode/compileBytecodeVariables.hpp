@@ -18,6 +18,9 @@ namespace ds
 		Type* variableType = nullptr;
 		std::string name;
 		uint32_t variablePos = 0;
+		bool isInvalid = false;
+
+		void unrefHere(BytecodeBuffer* buffer) override;
 	};
 
 	class BytecodeReadVariable : public BytecodeInstruction

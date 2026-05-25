@@ -30,6 +30,14 @@ void ds::BytecodePushVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindS
 	});
 }
 
+void ds::BytecodePushVariable::unrefHere(BytecodeBuffer* buffer)
+{
+	buffer->addNew<BytecodeReadVariable>(this);
+	buffer->addBuffer(variableType->compileUnref());
+	buffer->addNew<BytecodePopVariable>(this->variableType->size, false, false);
+	isInvalid = true;
+}
+
 void BytecodePushVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler)
 {
 	this->variablePos = compiler->variableStackPosition;
