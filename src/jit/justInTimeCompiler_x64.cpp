@@ -98,6 +98,11 @@ JustInTimeCode* ds::jit::JustInTimeCompiler::compileBytecode(BinaryBuffer& code,
 	return result;
 }
 
+ds::jit::JustInTimeCompiler::~JustInTimeCompiler()
+{
+	delete assembler;
+}
+
 void ds::jit::JustInTimeCompiler::scanForFunctions(BinaryBuffer& code, std::vector<ds::RuntimeFunction>& vTable,
 	ReflectInfo& reflect, UnwindInfo& unwind)
 {

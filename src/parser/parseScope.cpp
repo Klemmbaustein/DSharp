@@ -308,7 +308,8 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
 			{
-				code.addNew<BytecodeUnwindClass>(i.second.variableInstruction);
+				if (isEnd)
+					code.addNew<BytecodeUnwindClass>(i.second.variableInstruction);
 				code.addBuffer(i.second.readValue(this));
 				code.addBuffer(unrefCode);
 			}

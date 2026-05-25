@@ -67,8 +67,6 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 	auto& buffer = rt->runtime->unwindBuffer;
 
-	auto target = returnBuffer;
-
 	size_t callStackPos = callAddresses.size();
 
 	for (int32_t i = 0; i < callStackPos; i++)
@@ -85,14 +83,14 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 		for (auto& p : tbl->parts)
 		{
-			if (p.offset < codePos)
+			if (p.offset <= codePos)
 			{
 				continue;
 			}
 			switch (p.op)
 			{
 			case UnwindOp::popClass: {
-				if (p.start > codePos)
+				if (p.start >= codePos)
 				{
 					break;
 				}
@@ -117,10 +115,12 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 	rt->stackPos = 0;
 	unwinding = false;
 
+//	this->doUnwind(this->unwindBuffer);
+
 #ifdef _MSC_VER
 	// Disable MSVC's stack unwinding for longjmp since that doesn't work with the JIT code.
-	((_JUMP_BUFFER*)target)->Frame = 0;
+	((_JUMP_BUFFER*)returnBuffer)->Frame = 0;
 #endif
 
-	longjmp(target, 1);
+	longjmp(returnBuffer, 1);
 }
