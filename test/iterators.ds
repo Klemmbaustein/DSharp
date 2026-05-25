@@ -1,20 +1,26 @@
 using system
 using system::io
+using system::err
 
-class c
+fn other()
 {
-	string[] test = new()
+	other2()
 }
 
+fn other2()
+{
+	abort()
+}
 [EntryPoint]
 fn main()
 {
-	const a = new c()
+	string s = "hello"
 
-	a.test.push("5")
-
-	for string s = a.test
+	if s != "world"
 	{
-		writeln(s)
+		other()
 	}
+	float f = 15
+		writeInt(5)
+
 }

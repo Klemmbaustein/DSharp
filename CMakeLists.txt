@@ -6,7 +6,6 @@ cmake_minimum_required(VERSION 3.20)
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(CMAKE_CXX_STANDARD 23)
 
-
 project(DSharp)
 
 option(WITH_LANGUAGE_SERVICE "Include LanguageService class and related functionality." ON)

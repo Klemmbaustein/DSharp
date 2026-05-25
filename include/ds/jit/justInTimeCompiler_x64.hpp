@@ -33,6 +33,8 @@ namespace ds::jit
 
 		static constexpr Pointer MANAGED_STACK_BEGIN_MARKER = 12345;
 
+		~JustInTimeCompiler();
+
 	private:
 		/**
 		 * @brief
@@ -49,7 +51,7 @@ namespace ds::jit
 		const asmjit::x86::Mem varStackPos = ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, variableStackPos));
 
 		JustInTimeCode* result = new JustInTimeCode();
-		asmjit::x86::Assembler* assembler;
+		asmjit::x86::Assembler* assembler = nullptr;
 		asmjit::x86::Mem runtime = asmjit::x86::ptr_64(asmjit::x86::rsp, 32);
 
 #ifdef _WIN32

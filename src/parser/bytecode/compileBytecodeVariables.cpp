@@ -110,7 +110,7 @@ ds::BytecodePopVariable::BytecodePopVariable(uint32_t size, bool isScopeExit, bo
 std::string BytecodePopVariable::toString()
 {
 #if HAS_CPP_FORMAT
-	return std::format("\tPOP_VAR {}", this->popSize);
+	return std::format("\tPOP_VAR {} {}", this->popSize, this->isScopeExit);
 #else
 	return "\tPOP_VAR";
 #endif
@@ -130,11 +130,14 @@ void BytecodePopVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compil
 
 void ds::BytecodePopVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
 {
-	section.parts.push_back(UnwindPart{
-		.op = UnwindOp::popBytes,
-		.size = uint8_t(this->popSize),
-		.offset = this->offset,
+	if (!this->isScopeExit)
+	{
+		section.parts.push_back(UnwindPart{
+			.op = UnwindOp::popBytes,
+			.size = uint8_t(this->popSize),
+			.offset = this->offset,
 		});
+	}
 }
 
 BytecodeOffset BytecodePopVariable::getArgsSize()
