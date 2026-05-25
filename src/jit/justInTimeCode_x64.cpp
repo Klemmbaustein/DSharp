@@ -5,6 +5,9 @@ using namespace ds;
 
 void ds::jit::JustInTimeCode::run(Pointer at, JustInTimeRuntime* runtime)
 {
+	jmp_buf oldTarget;
+	memcpy(oldTarget, returnBuffer, sizeof(returnBuffer));
+
 	if (!unwinding && setjmp(returnBuffer))
 	{
 		return;
@@ -22,10 +25,14 @@ void ds::jit::JustInTimeCode::run(Pointer at, JustInTimeRuntime* runtime)
 	{
 		entry((void*)at, runtime);
 	}
+	memcpy(returnBuffer, oldTarget, sizeof(returnBuffer));
 }
 
 void ds::jit::JustInTimeCode::resume(void* at, JustInTimeRuntime* runtime)
 {
+	jmp_buf oldTarget;
+	memcpy(oldTarget, returnBuffer, sizeof(returnBuffer));
+
 	if (!unwinding && setjmp(returnBuffer))
 	{
 		return;
@@ -40,6 +47,7 @@ void ds::jit::JustInTimeCode::resume(void* at, JustInTimeRuntime* runtime)
 	auto newEntry = (JitEntryFunction)offset;
 
 	newEntry(at, runtime);
+	memcpy(returnBuffer, oldTarget, sizeof(returnBuffer));
 }
 
 void ds::jit::JustInTimeCode::getUnwindData(void* atPtr, std::vector<Pointer>& outPointers)
@@ -69,6 +77,9 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 	size_t callStackPos = callAddresses.size();
 
+	jmp_buf returnTarget;
+	memcpy(&returnTarget, &returnBuffer, sizeof(jmp_buf));
+
 	for (int32_t i = 0; i < callStackPos; i++)
 	{
 		Pointer codePos = callAddresses[i];
@@ -96,7 +107,7 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 				}
 				ds::RuntimeClass* c;
 				memcpy(&c, &rt->variableStack[rt->variableStackPos - p.size], sizeof(ds::RuntimeClass*));
-				rt->destruct(c);
+				//rt->destruct(c);
 				break;
 			}
 			case UnwindOp::popBytes: {
@@ -119,8 +130,8 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 #ifdef _MSC_VER
 	// Disable MSVC's stack unwinding for longjmp since that doesn't work with the JIT code.
-	((_JUMP_BUFFER*)returnBuffer)->Frame = 0;
+	((_JUMP_BUFFER*)&returnTarget[0])->Frame = 0;
 #endif
 
-	longjmp(returnBuffer, 1);
+	longjmp(returnTarget, 1);
 }
