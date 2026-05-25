@@ -537,12 +537,18 @@ static void array_pop(InterpretContext* context)
 static void array_at(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
-	uint32_t index = context->popValue<uint32_t>();
+	int32_t index = context->popValue<uint32_t>();
 	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
+	if (index < 0)
+	{
+		context->runtimePanic("Negative array index");
+		return;
+	}
 
 	if (array->length <= index)
 	{
-		abort();
+		context->runtimePanic("Out of bounds array access");
+		return;
 	}
 
 	context->pushBytes((uint8_t*)array->data + elementSize * index, elementSize);

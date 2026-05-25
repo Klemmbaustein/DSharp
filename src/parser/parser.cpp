@@ -355,6 +355,8 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 void ds::ParseContext::resetModules(LanguageContext* context)
 {
 	this->virtualTable.clear();
+	delete this->registry;
+	this->registry = new TypeRegistry(*context->registry);
 	this->compiler.functions.clear();
 
 	for (ParsedFile& file : this->files)
