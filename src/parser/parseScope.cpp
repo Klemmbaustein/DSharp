@@ -291,6 +291,10 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 
 	for (auto& i : variables)
 	{
+		if (i.second.variableInstruction->isInvalid)
+		{
+			continue;
+		}
 		bool isLambdaOwned = !this->isLambda || i.second.ownedBy == this;
 		if (i.second.depth < toDepth || !isLambdaOwned)
 		{
@@ -876,6 +880,12 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 BytecodeBuffer ds::ScopeVariable::readValue(ParsedScope* with) const
 {
+	if (this->variableInstruction->isInvalid)
+	{
+		with->context->errors.error(ErrorCode::internalError, Token(),
+			"Internal error, temporary variable read after invalidated.");
+	}
+
 	BytecodeBuffer result;
 	if (with->isLambda && ownedBy != with)
 	{
@@ -916,6 +926,11 @@ BytecodeBuffer ds::ScopeVariable::writeValue() const
 
 ExpressionResult ds::ScopeVariable::readExpression(ParsedScope* with) const
 {
+	if (this->variableInstruction->isInvalid)
+	{
+		with->context->errors.error(ErrorCode::internalError, Token(),
+			"Internal error, temporary variable read after invalidated.");
+	}
 	ExpressionResult result;
 	result.valid = true;
 	result.type = this->type;

@@ -14,6 +14,7 @@ namespace ds
 	class ClassType;
 	class Function;
 	class ConstantEvaluate;
+	class BytecodeBuffer;
 
 	/**
 	 * @brief
@@ -59,6 +60,11 @@ namespace ds
 		virtual bool constantEvaluate(ConstantEvaluate* evaluator)
 		{
 			return false;
+		}
+		
+		virtual void unrefHere(BytecodeBuffer* buffer)
+		{
+
 		}
 
 		virtual ~BytecodeInstruction() = default;

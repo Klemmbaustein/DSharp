@@ -48,3 +48,13 @@ void ds::ExpressionResult::compileToType(Token at, Type* target, ParsedScope* wi
 
 	*this = cast;
 }
+
+ds::BytecodeBuffer ds::ExpressionResult::unrefHere(ParsedScope* with)
+{
+	BytecodeBuffer result;
+	for (auto& i : this->code.instructions)
+	{
+		i->unrefHere(&result);
+	}
+	return result;
+}

@@ -379,6 +379,7 @@ ExpressionResult ds::BoolType::compileOperator(Operator operatorType,
 		result.code.addNew<BytecodeJump>(BytecodeOp::jumpIfNot, labelFail.get());
 
 		result.code.addBuffer(second.code);
+		result.code.addBuffer(second.unrefHere(with));
 		result.code.addNew<BytecodeJump>(BytecodeOp::jump, labelSuccess.get());
 
 		// When jumping to "andShortCircuit", return false. (First condition failed so the result is known to be false)
@@ -402,6 +403,7 @@ ExpressionResult ds::BoolType::compileOperator(Operator operatorType,
 		result.code.addNew<BytecodeJump>(BytecodeOp::jumpIf, labelFail.get());
 
 		result.code.addBuffer(second.code);
+		result.code.addBuffer(second.unrefHere(with));
 		result.code.addNew<BytecodeJump>(BytecodeOp::jump, labelSuccess.get());
 
 		// When jumping to "orShortCircuit", return true. (First condition succeeded so the result is known to be true)

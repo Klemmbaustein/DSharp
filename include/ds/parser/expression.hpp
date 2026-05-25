@@ -31,6 +31,8 @@ namespace ds
 
 		void discard(Token at, ErrorContext* errors) const;
 
+		BytecodeBuffer unrefHere(ParsedScope* with);
+
 		/**
 		 * @brief
 		 * Tries to convert this expression into the given type, if possible.
