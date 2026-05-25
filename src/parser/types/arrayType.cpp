@@ -37,7 +37,17 @@ ExpressionResult ds::ArrayType::compileOperator(Operator operatorType, Expressio
 ExpressionResult ds::ArrayType::compileValue(Token first, TokenLine& line, ErrorContext* errors,
 	ParsedScope* with, Type* hintType)
 {
-	return ExpressionResult();
+	auto constructorArgs = line.getInBraces(errors);
+	if (!constructorArgs.empty())
+	{
+		errors->error(ErrorCode::parseUnexpectedToken, first, "Unexpected arguments for constructor");
+		return ExpressionResult();
+	}
+	auto cls = makeArrayValue({}, with);
+
+	cls.code.addBuffer(compileMove(with));
+
+	return cls;
 }
 
 ExpressionResult ds::ArrayType::compileCast(ExpressionResult value, ParsedScope* with)
