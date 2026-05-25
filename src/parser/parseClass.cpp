@@ -344,6 +344,7 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 		valueLine.lineTokens = &member.value;
 		auto varExpr = Expression::pushExpression(valueLine, &context->errors, false, member.type,
 			&constructorScope);
+		valueLine.expectEndOfLine(errors);
 		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
 		if (varExpr.type)
 		{

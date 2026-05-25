@@ -1,0 +1,20 @@
+using system
+using system::io
+
+class c
+{
+	string[] test = new()
+}
+
+[EntryPoint]
+fn main()
+{
+	const a = new c()
+
+	a.test.push("5")
+
+	for string s = a.test
+	{
+		writeln(s)
+	}
+}
