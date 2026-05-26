@@ -161,8 +161,20 @@ Type* ds::convertGenericType(Type* inType, std::vector<Type*> args, bool isFunct
 		{
 			return nullptr;
 		}
+	
+		auto type = args[genericType->index];
 
-		return args[genericType->index];
+		if (genericType->isNullable)
+		{
+			auto classType = type->asClass();
+
+			if (classType)
+			{
+				return classType->nullable;
+			}
+		}
+
+		return type;
 	}
 
 	return inType;

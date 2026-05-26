@@ -7,10 +7,15 @@ namespace ds
 	{
 	public:
 
-		GenericArgumentType(size_t index, bool isFunctionIndex);
+		GenericArgumentType(size_t index, bool isFunctionIndex, bool isNullable = false);
+
+		~GenericArgumentType();
+
+		GenericArgumentType* nullable = nullptr;
 
 		size_t index = 0;
 		bool isFunctionIndex = false;
+		bool isNullable = false;
 
 		virtual ExpressionResult compileOperator(Operator operatorType,
 			ExpressionResult& first, ExpressionResult& second, ParsedScope* with) override;
@@ -35,7 +40,6 @@ namespace ds
 				instance = new GenericArgumentType(index, false);
 			}
 			return instance;
-
 		}
 
 	private:
