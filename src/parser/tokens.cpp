@@ -235,7 +235,7 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 		if (specialChars.find(newChar) != specialChars.end() ||
 			(newChar == '.' && !isNumber(currentWord.string, false)))
 		{
-			if (newChar == '}' && !currentLine->empty())
+			if (newChar == '}' && !currentLine->empty() && bracketDepth == 0)
 			{
 				addLine();
 			}
@@ -274,7 +274,7 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 			charToken.position.startPos--;
 			charToken.position.endPos--;
 			currentLine->push_back(charToken);
-			if (newChar == '{')
+			if (newChar == '{' && bracketDepth == 0)
 			{
 				addLine();
 			}
