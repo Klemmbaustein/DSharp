@@ -94,14 +94,14 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 		for (auto& p : tbl->parts)
 		{
-			if (p.offset <= codePos)
+			if (p.offset < codePos)
 			{
 				continue;
 			}
 			switch (p.op)
 			{
 			case UnwindOp::popClass: {
-				if (p.start >= codePos)
+				if (p.start > codePos)
 				{
 					break;
 				}
