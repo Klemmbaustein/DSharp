@@ -90,7 +90,9 @@ BytecodeBuffer ds::compileGenericArguments(std::vector<Type*> types)
 		result.pushInt(types[i]->size);
 
 		BinaryBuffer buf;
-		buf.addValue(dynamic_cast<ClassType*>(types[i]) ? true : false);
+		auto classType = types[i]->asClass();
+
+		buf.addValue(classType && !classType->isByValueType);
 		result.addOperation(BytecodeOp::push, buf);
 	}
 
@@ -168,7 +170,7 @@ Type* ds::convertGenericType(Type* inType, std::vector<Type*> args, bool isFunct
 		{
 			auto classType = type->asClass();
 
-			if (classType)
+			if (classType && classType->isByValueType)
 			{
 				return classType->nullable;
 			}

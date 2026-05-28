@@ -76,19 +76,32 @@ static void string_concat(InterpretContext* context)
 
 static void string_indexString(InterpretContext* context)
 {
-	auto index = context->popValue<int32_t>();
+	auto index = context->popValue<Int>();
 	auto first = context->popRuntimeString();
 	first.classPtr->addRef();
+
+	if (index >= first.length() || index < 0)
+	{
+		context->runtimePanic("Invalid string index");
+		return;
+	}
+
 	context->pushValue<Char>(Char(first.ptr()[index]));
 }
 
 static void string_setIndexCopy(InterpretContext* context)
 {
-	auto index = context->popValue<int32_t>();
+	auto index = context->popValue<Int>();
 	auto str = context->popRuntimeString();
 	str.classPtr->addRef();
 	Char newChar = context->popValue<Char>();
 	str.classPtr->addRef();
+
+	if (index >= str.length() || index < 0)
+	{
+		context->runtimePanic("Invalid string index");
+		return;
+	}
 
 	// Space for null terminator
 	Size strLength = str.length();
@@ -156,7 +169,7 @@ static void array_delete(InterpretContext* context)
 
 	if (array->data)
 	{
-		if (array->isType)
+		if (array->isClassType)
 		{
 			for (uint32_t i = 0; i < array->length; i++)
 			{
@@ -270,8 +283,22 @@ static void map_remove(InterpretContext* context)
 	{
 		context->destruct(MapData::getClass(buffer.data()));
 	}
+}
 
-	return;
+static void map_contains(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
+
+	std::vector<uint8_t> buffer;
+	buffer.resize(key.typeSize);
+
+	context->popBytes(buffer.data(), key.typeSize);
+
+	auto& node = map->getNode(buffer.data(), key, context);
+
+	context->pushValue<Bool>(node != nullptr);
 }
 
 MapData::Node*& ds::modules::system::MapData::getMinimumNode(Node*& at)
@@ -474,14 +501,14 @@ bool ds::modules::system::MapData::lessThan(uint8_t* a, uint8_t* b, GenericData 
 
 static void array_new(InterpretContext* context)
 {
-	Bool isType = context->popValue<Bool>();
+	Bool isClassType = context->popValue<Bool>();
 	uint32_t elementSize = context->popValue<uint32_t>();
 	uint32_t length = context->popValue<uint32_t>();
 
 	auto newClass = createArrayObject();
 
 	ArrayData* data = (ArrayData*)newClass->getBody();
-	data->isType = isType;
+	data->isClassType = isClassType;
 	data->length = length;
 	if (data->length)
 	{
@@ -508,6 +535,10 @@ static void array_push(InterpretContext* context)
 		array->data = newData;
 		context->popBytes((uint8_t*)array->data + generic.typeSize * (array->length - 1), generic.typeSize);
 	}
+	else
+	{
+		context->runtimePanic("Array allocation failed!");
+	}
 }
 
 static void array_pop(InterpretContext* context)
@@ -522,9 +553,55 @@ static void array_pop(InterpretContext* context)
 
 	array->length--;
 
-	RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
+	if (array->isClassType)
+	{
+		RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
 
-	context->destruct(elem[array->length]);
+		context->destruct(elem[array->length]);
+	}
+
+	void* newData = realloc(array->data, array->length * generic.typeSize);
+
+	if (newData || array->length == 0)
+	{
+		array->data = newData;
+	}
+}
+
+static void array_removeIndex(InterpretContext* context)
+{
+	auto generic = GenericData(context);
+	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
+
+	Int index = context->popValue<uint32_t>();
+
+	if (index < 0)
+	{
+		context->runtimePanic("Cannot remove negative array indices");
+		return;
+	}
+
+	if (array->length <= index)
+	{
+		context->runtimePanic("Removed array index is out of bounds.");
+		return;
+	}
+
+	array->length--;
+
+	if (array->isClassType)
+	{
+		RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
+		context->destruct(elem[index]);
+		memmove(&elem[index], &elem[index + 1], array->length - index);
+	}
+	else
+	{
+		uint8_t* arrayPointer = reinterpret_cast<uint8_t*>(array->data);
+
+		memmove(arrayPointer + index * generic.typeSize, arrayPointer + (index + 1) * generic.typeSize,
+			array->length - index);
+	}
 
 	void* newData = realloc(array->data, array->length * generic.typeSize);
 
@@ -537,7 +614,7 @@ static void array_pop(InterpretContext* context)
 static void array_at(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
-	int32_t index = context->popValue<uint32_t>();
+	Int index = context->popValue<uint32_t>();
 	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
 	if (index < 0)
 	{
@@ -630,6 +707,7 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 
 	auto intType = to->registry->getEntry<IntType>();
 	auto stringType = to->registry->getEntry<StringType>();
+	auto boolType = to->registry->getEntry<BoolType>();
 
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(intType, Token("intValue")) }, stringType,
@@ -646,6 +724,10 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.pop", &array_pop));
+
+	out.addFunction(NativeFunction(
+		{ FunctionArgument(intType, Token("index")) }, nullptr,
+		"array.removeIndex", &array_removeIndex));
 
 	out.addFunction(NativeFunction(
 		{}, nullptr,
@@ -710,7 +792,7 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	mapType->members.push_back(ClassMember{
 		.name = "comparator",
 		.offset = offsetof(MapData, comparator),
-		.type = FunctionType::getInstance(to->registry->getEntry<BoolType>(),
+		.type = FunctionType::getInstance(boolType,
 			{ firstGeneric, secondGeneric }, to->registry)
 	        ->nullable });
 
@@ -723,6 +805,11 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 		NativeFunction(
 			{ FunctionArgument(firstGeneric, "key") },
 			secondGeneric, "at", &map_at));
+
+	out.addClassMethod(mapType,
+		NativeFunction(
+			{ FunctionArgument(firstGeneric, "key") },
+			boolType, "contains", &map_contains));
 
 	out.addClassMethod(mapType,
 		NativeFunction(
