@@ -33,6 +33,21 @@ static void math_sqrt(InterpretContext* context)
 	context->pushValue<Float>(std::sqrt(context->popValue<Float>()));
 }
 
+static void math_floor(InterpretContext* context)
+{
+	context->pushValue<Float>(std::floor(context->popValue<Float>()));
+}
+
+static void math_ceil(InterpretContext* context)
+{
+	context->pushValue<Float>(std::ceil(context->popValue<Float>()));
+}
+
+static void math_round(InterpretContext* context)
+{
+	context->pushValue<Float>(std::round(context->popValue<Float>()));
+}
+
 template <typename T>
 static void math_clamp(InterpretContext* context)
 {
@@ -41,6 +56,14 @@ static void math_clamp(InterpretContext* context)
 	T val = context->popValue<T>();
 
 	context->pushValue<T>(val < min ? min : (val > max ? max : val));
+}
+
+template <typename T>
+static void math_abs(InterpretContext* context)
+{
+	T value = context->popValue<T>();
+
+	context->pushValue<T>(std::abs(value));
 }
 
 template <typename T>
@@ -89,6 +112,21 @@ NativeModule ds::modules::system::math::createModule(LanguageContext* to)
 	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
 		floatInst, "sqrt", &math_sqrt));
 
+	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
+		floatInst, "floor", &math_floor));
+
+	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
+		floatInst, "ceil", &math_ceil));
+
+	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
+		floatInst, "round", &math_round));
+
+	out.addFunction(NativeFunction({ ds::FunctionArgument(floatInst, "value") },
+		floatInst, "absF", &math_abs<Float>));
+
+	out.addFunction(NativeFunction({ ds::FunctionArgument(intInst, "value") },
+		floatInst, "absI", &math_abs<Int>));
+
 	out.addFunction(NativeFunction(
 		{ ds::FunctionArgument(floatInst, "value"),
 			ds::FunctionArgument(floatInst, "min"),
@@ -127,6 +165,7 @@ NativeModule ds::modules::system::math::createModule(LanguageContext* to)
 		{ ds::FunctionArgument(floatInst, "value"),
 			ds::FunctionArgument(floatInst, "max") },
 		floatInst, "maxF", &math_max<Float>));
+
 	out.addFunction(NativeFunction(
 		{ ds::FunctionArgument(intInst, "value"),
 			ds::FunctionArgument(intInst, "max") },

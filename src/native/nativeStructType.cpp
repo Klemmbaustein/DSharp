@@ -10,7 +10,9 @@ ds::NativeStructType::NativeStructType(Size size, std::string name)
 {
 	this->size = size;
 	this->name = name;
+	this->isByValueType = true;
 }
+
 BytecodeBuffer ds::NativeStructType::compileUnref()
 {
 	return Type::compileUnref();

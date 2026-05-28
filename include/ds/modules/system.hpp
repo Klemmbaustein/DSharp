@@ -97,7 +97,7 @@ namespace ds::modules
 				assert(index < length);
 				return reinterpret_cast<T*>(data)[index];
 			}
-			bool isType = false;
+			bool isClassType = false;
 		};
 
 		class MapData
@@ -139,7 +139,7 @@ namespace ds::modules
 		RuntimeClass* createArrayObject();
 
 		template <typename T>
-		RuntimeClass* createArray(T* items, Size length, bool isType)
+		RuntimeClass* createArray(T* items, Size length, bool isClassType)
 		{
 			size_t sizeInBytes = length * sizeof(T);
 			void* buffer = malloc(sizeInBytes);
@@ -155,7 +155,7 @@ namespace ds::modules
 			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
 			data->data = buffer;
 			data->length = length;
-			data->isType = isType;
+			data->isClassType = isClassType;
 			return array;
 		}
 		RuntimeClass* createMapObject();

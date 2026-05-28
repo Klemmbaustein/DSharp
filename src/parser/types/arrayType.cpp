@@ -16,11 +16,16 @@ ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 
 	this->methods.insert({ "pop",
 		new BuiltinClassFunction({}, nullptr, "system::array.pop", "pop") });
+	auto intType = registry->getEntry<IntType>();
+
+	this->methods.insert({ "removeIndex",
+		new BuiltinClassFunction({ FunctionArgument(intType, Token("value")) },
+			nullptr, "system::array.removeIndex", "removeIndex") });
 
 	this->members.push_back(ClassMember{
 		.name = "length",
 		.offset = 0,
-		.type = registry->getEntry<IntType>() });
+		.type = intType });
 
 	isGeneric = true;
 	addGenericToName = false;
@@ -109,11 +114,12 @@ ExpressionResult ds::ArrayType::makeArrayValue(std::vector<ExpressionResult> val
 	result.code.pushInt(Size(values.size()));
 	result.code.pushInt(elementSize);
 
+	auto baseClass = baseType->asClass();
 
-	Bool isType = dynamic_cast<ClassType*>(this->baseType) || dynamic_cast<NullableClassType*>(this->baseType);
+	Bool isClassType = baseClass && !baseClass->isByValueType;
 
 	BinaryBuffer b;
-	b.addValue(isType);
+	b.addValue(isClassType);
 	result.code.addOperation(BytecodeOp::push, b);
 
 	result.code.addNew<BytecodeCallNative>("system::array.new");
