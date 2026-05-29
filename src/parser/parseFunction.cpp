@@ -137,6 +137,10 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 				line.expect(",", errors);
 		}
 	}
+	else
+	{
+		arguments.clear();
+	}
 
 	if (!returnTypeTokens.empty())
 	{
@@ -152,6 +156,10 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 				"Unknown return type for function '" + this->getFullName() + "': '" + line.lineTokens->at(0).string +
 					"'");
 		}
+	}
+	else
+	{
+		returnType = nullptr;
 	}
 
 	if (isAsync)
