@@ -193,6 +193,7 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 		for (ClassMember i : classType->members)
 		{
 			i.offset += position;
+			i.source = classType;
 			members.push_back(i);
 		}
 
@@ -564,6 +565,7 @@ void ds::ParsedClass::registerType(ParseContext* context, ParsedFile* file)
 
 	thisType = new ClassType();
 	thisType->from = name;
+	thisType->module = file->moduleName;
 	thisType->name = name.string;
 	thisType->nullable->name = name.string + "?";
 	thisType->languageClass = this;

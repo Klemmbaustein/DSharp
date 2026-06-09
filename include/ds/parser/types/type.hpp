@@ -29,6 +29,8 @@ namespace ds
 		uint32_t size = 0;
 		/// The name of this type.
 		std::string name;
+		/// The module this type is in.
+		std::string module;
 		/// Does this type have a default value that can be used when a variable isn't explicitly initialized.
 		bool hasDefaultValue = true;
 		/// Is this type generic (does it take types as arguments)
@@ -135,6 +137,7 @@ namespace ds
 		 * Returns the name of the type, or <void> if the type is null.
 		 */
 		static std::string toString(Type* target);
+		static std::string toFullString(Type* target);
 
 		virtual std::string getName()
 		{

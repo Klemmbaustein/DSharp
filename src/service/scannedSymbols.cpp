@@ -9,11 +9,12 @@ ds::ScannedFunction::ScannedFunction(Function* from, Token atToken, Kind kind, T
 	this->at = atToken;
 
 	this->name = from->getFullName();
-	this->name = from->getShortName();
+	this->shortName = from->getShortName();
 	this->argEnd = argEnd;
 	this->kind = kind;
 	auto functionArgs = from->getArguments();
 	this->arguments.reserve(functionArgs.size());
+	this->isVirtual = from->isVirtual();
 
 	for (auto& i : functionArgs)
 	{
@@ -77,7 +78,7 @@ ds::ScannedVariable::ScannedVariable(ParsedClassMember* from, ClassType* inClass
 		.at = from->name,
 	};
 
-	this->inClass = inClass->languageClass->classModule->name + "::" + inClass->languageClass->name.string;
+	this->inClass = Type::toFullString(inClass);
 	kind = Kind::classMember;
 	type = Type::toString(from->type);
 	if (from->type)
@@ -96,7 +97,9 @@ ds::ScannedVariable::ScannedVariable(ClassMember* from, ClassType* inClass, Pars
 		.at = from->name,
 	};
 
-	this->inClass = Type::toString(inClass);
+	auto source = from->source ? from->source : inClass;
+
+	this->inClass = Type::toFullString(source);
 	kind = Kind::classMember;
 	type = Type::toString(from->type);
 	if (from->type)

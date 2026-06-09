@@ -85,6 +85,7 @@ EnumType* ds::NativeModule::createEnum(std::string name)
 {
 	auto newType = new EnumType();
 	newType->name = name;
+	newType->module = this->name;
 	this->enums.push_back(newType);
 	this->types.push_back(newType);
 	return newType;
@@ -148,6 +149,7 @@ Module ds::NativeModule::create() const
 	}
 	for (auto& i : this->types)
 	{
+		i->module = this->name;
 		outModule.moduleTypes.insert({ i->name, i });
 	}
 	for (auto& i : this->enums)

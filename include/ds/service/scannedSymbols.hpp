@@ -24,6 +24,8 @@ namespace ds
 		TypeId returnTypeId = 0;
 		std::vector<std::pair<std::string, std::string>> arguments;
 
+		bool isVirtual = false;
+
 		enum class Kind
 		{
 			functionCall,
