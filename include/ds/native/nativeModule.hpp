@@ -99,13 +99,15 @@ namespace ds
 			cls->name = name;
 			cls->classSize = sizeof(TNative);
 			cls->vTableOffset = UINT32_MAX;
+			cls->module = this->name;
 
 			if (derived)
 			{
 				cls->parent = derived;
 
-				for (auto& i : derived->members)
+				for (ClassMember i : derived->members)
 				{
+					i.source = derived;
 					cls->members.push_back(i);
 				}
 
@@ -126,6 +128,7 @@ namespace ds
 			cls->name = name;
 			cls->classSize = sizeof(TNative);
 			cls->vTableOffset = UINT32_MAX;
+			cls->module = this->name;
 
 			if (derived)
 			{
@@ -174,6 +177,7 @@ namespace ds
 
 		void addType(Type* newType)
 		{
+			newType->module = this->name;
 			this->types.push_back(newType);
 		}
 

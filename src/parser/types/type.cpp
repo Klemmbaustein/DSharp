@@ -142,7 +142,7 @@ ExpressionResult ds::IntType::compileToString(ExpressionResult thisValue, ErrorC
 
 void ds::Type::applyName()
 {
-	this->id = typeIdFromName(getName());
+	this->id = typeIdFromName((module.empty() ? "" : (module + "::")) + getName());
 }
 
 ExpressionResult ds::Type::defaultValue()
@@ -238,6 +238,16 @@ std::string ds::Type::toString(Type* target)
 	}
 
 	return target ? target->getName() : "<void>";
+}
+
+std::string ds::Type::toFullString(Type* target)
+{
+	if (!target || target->module.empty())
+	{
+		return toString(target);
+	}
+
+	return target->module + "::" + target->toString(target);
 }
 
 ExpressionResult ds::FloatType::compileOperator(Operator operatorType, ExpressionResult& first,

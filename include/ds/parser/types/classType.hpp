@@ -11,6 +11,7 @@ namespace ds
 		Token name;
 		uint32_t offset = 0;
 		Type* type = nullptr;
+		Type* source = nullptr;
 
 		bool isConst = false;
 		bool isPointerMember = false;
