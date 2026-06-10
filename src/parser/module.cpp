@@ -92,10 +92,14 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 	if (from.peek() == "?")
 	{
 		auto nullableType = found->asClass();
-		if (nullableType)
+		if (nullableType && !nullableType->isByValueType)
 		{
 			from.get();
 			found = nullableType->nullable;
+		}
+		else
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, from.get(), "This type cannot be nullable.");
 		}
 	}
 

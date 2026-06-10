@@ -204,11 +204,9 @@ ExpressionResult ds::Type::compileToString(ExpressionResult thisValue, ErrorCont
 
 ScannedType ds::Type::toScanned()
 {
-	auto name = this->getName();
-
 	return ScannedType{
-		.name = name,
-		.id = typeIdFromName(name),
+		.name = toString(this),
+		.id = typeIdFromName(toFullString(this)),
 	};
 }
 

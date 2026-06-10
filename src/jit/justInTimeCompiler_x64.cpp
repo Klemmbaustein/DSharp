@@ -24,6 +24,13 @@ static RuntimeFunction jit_unrefPtr(RuntimeClass** ptr)
 	return RuntimeClass::unref(*ptr);
 }
 
+static void jit_getStructMember(JustInTimeRuntime* rt, Size size, Size offset, Size structSize)
+{
+	auto targetPos = rt->stackPos - offset - size;
+	rt->stackPos -= structSize - size;
+	memcpy(&rt->stack[rt->stackPos], &rt->stack[targetPos], size);
+}
+
 static void jit_setStructMember(JustInTimeRuntime* rt, Size size, Size offset, Size structSize)
 {
 	auto targetPos = rt->stackPos - offset - size;
@@ -930,29 +937,34 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
 			Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
 
-			Gp resultRegister;
-			changeStackBy(-structSize);
-
 			switch (size)
 			{
 			case 1:
+				changeStackBy(-structSize);
 				assembler->mov(al, ptr_8(stackRegister, structSize - offset - size));
-				resultRegister = al;
+				compilePushValue(al);
 				break;
 			case 4:
+				changeStackBy(-structSize);
 				assembler->mov(eax, ptr_32(stackRegister, structSize - offset - size));
-				resultRegister = eax;
+				compilePushValue(eax);
 				break;
 			case 8:
+				changeStackBy(-structSize);
 				assembler->mov(rax, ptr_64(stackRegister, structSize - offset - size));
-				resultRegister = rax;
+				compilePushValue(rax);
 				break;
 			default:
-				abort();
+				flushStack();
+				assembler->mov(argumentRegisters[0], runtimeRegister);
+				assembler->mov(halfArgumentRegisters[1], size);
+				assembler->mov(halfArgumentRegisters[2], offset);
+				assembler->mov(halfArgumentRegisters[3], structSize);
+
+				assembler->call(jit_getStructMember);
+				restoreRegisters();
+				break;
 			}
-
-			compilePushValue(resultRegister);
-
 			break;
 		}
 		case ds::BytecodeOp::classIs: {
