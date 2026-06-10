@@ -51,7 +51,7 @@ ds::NullableClassType::~NullableClassType()
 
 void ds::NullableClassType::applyName()
 {
-	this->id = typeIdFromName(this->from->getName());
+	this->id = typeIdFromName(Type::toFullString(this->from));
 }
 
 void ds::ClassType::applyName()

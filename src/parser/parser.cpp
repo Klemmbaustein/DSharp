@@ -236,7 +236,7 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 
 			toStream.reflect.types[cls.thisType->id] = TypeInfo{
 				.hash = cls.thisType->id,
-				.name = cls.classModule->name + "::" + cls.name.string,
+				.name = Type::toFullString(cls.thisType),
 				.vTableOffset = cls.thisType->vTableOffset,
 				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,
 				.bodySize = cls.thisType->classSize,

@@ -142,7 +142,7 @@ ExpressionResult ds::IntType::compileToString(ExpressionResult thisValue, ErrorC
 
 void ds::Type::applyName()
 {
-	this->id = typeIdFromName((module.empty() ? "" : (module + "::")) + getName());
+	this->id = typeIdFromName(toFullString(this));
 }
 
 ExpressionResult ds::Type::defaultValue()
