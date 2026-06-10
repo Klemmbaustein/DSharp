@@ -28,7 +28,7 @@ static void jit_getStructMember(JustInTimeRuntime* rt, Size size, Size offset, S
 {
 	auto targetPos = rt->stackPos - offset - size;
 	rt->stackPos -= structSize - size;
-	memcpy(&rt->stack[rt->stackPos], &rt->stack[targetPos], size);
+	memcpy(&rt->stack[rt->stackPos - size], &rt->stack[targetPos], size);
 }
 
 static void jit_setStructMember(JustInTimeRuntime* rt, Size size, Size offset, Size structSize)
