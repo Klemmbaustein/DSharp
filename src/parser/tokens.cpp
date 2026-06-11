@@ -219,7 +219,25 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 					errors->error(ErrorCode::tokenUnexpectedEof, currentWord, "Unexpected EOF");
 					break;
 				}
-				currentWord.addChar(newChar);
+
+				if (newChar == '\\')
+				{
+					newChar = getNextChar(stream);
+
+					if (newChar == '"')
+					{
+						currentWord.addChar('"');
+						newChar = 0;
+					}
+					else
+					{
+						currentWord.addChar('\\');
+					}
+				}
+				else
+				{
+					currentWord.addChar(newChar);
+				}
 			} while (newChar != '"');
 			addToken(currentWord);
 			currentWord = newToken();

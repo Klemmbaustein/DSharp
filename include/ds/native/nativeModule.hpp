@@ -75,17 +75,17 @@ namespace ds
 		NativeFunction* addFunction(const NativeFunction& function);
 
 		template <typename T>
-		static RuntimeClass* makePointerClass(T* value)
+		static RuntimeClass* makePointerClass(T* value, TypeId Id = 0, RuntimeFunction* vTable = nullptr)
 		{
-			ClassRef<T*> newObject = RuntimeClass::allocateClass(sizeof(T*), 0, nullptr);
+			ClassRef<T*> newObject = RuntimeClass::allocateClass(sizeof(T*), Id, vTable);
 			newObject.getValue() = value;
 			return newObject.classPtr;
 		}
 
 		template <typename T>
-		static RuntimeClass* makeClass(const T& value)
+		static RuntimeClass* makeClass(const T& value, TypeId Id = 0, RuntimeFunction* vTable = nullptr)
 		{
-			ClassRef<T> newObject = RuntimeClass::allocateClass(sizeof(T), 0, nullptr);
+			ClassRef<T> newObject = RuntimeClass::allocateClass(sizeof(T), Id, vTable);
 			newObject.getValue() = value;
 			return newObject.classPtr;
 		}
