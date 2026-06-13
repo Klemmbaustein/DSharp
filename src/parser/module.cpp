@@ -70,7 +70,7 @@ Type* ds::Module::getType(Token name, TokenLine& from, ErrorContext* errors,
 #ifdef WITH_LANGUAGE_SERVICE
 		if (context->service)
 		{
-			context->service->files[file->name].types.push_back(name);
+			context->service->files[file->name].types.push_back(ScannedTypeUsage(name, foundType->second));
 		}
 #endif
 
@@ -134,7 +134,7 @@ Attribute* ds::Module::getAttribute(Token name, TokenLine& from, ParsedFile* fil
 #ifdef WITH_LANGUAGE_SERVICE
 		if (context->service)
 		{
-			context->service->files[file->name].types.push_back(name);
+			context->service->files[file->name].types.push_back(ScannedTypeUsage(name, foundAttribute->second));
 		}
 #endif
 		return foundAttribute->second;

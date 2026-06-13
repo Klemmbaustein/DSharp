@@ -12,6 +12,8 @@ namespace ds
 	struct ClassMember;
 	class ClassType;
 	struct GenericParseData;
+	class Attribute;
+	class Type;
 
 	struct ScannedFunction
 	{
@@ -72,6 +74,32 @@ namespace ds
 		}
 	};
 
+	struct ScannedTypeUsage
+	{
+		Token at;
+		std::string fullName;
+		std::string module;
+		TypeId id = 0;
+		bool isClass = false;
+		bool isPrimitive = true;
+		bool isAttribute = false;
+		bool isInterface = false;
+
+		ScannedTypeUsage(Token at, Type* type);
+		ScannedTypeUsage(Token at, Attribute* attrib);
+
+		explicit ScannedTypeUsage(Token at)
+		{
+			this->at = at;
+			this->fullName = at.string;
+		}
+
+		ScannedTypeUsage()
+		{
+
+		}
+	};
+
 	class ScannedMember
 	{
 	public:
@@ -85,6 +113,8 @@ namespace ds
 	public:
 		std::string name;
 		TypeId id = 0;
+
+		std::optional<SymbolDefinition> definition;
 
 		std::vector<ScannedMember> members;
 		std::vector<ScannedFunction> methods;

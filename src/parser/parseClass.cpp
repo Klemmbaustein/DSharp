@@ -595,7 +595,7 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 #ifdef WITH_LANGUAGE_SERVICE
 	if (context->service)
 	{
-		context->service->files[file->name].types.push_back(this->name);
+		context->service->files[file->name].types.push_back(ScannedTypeUsage(this->name, thisType));
 	}
 #endif
 
