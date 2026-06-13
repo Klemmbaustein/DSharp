@@ -107,4 +107,28 @@ ds::ScannedVariable::ScannedVariable(ClassMember* from, ClassType* inClass, Pars
 		typeId = from->type->id;
 	}
 }
+
+ds::ScannedTypeUsage::ScannedTypeUsage(Token at, Type* type)
+{
+	this->at = at;
+	this->fullName = Type::toFullString(type);
+	this->id = type->id;
+
+	auto classValue = type->asClass();
+
+	this->isClass = classValue && !classValue->isByValueType;
+	this->isInterface = classValue && classValue->isInterface;
+	this->isPrimitive = !classValue;
+	this->module = type->module;
+}
+
+ds::ScannedTypeUsage::ScannedTypeUsage(Token at, Attribute* attrib)
+{
+	this->at = at;
+	this->fullName = attrib->moduleName.empty() ? attrib->name : attrib->moduleName + "::" + attrib->name;
+	this->module = attrib->moduleName;
+	this->id = 0;
+	this->isAttribute = true;
+}
+
 #endif

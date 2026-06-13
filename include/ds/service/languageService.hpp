@@ -13,7 +13,7 @@ namespace ds
 	public:
 		std::vector<ScannedFunction> functions;
 		std::vector<ScannedVariable> variables;
-		std::vector<Token> types;
+		std::vector<ScannedTypeUsage> types;
 		std::map<TypeId, std::string> accessibleTypes;
 		std::map<Token, std::string> accessibleFunctions;
 		std::map<Token, std::string> accessibleEnums;

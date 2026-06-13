@@ -114,6 +114,11 @@ ScannedType ds::ClassType::toScanned()
 		out.methods.push_back(ScannedFunction(i.second.function, Token(), ScannedFunction::Kind::classMember));
 	}
 
+	if (this->languageClass && this->languageClass->definitionFile)
+	{
+		out.definition = SymbolDefinition(this->languageClass->definitionFile->name, this->languageClass->name);
+	}
+
 	return out;
 }
 #endif
@@ -219,7 +224,6 @@ ExpressionResult ds::NullableClassType::compileEqualsTo(ExpressionResult first, 
 	{
 		second.type = this;
 		return this->from->compileEqualsTo(first, second, opToken, errors, with);
-
 	}
 	auto secondClass = second.type->asClass();
 
@@ -266,7 +270,11 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 
 	if (this->constructors.empty())
 	{
-		argsLine.expectEndOfLine(errors);
+		if (!argsLine.empty())
+		{
+			errors->error(ErrorCode::parseUnexpectedToken, argsLine.peek(),
+				"Unexpected '" + argsLine.peek().string + "' - " + Type::toString(this) + " does not have a constructor that takes arguments");
+		}
 		result.code.pushInt(Size(this->classSize));
 		result.code.add(std::make_shared<BytecodeAllocClass>(this));
 		if (baseConstructor)
