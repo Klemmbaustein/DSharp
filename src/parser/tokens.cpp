@@ -292,7 +292,7 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 			charToken.position.startPos--;
 			charToken.position.endPos--;
 			currentLine->push_back(charToken);
-			if (newChar == '{' && bracketDepth == 0)
+			if ((newChar == '{' || newChar == '}') && bracketDepth == 0)
 			{
 				addLine();
 			}
@@ -518,7 +518,7 @@ std::vector<Token> ds::TokenLine::getInBraces(ErrorContext* errors)
 	return result;
 }
 
-std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* errors)
+std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* errors, bool allowNoFind)
 {
 	std::vector<Token> result;
 
@@ -570,6 +570,11 @@ std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* erro
 		}
 		else if ((depth == 0 && scopeDepth == 0) || next.empty())
 		{
+			if (next.empty() && !token.empty() && !allowNoFind)
+			{
+				errors->error(ErrorCode::parseUnexpectedToken, previous(), "Expected '" + token + "'");
+			}
+
 			break;
 		}
 		else

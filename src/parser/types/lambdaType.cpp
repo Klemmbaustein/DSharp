@@ -20,15 +20,15 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	}
 
 	auto argTokens = line.getInBraces(errors);
-	Type* returnType = nullptr;
+
+	std::vector<Token> returnTokens;
 
 	if (line.peek() == "->")
 	{
 		line.get();
-		returnType = with->scopeFile->getType(line, errors);
+		returnTokens = line.getUntil("{", errors);
 	}
-
-	if (line.expect("{", errors))
+	else if (line.expect("{", errors))
 	{
 		return ExpressionResult();
 	}
@@ -50,15 +50,15 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	newFunction.functionFile = with->scopeFile;
 
 	newFunction.argumentTokens = argTokens;
+	newFunction.returnTypeTokens = returnTokens;
 	newFunction.resolveTypes(with->context, errors);
-	newFunction.returnType = returnType;
 
 	newFunction.registerFunction(with->context);
 
 	with->parseSubScope(with->scopeFile, errors, nullptr, nullptr, with->depth,
 		ParsedScope::ScopeOptions{
 			.targetBuffer = newFunction.functionCode,
-			.scopeTokens = hasStream ? & stream : nullptr,
+			.scopeTokens = hasStream ? &stream : nullptr,
 			.scopeFunction = &newFunction,
 			.isLambda = true,
 		});
@@ -120,7 +120,7 @@ ParsedFunction* ds::LambdaType::compileDestructorFor(std::vector<ScopeVariable*>
 		{
 			BinaryBuffer args;
 			args.addValue((*i)->type->size),
-			code.addOperation(BytecodeOp::pop, args);
+				code.addOperation(BytecodeOp::pop, args);
 		}
 		else
 		{

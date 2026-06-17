@@ -142,7 +142,7 @@ ParsedClass& ds::ParsedFile::scanClass(TokenLine currentLine, bool isInterface, 
 		currentLine.get();
 		while (true)
 		{
-			newClass.derivedFrom.push_back(currentLine.getUntil("{,", errors));
+			newClass.derivedFrom.push_back(currentLine.getUntil("{,", errors, true));
 
 			if (currentLine.previous() == "{")
 			{

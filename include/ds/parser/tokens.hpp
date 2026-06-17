@@ -77,7 +77,7 @@ namespace ds
 		bool empty() const;
 
 		std::vector<Token> getInBraces(ErrorContext* errors);
-		std::vector<Token> getUntil(std::string token, ErrorContext* errors);
+		std::vector<Token> getUntil(std::string token, ErrorContext* errors, bool allowNoFind = false);
 
 		bool contains(std::string token) const;
 
