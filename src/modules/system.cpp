@@ -690,7 +690,7 @@ static void fn_new_lambda(InterpretContext* context)
 
 static void fn_new_native(InterpretContext* context)
 {
-	auto offset = context->popValue<BytecodeOffset>();
+	auto offset = context->popValue<Pointer>();
 
 	RuntimeFunction* entries = new RuntimeFunction[3]();
 	entries[0].nativeFn = &fn_delete;
