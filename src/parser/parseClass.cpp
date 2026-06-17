@@ -3,7 +3,7 @@
 #include <ds/parser/parseScope.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/parser/parseExpression.hpp>
-#include <cassert>
+
 using namespace ds;
 
 bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file)
@@ -20,10 +20,21 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 	{
 		Token name = currentLine.get();
 		name.checkIsName(errors);
-		Token equals = currentLine.get();
 
-		auto value = currentLine.getUntil("", errors);
+		std::vector<Token> value;
 
+		if (!currentLine.empty())
+		{
+			if (!currentLine.expect("=", errors))
+			{
+				value = currentLine.getUntil("", errors);
+
+				if (value.empty())
+				{
+					errors->error(ErrorCode::parseUnexpectedEof, currentLine.previous(), "Expected a value after '='");
+				}
+			}
+		}
 		addMember(name, type, value, false).attributes = currentAttributes;
 		currentAttributes.clear();
 
@@ -142,6 +153,14 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 		TokenLine line;
 		line.lineTokens = &i;
 
+		bool isInterface = false;
+
+		if (line.peek() == "is")
+		{
+			isInterface = true;
+			line.get();
+		}
+
 		Type* type = file->getType(line, &context->errors);
 
 		if (!type)
@@ -170,10 +189,22 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 			}
 		}
 
-		for (auto& i : classType->interfaces)
+		for (auto& j : classType->interfaces)
 		{
-			this->thisType->interfaces.insert(i);
+			this->thisType->interfaces.insert(j);
 		}
+
+		if (isInterface && !classType->isInterface)
+		{
+			context->errors.error(ErrorCode::parseInvalidType, *i.begin(),
+				"Expected an interface, got " + Type::toString(classType));
+		}
+		else if (!isInterface && classType->isInterface)
+		{
+			context->errors.error(ErrorCode::parseInvalidType, *i.begin(),
+				"A non interface class, got " + Type::toString(classType));
+		}
+
 
 		if (classType->isInterface)
 		{
@@ -190,19 +221,19 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 			thisType->parent = classType;
 		}
 
-		for (ClassMember i : classType->members)
+		for (ClassMember j : classType->members)
 		{
-			i.offset += position;
-			i.source = classType;
-			members.push_back(i);
+			j.offset += position;
+			j.source = classType;
+			members.push_back(j);
 		}
 
-		for (auto& i : classType->methods)
+		for (auto& j : classType->methods)
 		{
-			ClassMethod m = i.second;
+			ClassMethod m = j.second;
 			if (classType->isInterface)
 				m.interfaceSource = classType;
-			methods.insert({ i.first, m });
+			methods.insert({ j.first, m });
 		}
 		position += Size(classType->classSize);
 	}
