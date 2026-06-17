@@ -48,11 +48,11 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
 	newFunction.functionFile = with->scopeFile;
-	newFunction.returnType = returnType;
 
 	newFunction.argumentTokens = argTokens;
-
 	newFunction.resolveTypes(with->context, errors);
+	newFunction.returnType = returnType;
+
 	newFunction.registerFunction(with->context);
 
 	with->parseSubScope(with->scopeFile, errors, nullptr, nullptr, with->depth,

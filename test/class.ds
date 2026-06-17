@@ -3,6 +3,14 @@ using system
 
 module classExample
 
+interface MyInterface
+{
+	virtual fn f2()
+	{
+		writeln("Interface function")
+	}
+}
+
 class BaseClass
 {
 	virtual fn f()
@@ -11,7 +19,7 @@ class BaseClass
 	}
 }
 
-class Derived : BaseClass
+class Derived : BaseClass, is MyInterface
 {
 	override fn f()
 	{
@@ -26,6 +34,9 @@ fn example()
 
 	c.f()
 
+	(c as MyInterface).f2()
+
 	// Output:
 	// Derived function
+	// Interface function
 }

@@ -125,8 +125,9 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 			if (!newArgument.type)
 			{
 				errors->error(ErrorCode::parseUnknownSymbol, line.lineTokens->at(0),
-					"Unknown type for function argument: '" + newArgument.name.string + "': '" +
+					"Unknown argument type for function: '" + getFullName() + "': '" +
 						line.lineTokens->at(0).string + "'");
+				break;
 			}
 
 			this->arguments.push_back(newArgument);
@@ -153,7 +154,7 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 		if (!returnType)
 		{
 			errors->error(ErrorCode::parseUnknownSymbol, line.lineTokens->at(0),
-				"Unknown return type for function '" + this->getFullName() + "': '" + line.lineTokens->at(0).string +
+				"Unknown return type for function '" + getFullName() + "': '" + line.lineTokens->at(0).string +
 					"'");
 		}
 	}

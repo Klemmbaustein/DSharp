@@ -135,14 +135,14 @@ BytecodeStream ds::ParseContext::compile()
 {
 	initializeModules();
 
-	if (!errors.isOk())
+	if (!errors.isOk() && !this->service)
 	{
-#ifdef WITH_LANGUAGE_SERVICE
-		if (this->service)
-		{
-			emitServiceTypes();
-		}
-#endif
+//#ifdef WITH_LANGUAGE_SERVICE
+//		if (this->service)
+//		{
+//			emitServiceTypes();
+//		}
+//#endif
 		return BytecodeStream();
 	}
 
