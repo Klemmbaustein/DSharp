@@ -260,6 +260,11 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 		return ExpressionResult();
 	}
 
+	if (!this->allowDirectConstructorCall)
+	{
+		return ExpressionResult();
+	}
+
 	ExpressionResult result;
 
 	auto constructorArgs = line.getInBraces(errors);

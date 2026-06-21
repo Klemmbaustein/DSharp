@@ -402,6 +402,11 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 
 void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
+	if (thisType->parent && !thisType->parent->allowDirectConstructorCall)
+	{
+		thisType->allowDirectConstructorCall = false;
+	}
+
 	for (auto& i : this->methods)
 	{
 		i->registerFunction(context);
