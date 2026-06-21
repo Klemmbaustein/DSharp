@@ -141,16 +141,19 @@ namespace ds::modules
 		template <typename T>
 		RuntimeClass* createArray(T* items, Size length, bool isClassType)
 		{
-			size_t sizeInBytes = length * sizeof(T);
-			void* buffer = malloc(sizeInBytes);
-
-			if (!buffer)
+			void* buffer = nullptr;
+			if (length)
 			{
-				abort();
+				size_t sizeInBytes = length * sizeof(T);
+				buffer = malloc(sizeInBytes);
+
+				if (!buffer)
+				{
+					abort();
+				}
+
+				memcpy(buffer, items, sizeInBytes);
 			}
-
-			memcpy(buffer, items, sizeInBytes);
-
 			RuntimeClass* array = createArrayObject();
 			ArrayData* data = reinterpret_cast<ArrayData*>(array->getBody());
 			data->data = buffer;

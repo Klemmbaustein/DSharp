@@ -97,6 +97,7 @@ namespace ds
 		BytecodeOffset vTableOffset = 0;
 		bool isInterface = false;
 		bool isByValueType = false;
+		bool allowDirectConstructorCall = true;
 		size_t classSize = 0;
 
 		void makePointerClass();
