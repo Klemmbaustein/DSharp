@@ -94,30 +94,32 @@ std::vector<DebugSection*> ds::InterpretContext::getStackTrace() const
 
 void ds::InterpretContext::runtimePanic(const char* message)
 {
-	std::vector<DebugSection*> stack = getStackTrace();
-
-	std::string errorString = message;
-	errorString.push_back('\n');
-
-	for (DebugSection* i : stack)
 	{
-		if (i)
+		std::vector<DebugSection*> stack = getStackTrace();
+
+		std::string errorString = message;
+		errorString.push_back('\n');
+
+		for (DebugSection* i : stack)
 		{
-			errorString += "\t" + i->name + "()\n";
+			if (i)
+			{
+				errorString += "\t" + i->name + "()\n";
+			}
+			else
+			{
+				errorString += "\t<unknown stack frame>\n";
+			}
+		}
+
+		if (runtime->writeError)
+		{
+			runtime->writeError(errorString.c_str());
 		}
 		else
 		{
-			errorString += "\t<unknown stack frame>\n";
+			std::printf("%s", errorString.c_str());
 		}
-	}
-
-	if (runtime->writeError)
-	{
-		runtime->writeError(errorString.c_str());
-	}
-	else
-	{
-		std::printf("%s", errorString.c_str());
 	}
 
 	doUnwind();
