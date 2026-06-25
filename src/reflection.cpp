@@ -10,9 +10,14 @@ RuntimeClass* TypeInfo::create(InterpretContext* context) const
 
 	context->pushValue(cls);
 
+	auto stack = context->stackPos;
 	context->run(this->constructor);
 
-	return context->popValue<RuntimeClass*>();
+	if (stack == context->stackPos && context->stackPos != 0)
+	{
+		return context->popValue<RuntimeClass*>();
+	}
+	return nullptr;
 }
 std::optional<std::string> ds::TypeMember::getParameterValue(const std::string& name) const
 {
