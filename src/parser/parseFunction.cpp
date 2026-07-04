@@ -121,6 +121,7 @@ void ds::ParsedFunction::resolveTypes(ParseContext* context, ErrorContext* error
 			FunctionArgument newArgument;
 			newArgument.type = functionFile->getType(line, errors);
 			newArgument.name = line.get();
+			newArgument.name.checkIsName(errors);
 
 			if (!newArgument.type)
 			{

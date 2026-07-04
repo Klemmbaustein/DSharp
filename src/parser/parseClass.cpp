@@ -124,11 +124,8 @@ bool ds::ParsedClass::scanLine(std::vector<AttribInfo>& currentAttributes, Error
 		{
 			auto& usingName = currentLine.get();
 
-			if (usingName.checkIsName(errors))
-			{
-				file->usings[usingName.string] = nullptr;
-				file->updateUsings();
-			}
+			file->usings[usingName.string] = nullptr;
+			file->updateUsings();
 			return true;
 		}
 	}

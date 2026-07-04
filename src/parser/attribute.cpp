@@ -16,8 +16,6 @@ void ds::Attributable::resolveAttributes(ParsedFile* file, ErrorContext* errors)
 {
 	for (auto& i : this->attributes)
 	{
-		i.attributeTokens[0].checkIsName(errors);
-
 		auto line = TokenLine();
 		line.lineTokens = &i.attributeTokens;
 		i.attribute = file->getAttribute(line);
@@ -31,7 +29,6 @@ void ds::Attributable::resolveAttributes(ParsedFile* file, ErrorContext* errors)
 		while (!line.empty())
 		{
 			Token name = line.get();
-			name.checkIsName(errors);
 
 			if (i.attribute->attributeParameters.find(name.string) == i.attribute->attributeParameters.end())
 			{
