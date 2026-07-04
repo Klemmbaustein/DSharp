@@ -93,7 +93,7 @@ bool ds::Token::checkIsName(ErrorContext* errors) const
 
 	for (auto c : this->string)
 	{
-		if (c != ':' && specialChars.find(c) != specialChars.end())
+		if (specialChars.find(c) != specialChars.end())
 		{
 			isValid = false;
 		}
