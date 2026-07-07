@@ -305,6 +305,8 @@ ExpressionResult ds::FloatType::compileOperator(Operator operatorType, Expressio
 		result.code.addOperation(BytecodeOp::negativeFloat);
 		break;
 	case ds::Operator::modulo:
+		result.code.addOperation(BytecodeOp::modFloat);
+		break;
 	case ds::Operator::unknown:
 	default:
 		return ExpressionResult();
@@ -366,6 +368,17 @@ ExpressionResult ds::FloatType::compileToString(ExpressionResult thisValue, Erro
 	result.valid = true;
 	result.type = with->context->registry->getEntry<StringType>();
 	return result;
+}
+
+ExpressionResult ds::FloatType::compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken, ErrorContext* errors, ParsedScope* with)
+{
+	second.compileToType(opToken, this, with, errors);
+
+	first.code.addBuffer(second.code);
+
+	first.code.addOperation(BytecodeOp::equalFloat);
+	first.type = with->context->registry->getEntry<BoolType>();
+	return first;
 }
 
 ExpressionResult ds::BoolType::compileOperator(Operator operatorType,

@@ -212,6 +212,10 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 		virtual ExpressionResult compileToString(ExpressionResult thisValue,
 			ErrorContext* errors, ParsedScope* with);
+
+		ExpressionResult compileEqualsTo(ExpressionResult first, ExpressionResult second, Token opToken,
+			ErrorContext* errors, ParsedScope* with);
+
 		constexpr static TypeId FLOAT_ID = typeIdFromName("float");
 	};
 

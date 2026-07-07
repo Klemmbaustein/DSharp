@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <ds/binaryBuffer.hpp>
 #include <asmjit/x86.h>
 #include <ds/native/externalFunction.hpp>
@@ -16,7 +16,9 @@ namespace ds::jit
 	struct StackValue
 	{
 		bool isNumber = false;
+		bool isVector = false;
 		asmjit::x86::Gp gpRegister;
+		asmjit::x86::Vec vecRegister;
 		size_t number = 0;
 		size_t size = 0;
 		size_t stackDiff = 0;
@@ -47,8 +49,12 @@ namespace ds::jit
 		std::map<BytecodeOffset, asmjit::Label> debugMappings;
 		std::vector<std::pair<std::vector<uint8_t>, asmjit::Label>> embeddedStrings;
 
-		const asmjit::x86::Gp runtimeRegister = asmjit::x86::rdx;
-		const asmjit::x86::Gp stackRegister = asmjit::x86::rcx;
+		bool variableStackChanged = false;
+		bool stackChanged = false;
+
+		const asmjit::x86::Gp runtimeRegister = asmjit::x86::r14;
+		const asmjit::x86::Gp stackRegister = asmjit::x86::r15;
+		const asmjit::x86::Gp variableStackRegister = asmjit::x86::r13;
 		const asmjit::x86::Mem stackPos = ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, stackPos));
 		const asmjit::x86::Mem varStackPos = ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, variableStackPos));
 
@@ -97,7 +103,10 @@ namespace ds::jit
 		void updateReflectionOffsets(ReflectInfo& reflect);
 		void updateUnwindOffsets(UnwindInfo& unwind);
 		void updateDebugOffsets(DebugInfo* debug);
+		void flushStackRegisters(bool force = false);
 
+		void buildPrologCallConventionEntry();
+		void buildPrologCallConventionExit();
 		void buildProlog();
 
 		/**
@@ -108,6 +117,7 @@ namespace ds::jit
 		 * it will never be pushed to the stack but instead stored in registers.
 		 */
 		void compilePushValue(asmjit::x86::Gp gpRegister);
+		void compilePushValue(asmjit::x86::Vec vecRegister);
 
 		/**
 		 * @brief
@@ -131,7 +141,7 @@ namespace ds::jit
 		 *
 		 */
 		void compileMemoryCopy(asmjit::x86::Gp size);
-		void restoreRegisters();
+		void restoreRegisters(bool full = false);
 		void getStack();
 
 		void compileAbort(const char* msg);
@@ -153,6 +163,15 @@ namespace ds::jit
 		 * The size on the stack the item took up
 		 */
 		int32_t compilePopValueToRegister(asmjit::x86::Gp target, bool applyStackPos);
+
+		/**
+		 * @brief
+		 * Compiles popping a value from the stack
+		 *
+		 * @return
+		 * The size on the stack the item took up
+		 */
+		int32_t compilePopValueToRegister(asmjit::x86::Vec target, bool applyStackPos);
 
 		void changeStackBy(int32_t amount);
 

@@ -1,10 +1,11 @@
-﻿#include <ds/interpreter.hpp>
+#include <ds/interpreter.hpp>
 #include <ds/bytecode.hpp>
 #include <ds/class.hpp>
 #include <ds/modules/system.async.hpp>
 #include <ds/language.hpp>
 #include <vector>
 #include <cstring>
+#include <cmath>
 
 using namespace ds;
 
@@ -195,6 +196,15 @@ void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 		case ds::BytecodeOp::divFloat: {
 			Float first = popValue<Float>();
 			pushValue(popValue<Float>() / first);
+			break;
+		}
+		case ds::BytecodeOp::modFloat: {
+			Float first = popValue<Float>();
+			pushValue(std::fmod(popValue<Float>(), first));
+			break;
+		}
+		case ds::BytecodeOp::equalFloat: {
+			pushValue<Bool>(popValue<Float>() == popValue<Float>());
 			break;
 		}
 		case ds::BytecodeOp::negativeFloat: {
