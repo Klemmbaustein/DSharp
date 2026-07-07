@@ -1,0 +1,40 @@
+using system::io
+using system::math
+using system
+
+module primes
+
+fn testPrime(float number) -> bool
+{
+	float i = 2.0
+	float target = sqrt(number)
+
+	while i < target
+	{
+		if number % i == 0.0
+		{
+			return false
+		}
+		i += 1.0
+	}
+
+	return true
+}
+
+[EntryPoint]
+fn main()
+{
+	float max = 10000.0
+
+	float i = 0.0
+
+	while i < max
+	{
+		if testPrime(i)
+		{
+			writeInt(i)
+		}
+
+		i += 1.0
+	}
+}

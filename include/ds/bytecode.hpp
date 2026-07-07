@@ -68,6 +68,8 @@ namespace ds
 		mulFloat,
 		/// Divides the 2 topmost 32 bit floats on the stack and pushes the result.
 		divFloat,
+		modFloat,
+		equalFloat,
 		/// Takes the topmost 32 bit float on the stack and pushes it's inverse value.
 		negativeFloat,
 		greaterFloat,

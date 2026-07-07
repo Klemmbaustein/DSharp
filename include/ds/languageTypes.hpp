@@ -28,7 +28,7 @@ namespace ds
 
 		operator bool()
 		{
-			return (codeOffset != UINTPTR_MAX && codeOffset != 240) || bool(nativeFn);
+			return (codeOffset != UINTPTR_MAX) || bool(nativeFn);
 		}
 	};
 
