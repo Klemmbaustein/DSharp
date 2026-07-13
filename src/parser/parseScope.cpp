@@ -333,7 +333,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 	}
 
 	// Also call the base (compiler generated) destructor if this is a destructor function
-	if (inClass && scopeFunction && scopeFunction->name == "delete")
+	if (inClass && toDepth == 0 && scopeFunction && scopeFunction->name == "delete")
 	{
 		code.addBuffer(thisVariable->readValue(this));
 
