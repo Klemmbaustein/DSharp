@@ -44,7 +44,15 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 
 	auto& newFunction = with->scopeFile->functions.emplace_back();
 	newFunction.isAsync = isAsync;
-	newFunction.name = Token(with->scopeFunction->name.string + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
+
+	std::string name = with->scopeFunction->name.string;
+
+	if (with->scopeFunction->inClass)
+	{
+		name = with->scopeFunction->inClass->name.string + "." + name;
+	}
+
+	newFunction.name = Token(name + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
 	newFunction.functionFile = with->scopeFile;
