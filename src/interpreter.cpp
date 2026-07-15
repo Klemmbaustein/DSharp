@@ -46,7 +46,7 @@ void ds::RuntimeInterpretContext::doUnwind()
 
 	callStack[callStackPos++] = BytecodeOffset(code.streamPos);
 
-	uint32_t targetPosition = this->suspended ? suspendStackPos : 0;
+	uint32_t targetPosition = suspendStackPos == 0 ? 0 : suspendStackPos - 1;
 
 	for (uint32_t i = callStackPos - 1; i > targetPosition; i--)
 	{
