@@ -132,7 +132,7 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 	rt->stackPos = 0;
 	unwinding = false;
 
-	if (isSuspended)
+	if (!isSuspended)
 	{
 #ifdef _MSC_VER
 		// Disable MSVC's stack unwinding for longjmp since that doesn't work with the JIT code.
