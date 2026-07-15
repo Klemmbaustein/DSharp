@@ -323,6 +323,10 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 				toErase.push_back(i.first);
 			}
 		}
+		else if (isEnd && dereferenceAll && !unreachable && varIsThisTask)
+		{
+			code.addNew<BytecodeUnwindClass>(i.second.variableInstruction);
+		}
 
 		size += i.second.type->size;
 	}
