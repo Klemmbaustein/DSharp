@@ -161,3 +161,11 @@ void ds::modules::system::async::completeTask(ClassRef<Task> task, InterpretCont
 		task->awaiter->resumeSuspend();
 	}
 }
+
+void ds::modules::system::async::abortTask(ClassRef<Task> task, InterpretContext* context)
+{
+	if (task->awaiter)
+	{
+		task->awaiter->doUnwind();
+	}
+}
