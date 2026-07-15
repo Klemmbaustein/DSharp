@@ -71,6 +71,6 @@ namespace ds::modules::system
 		}
 
 		void completeTask(ClassRef<Task> task, InterpretContext* context);
-
+		void abortTask(ClassRef<Task> task, InterpretContext* context);
 	} // namespace async
 } // namespace ds::modules::system

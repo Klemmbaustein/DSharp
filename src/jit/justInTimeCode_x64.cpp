@@ -66,7 +66,17 @@ void ds::jit::JustInTimeCode::getUnwindData(void* atPtr, std::vector<Pointer>& o
 void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 {
 	std::vector<Pointer> callAddresses;
-	getUnwindData(atPtr, callAddresses);
+	bool isSuspended = false;
+	if (rt->suspendLocation)
+	{
+		callAddresses = { Pointer(rt->suspendLocation) };
+		rt->suspendLocation = nullptr;
+		isSuspended = true;
+	}
+	else
+	{
+		getUnwindData(atPtr, callAddresses);
+	}
 	unwinding = true;
 
 	auto& buffer = rt->runtime->unwindBuffer;
@@ -122,12 +132,12 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 	rt->stackPos = 0;
 	unwinding = false;
 
-//	this->doUnwind(this->unwindBuffer);
-
+	if (isSuspended)
+	{
 #ifdef _MSC_VER
-	// Disable MSVC's stack unwinding for longjmp since that doesn't work with the JIT code.
-	((_JUMP_BUFFER*)&returnTarget[0])->Frame = 0;
+		// Disable MSVC's stack unwinding for longjmp since that doesn't work with the JIT code.
+		((_JUMP_BUFFER*)&returnTarget[0])->Frame = 0;
 #endif
-
-	longjmp(returnTarget, 1);
+		longjmp(returnTarget, 1);
+	}
 }
