@@ -25,6 +25,7 @@ namespace ds
 		bool foundOverride = false;
 		bool isLambda = false;
 		bool isAsync = false;
+		bool inheritsGeneric = false;
 		BytecodeOffset vTableOffset = 0;
 
 		std::string getFullName() const override;

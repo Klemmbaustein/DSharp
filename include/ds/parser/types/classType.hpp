@@ -138,6 +138,9 @@ namespace ds
 		virtual ExpressionResult compileMember(ExpressionResult value, TokenLine& line,
 			ErrorContext* errors, bool setMember, ParsedScope* with) override;
 
+		ExpressionResult compileMethodDirect(Token name, ExpressionResult value, ErrorContext* errors,
+			ParsedScope* with);
+
 	private:
 
 		BytecodeBuffer getClassGenericCode();

@@ -7,12 +7,7 @@ namespace ds
 	{
 	public:
 		IteratorType(Type* baseType, TypeRegistry* registry);
-
-		ExpressionResult compileAwait(ExpressionResult taskExpr, ExpressionResult returnTaskExpr,
-			ParsedScope* with) const;
-
-		ExpressionResult compileTask();
-		ExpressionResult compileCompleteTask();
+		~IteratorType();
 
 		Type* baseType;
 
@@ -28,6 +23,9 @@ namespace ds
 			return {};
 		}
 
+		BytecodeBuffer compileNext(BytecodeBuffer thisValue, ErrorContext* errors, ParsedScope* with);
+		ExpressionResult compileGet(BytecodeBuffer thisValue, ErrorContext* errors, ParsedScope* with);
+
 		Type* instantiateGeneric(std::vector<Type*> types, Token at, ErrorContext* with, TypeRegistry* registry) override
 		{
 			return getInstance(types[0], registry);
@@ -35,7 +33,7 @@ namespace ds
 
 		static IteratorType* getInstance(Type* baseType, TypeRegistry* registry)
 		{
-			return registry->getClassGenericEntry<IteratorType>({ baseType }, [&] {
+			return registry->getClassGenericEntry<IteratorType>({ baseType }, [baseType, registry] {
 				return new IteratorType(baseType, registry);
 			});
 		}

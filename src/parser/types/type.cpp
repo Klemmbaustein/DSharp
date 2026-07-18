@@ -142,7 +142,25 @@ ExpressionResult ds::IntType::compileToString(ExpressionResult thisValue, ErrorC
 
 void ds::Type::applyName()
 {
-	this->id = typeIdFromName(toFullString(this));
+	if (!isGeneric)
+	{
+		this->id = typeIdFromName(toFullString(this));
+	}
+	else
+	{
+		auto name = getName();
+		if (!this->module.empty())
+		{
+			name = module + "::" + name;
+		}
+
+		this->id = typeIdFromName(name);
+
+		for (auto& i : this->getGenericTypes())
+		{
+			this->id += i->id;
+		}
+	}
 }
 
 ExpressionResult ds::Type::defaultValue()

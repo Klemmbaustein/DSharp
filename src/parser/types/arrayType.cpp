@@ -2,6 +2,7 @@
 #include <ds/parser/types/listType.hpp>
 #include <ds/parser/types/builtinClassFunction.hpp>
 #include <ds/parser/parseScope.hpp>
+#include <ds/parser/types/iteratorType.hpp>
 using namespace ds;
 
 ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
@@ -22,6 +23,10 @@ ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 		new BuiltinClassFunction({ FunctionArgument(intType, Token("value")) },
 			nullptr, "system::array.removeIndex", "removeIndex") });
 
+	this->methods.insert({ "getIterator",
+		new BuiltinClassFunction({  },
+			IteratorType::getInstance(baseType, registry), "system::array.getIterator", "getIterator") });
+
 	this->members.push_back(ClassMember{
 		.name = "length",
 		.offset = 0,
@@ -31,6 +36,14 @@ ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 	addGenericToName = false;
 
 	applyName();
+}
+
+ds::ArrayType::~ArrayType()
+{
+	for (auto& i : this->methods)
+	{
+		delete i.second.function;
+	}
 }
 
 ExpressionResult ds::ArrayType::compileOperator(Operator operatorType, ExpressionResult& first,

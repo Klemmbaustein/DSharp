@@ -478,6 +478,48 @@ ExpressionResult ds::ClassType::compileMember(ExpressionResult value, TokenLine&
 	return ExpressionResult();
 }
 
+ExpressionResult ds::ClassType::compileMethodDirect(Token name, ExpressionResult value, ErrorContext* errors,
+	ParsedScope* with)
+{
+	for (auto& [n, function] : this->methods)
+	{
+		if (n != name.string)
+		{
+			continue;
+		}
+		ExpressionResult callCode;
+		if (function.interfaceSource)
+		{
+			value = toInterface(value, function.interfaceSource);
+
+			if (!value.valid)
+			{
+				errors->error(ErrorCode::internalError, name,
+					"Failed to compile function call. Failed to cast to interface " +
+						Type::toString(function.interfaceSource));
+			}
+		}
+		callCode.code.addBuffer(value.code);
+		if (!function.function->isVirtual())
+		{
+			callCode.code.addBuffer(getClassGenericCode());
+		}
+		auto compiled = function.function->compileCall();
+		if (compiled.type)
+		{
+			compiled.code.addBuffer(compiled.type->compileEndMove(with));
+		}
+
+		callCode.type = compiled.type;
+		callCode.code.addBuffer(compiled.code);
+		callCode.valid = true;
+
+		return callCode;
+	}
+
+	return ExpressionResult();
+}
+
 BytecodeBuffer ds::ClassType::getClassGenericCode()
 {
 	if (!isGeneric)
@@ -530,11 +572,20 @@ ExpressionResult ds::ClassType::compileMethod(Token memberName, ExpressionResult
 		if (function.interfaceSource)
 		{
 			value = toInterface(value, function.interfaceSource);
+
+			if (!value.valid)
+			{
+				errors->error(ErrorCode::internalError, memberName,
+					"Failed to compile function call. Failed to cast to interface " + Type::toString(function.interfaceSource));
+			}
 		}
 		callCode.code.addBuffer(value.code);
 
-		callCode.code.addBuffer(generic.code);
-		callCode.code.addBuffer(getClassGenericCode());
+		if (!function.function->isVirtual())
+		{
+			callCode.code.addBuffer(getClassGenericCode());
+			callCode.code.addBuffer(generic.code);
+		}
 		auto compiled = function.function->compileCall();
 		compiled.type = generic.returnType;
 		if (compiled.type)

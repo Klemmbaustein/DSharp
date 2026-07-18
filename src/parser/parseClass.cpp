@@ -3,6 +3,7 @@
 #include <ds/parser/parseScope.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/parser/parseExpression.hpp>
+#include <algorithm>
 
 using namespace ds;
 
@@ -493,9 +494,20 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 
 	context->virtualTable.push_back(usedDestructor);
 
-	for (auto& m : interface->methods)
+	std::vector<ds::ClassMethod*> sortedInterfaceMethods;
+
+	for (auto& i : interface->methods)
 	{
-		if (!m.second.function->isVirtual())
+		sortedInterfaceMethods.push_back(&i.second);
+	}
+
+	std::sort(sortedInterfaceMethods.begin(), sortedInterfaceMethods.end(), [](ds::ClassMethod* a, ds::ClassMethod* b) {
+		return a->function->getVirtualOffset() < b->function->getVirtualOffset();
+	});
+
+	for (auto& m : sortedInterfaceMethods)
+	{
+		if (!m->function->isVirtual())
 		{
 			continue;
 		}
@@ -504,16 +516,16 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 
 		for (auto& i : this->methods)
 		{
-			if (!i->isOverride || i->foundOverride || i->getShortName() != m.second.function->getShortName())
+			if (!i->isOverride || i->foundOverride || i->getShortName() != m->function->getShortName())
 			{
 				continue;
 			}
-			if (!Function::signaturesMatch(i, m.second.function))
+			if (!Function::signaturesMatch(i, m->function))
 			{
 				errors->error(ErrorCode::parseInvalidOverride, i->name,
 					"Function signatures of " + i->getFullName() + " and " +
-						m.second.function->getFullName() + " do not match.\nExpected signature: " +
-						m.second.function->getSignatureText() + "\nGot:                " + i->getSignatureText());
+						m->function->getFullName() + " do not match.\nExpected signature: " +
+						m->function->getSignatureText() + "\nGot:                " + i->getSignatureText());
 			}
 
 			context->virtualTable.push_back(i);
@@ -526,6 +538,7 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 				std::make_shared<BytecodeOperation>(BytecodeOp::castInterface, args));
 			i->vTableOffset = vTableIndex++;
 			i->foundOverride = true;
+			i->inheritsGeneric = interface->isGeneric;
 			found = true;
 			break;
 		}
@@ -533,7 +546,7 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 		{
 			continue;
 		}
-		context->virtualTable.push_back(thisType->methods.at(m.first).function);
+		context->virtualTable.push_back(m->function);
 		vTableIndex++;
 	}
 

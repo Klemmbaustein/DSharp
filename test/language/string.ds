@@ -24,8 +24,6 @@ fn main()
 {
 	expect("abcdef".substr(0, 3), "abc")
 	expect("abcdef".substr(3, INT_MAX), "def")
+	expect($"abc{15 + 5}", "abc20")
 	expectChar("abcdef"[0], 'a')
-
-	string str = "abcddf"
-	str[4] = 'e'
 }

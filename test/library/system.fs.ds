@@ -1,0 +1,16 @@
+using system
+using system::fs
+using system::io
+
+module test_fs
+
+[EntryPoint]
+fn main()
+{
+	const currentPath = getCurrentPath()
+
+	for const file = currentPath.getFiles()
+	{
+		writeln($"{file.name()} extension: {*file.extension()}")
+	}
+}

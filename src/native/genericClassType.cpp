@@ -17,6 +17,16 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 			t->nullable = new NullableClassType(t);
 			t->types = types;
 
+			if (t->parent)
+			{
+				t->parent = convertGenericType(t->parent, types, false, at, with, registry)->asClass();
+			}
+
+			for (auto& i : t->interfaces)
+			{
+				i.second = convertGenericType(i.second, types, false, at, with, registry)->asClass();
+			}
+
 			for (auto& i : t->members)
 			{
 				i.type = convertGenericType(i.type, types, false, at, with, registry);
@@ -25,6 +35,10 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 			for (auto& i : t->methods)
 			{
 				i.second.function = new GenericMethod(t, i.second.function, at, with, registry);
+				if (i.second.interfaceSource)
+				{
+					i.second.interfaceSource = convertGenericType(i.second.interfaceSource, types, false, at, with, registry)->asClass();
+				}
 			}
 
 			return t;

@@ -1,0 +1,64 @@
+using system
+using system::math
+
+module test_math
+
+fn test(bool result)
+{
+	if not result
+	{
+		err::abort()
+	}
+}
+
+[EntryPoint]
+fn main()
+{
+	test(floor(2.8) == 2.0)
+	test(ceil(2.1) == 3.0)
+	test(round(2.5) == 3.0)
+
+	test(powF(2.0, 2.0) == 4.0)
+	test(powF(3.0, 2.0) == 9.0)
+	test(powF(11.0, 2.0) == 121.0)
+
+	test(powI(2, 2) == 4)
+	test(powI(3, 2) == 9)
+	test(powI(11, 2) == 121)
+
+	test(sqrt(4.0) == 2.0)
+	test(sqrt(9.0) == 3.0)
+	test(sqrt(121.0) == 11.0)
+
+	test(absF(25.0) == 25.0)
+	test(absF(-25.0) == 25.0)
+	test(absF(0.0) == 0.0)
+
+	test(absI(25) == 25)
+	test(absI(-25) == 25)
+	test(absI(0) == 0)
+
+	test(clampF(2.0, -1.0, 1.0) == 1.0)
+	test(clampF(-2.0, -1.0, 1.0) == -1.0)
+	test(clampF(0.5, -1.0, 1.0) == 0.5)
+
+	test(clampI(2, -1, 1) == 1)
+	test(clampI(-2, -1, 1) == -1)
+	test(clampI(1, -2, 2) == 1)
+
+	test(minF(2.0, 1.0) == 1.0)
+	test(minF(-2.0, -1.0) == -2.0)
+	test(minF(0.0, 0.0) == 0.0)
+
+	test(maxF(2.0, 1.0) == 2.0)
+	test(maxF(-2.0, -1.0) == -1.0)
+	test(maxF(0.0, 0.0) == 0.0)
+
+	test(minI(2, 1) == 1)
+	test(minI(-2, -1) == -2)
+	test(minI(0, 0) == 0)
+
+	test(maxI(2, 1) == 2)
+	test(maxI(-2, -1) == -1)
+	test(maxI(0, 0) == 0)
+}

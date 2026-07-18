@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <ds/interpreter.hpp>
 #include <ds/parser/function.hpp>
 #include <ds/parser/module.hpp>
@@ -92,6 +92,8 @@ namespace ds
 
 		Type* getType(const std::string& name);
 
+		static void implementInterface(RuntimeClass* toClass, TypeId Id, RuntimeFunction* vTable, Size offset);
+
 		template <typename TNative>
 		ClassType* createClass(std::string name, ClassType* derived = nullptr)
 		{
@@ -103,17 +105,30 @@ namespace ds
 
 			if (derived)
 			{
-				cls->parent = derived;
-
-				for (ClassMember i : derived->members)
+				if (derived->isInterface)
 				{
-					i.source = derived;
+					cls->interfaces.insert({ 0, derived });
+				}
+				else
+				{
+					cls->parent = derived;
+				}
+
+				for (auto& i : derived->members)
+				{
+					ClassMember newMember = i;
+					newMember.source = derived;
 					cls->members.push_back(i);
 				}
 
 				for (auto& i : derived->methods)
 				{
-					cls->methods.insert(i);
+					ClassMethod newMethod = i.second;
+					if (derived->isInterface)
+					{
+						newMethod.interfaceSource = derived;
+					}
+					cls->methods.insert({ i.first, newMethod });
 				}
 			}
 
@@ -132,16 +147,30 @@ namespace ds
 
 			if (derived)
 			{
-				cls->parent = derived;
+				if (derived->isInterface)
+				{
+					cls->interfaces.insert({ 0, derived });
+				}
+				else
+				{
+					cls->parent = derived;
+				}
 
 				for (auto& i : derived->members)
 				{
+					ClassMember newMember = i;
+					newMember.source = derived;
 					cls->members.push_back(i);
 				}
 
 				for (auto& i : derived->methods)
 				{
-					cls->methods.insert(i);
+					ClassMethod newMethod = i.second;
+					if (derived->isInterface)
+					{
+						newMethod.interfaceSource = derived;
+					}
+					cls->methods.insert({ i.first, newMethod });
 				}
 			}
 

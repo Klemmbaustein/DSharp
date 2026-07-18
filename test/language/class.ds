@@ -1,0 +1,46 @@
+using system::io
+using system
+
+module classExample
+
+interface I1
+{
+	int v1 = 4
+	virtual fn doI1()
+	{
+		writeln("I1")
+	}
+}
+
+class C1 : is I1
+{
+	override fn doI1()
+	{
+		writeln("I1 in C1")
+	}
+}
+
+interface I2
+{
+	int v2 = 5
+	virtual fn doI2()
+	{
+		writeln("I2")
+	}
+}
+
+class C2 : C1, is I2
+{
+}
+
+[EntryPoint]
+fn example()
+{
+	C2 value = new()
+
+	writeInt(value.v1)
+	writeInt(value.v2)
+
+	(value as I1).doI1()
+	(value as I2).doI2()
+}

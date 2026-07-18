@@ -4,6 +4,7 @@
 #include <ds/parser/types/listType.hpp>
 #include <ds/parser/types/functionType.hpp>
 #include <ds/parser/types/lambdaType.hpp>
+#include <ds/parser/types/iteratorType.hpp>
 #include <ds/language.hpp>
 #include <ds/service/languageService.hpp>
 #include <ds/modules/system.hpp>
@@ -137,12 +138,12 @@ BytecodeStream ds::ParseContext::compile()
 
 	if (!errors.isOk() && !this->service)
 	{
-//#ifdef WITH_LANGUAGE_SERVICE
-//		if (this->service)
-//		{
-//			emitServiceTypes();
-//		}
-//#endif
+		// #ifdef WITH_LANGUAGE_SERVICE
+		//		if (this->service)
+		//		{
+		//			emitServiceTypes();
+		//		}
+		// #endif
 		return BytecodeStream();
 	}
 
@@ -198,6 +199,7 @@ void ds::ParseContext::initializeModules()
 	this->defaultTypes.push_back(NullType::getInstance());
 	this->defaultTypes.push_back(FunctionType::getInstance(nullptr, {}, registry));
 	this->defaultTypes.push_back(registry->getEntry<LambdaType>());
+	this->defaultTypes.push_back(IteratorType::getInstance(nullptr, registry));
 	this->defaultTypes.push_back(TaskType::getInstance(nullptr, registry));
 
 	scanModules();
@@ -205,6 +207,32 @@ void ds::ParseContext::initializeModules()
 
 void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 {
+	// Registry contains all native types.
+	for (auto& type : this->registry->getAllTypes())
+	{
+		auto cls = type->asClass();
+
+		if (!cls || cls->isByValueType || !cls->id)
+		{
+			continue;
+		}
+
+		std::map<TypeId, BytecodeOffset> superClasses;
+
+		for (auto& [offset, super] : cls->interfaces)
+		{
+			superClasses.insert({ super->id, offset });
+		}
+
+		toStream.reflect.types[cls->id] = TypeInfo{
+			.hash = cls->id,
+			.name = Type::toFullString(cls),
+			.bodySize = cls->classSize,
+			.superClass = cls->parent ? cls->parent->id : 0,
+			.interfaces = superClasses,
+		};
+	}
+
 	for (auto& i : this->files)
 	{
 		for (auto& cls : i.classes)

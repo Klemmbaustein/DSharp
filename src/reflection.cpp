@@ -67,7 +67,7 @@ bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const
 	return false;
 }
 
-std::pair<bool, BytecodeOffset> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass) const
+std::pair<bool, Int> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass) const
 {
 	auto t = this->types.find(toCheck);
 
@@ -100,6 +100,25 @@ std::pair<bool, BytecodeOffset> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId 
 				if (success)
 				{
 					return { true, offset };
+				}
+			}
+		}
+	}
+	auto t2 = this->types.find(superClass);
+	if (t2 != this->types.end())
+	{
+		for (auto& i : t2->second.interfaces)
+		{
+			if (i.first == toCheck)
+			{
+				return { true, -i.second - Int(sizeof(RuntimeClass)) * 2 };
+			}
+			else
+			{
+				auto [success, offset] = tryCast(i.first, toCheck);
+				if (success)
+				{
+					return { true, -offset - Int(sizeof(RuntimeClass)) * 2 };
 				}
 			}
 		}

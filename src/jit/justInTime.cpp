@@ -1,4 +1,4 @@
-﻿#include <ds/jit/justInTime.hpp>
+#include <ds/jit/justInTime.hpp>
 #include <ds/jit/justInTimeCompiler_x64.hpp>
 
 using namespace ds;
@@ -7,6 +7,10 @@ using namespace ds::jit;
 ds::jit::JustInTimeRuntime::JustInTimeRuntime(LanguageContext* from)
 {
 	this->language = from;
+}
+
+ds::jit::JustInTimeRuntime::~JustInTimeRuntime()
+{
 }
 
 void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)

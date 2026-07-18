@@ -1,4 +1,4 @@
-﻿#include <ds/native/nativeModule.hpp>
+#include <ds/native/nativeModule.hpp>
 #include <ds/parser/bytecode/compileBytecode.hpp>
 #include <ds/parser/bytecode/compileBytecodeVirtual.hpp>
 using namespace ds;
@@ -45,6 +45,15 @@ Type* ds::NativeModule::getType(const std::string& name)
 		}
 	}
 	return nullptr;
+}
+
+void ds::NativeModule::implementInterface(RuntimeClass* toClass, TypeId id, RuntimeFunction* vTable, Size offset)
+{
+	auto cls = reinterpret_cast<RuntimeClass*>(toClass->getBody() + offset);
+	cls->type = id;
+	cls->vtable = vTable;
+	cls->references = offset;
+	cls->referencesAreOffset = true;
 }
 
 std::string NativeFunction::getFullName() const

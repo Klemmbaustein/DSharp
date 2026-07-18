@@ -1,0 +1,51 @@
+using system
+using system::io
+
+module iterators
+
+class CustomIterator : is iterator<int>
+{
+	int count = -1
+
+	fn getIterator() -> iterator<int>
+	{
+		return this
+	}
+
+	override fn next() -> bool
+	{
+		count += 1
+		return count < 5
+	}
+
+	override fn get() -> int
+	{
+		return count
+	}
+}
+
+[EntryPoint]
+fn main()
+{
+	for const i = ["one", "two", "three"]
+	{
+		writeln(i)
+	}
+
+	for const i = new RangeIterator(5, 15)
+	{
+		writeInt(i)
+	}
+
+	Map<int, string> testMap = new()
+
+	for const i = new CustomIterator()
+	{
+		testMap.insert(i, $"{i} apples")
+	}
+
+	for const i = testMap
+	{
+		writeln(i.getValue())
+	}
+}
