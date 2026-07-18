@@ -38,7 +38,7 @@ namespace ds
 	struct ReflectInfo
 	{
 		bool isSubclassOf(TypeId toCheck, TypeId superClass) const;
-		std::pair<bool, BytecodeOffset> tryCast(TypeId toCheck, TypeId superClass) const;
+		std::pair<bool, Int> tryCast(TypeId toCheck, TypeId superClass) const;
 
 		std::map<TypeId, TypeInfo> types;
 	};

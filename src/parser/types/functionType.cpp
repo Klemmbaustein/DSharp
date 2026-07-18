@@ -21,6 +21,14 @@ ds::FunctionType::FunctionType(Type* returnType, std::vector<Type*> arguments)
 	applyName();
 }
 
+ds::FunctionType::~FunctionType()
+{
+	for (auto& i : this->methods)
+	{
+		delete i.second.function;
+	}
+}
+
 ExpressionResult ds::FunctionType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {

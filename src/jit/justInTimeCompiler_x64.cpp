@@ -304,7 +304,16 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		case ds::BytecodeOp::pop: {
 			Size size = *(int64_t*)&argumentBuffer[0];
-			changeStackBy(-size);
+
+			if (currentStackValue.has_value() && currentStackValue->size == size)
+			{
+				currentStackValue = {};
+			}
+			else
+			{
+				flushStack();
+				changeStackBy(-size);
+			}
 			break;
 		}
 		case ds::BytecodeOp::copy: {
@@ -968,6 +977,7 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 
 			assembler->mov(r8d, ptr_32(rax, DS_OFFSETOF(RuntimeClass, type)));
 			assembler->mov(ptr_32(rax, DS_OFFSETOF(RuntimeClass, type) + offsetBytes), r8d);
+			assembler->add(rax, offsetBytes);
 
 			compilePushValue(rax);
 
@@ -1507,7 +1517,7 @@ void ds::jit::JustInTimeCompiler::changeStackBy(int32_t amount)
 		stackChanged = true;
 	}
 
-#if 0 // stack sanity check
+#if 1 // stack sanity check
 	assembler->lea(r12, ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, stack)));
 	assembler->cmp(stackRegister, r12);
 	auto okay = assembler->new_label();

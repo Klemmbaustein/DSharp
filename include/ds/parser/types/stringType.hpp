@@ -7,6 +7,7 @@ namespace ds
 	{
 	public:
 		StringType(TypeRegistry* registry);
+		~StringType();
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;

@@ -11,6 +11,7 @@ namespace ds::jit
 	{
 	public:
 		JustInTimeRuntime(LanguageContext* from);
+		~JustInTimeRuntime();
 
 
 		// Inherited via InterpretContext

@@ -72,7 +72,7 @@ static void math_min(InterpretContext* context)
 	T min = context->popValue<T>();
 	T val = context->popValue<T>();
 
-	context->pushValue<T>(val < min ? min : val);
+	context->pushValue<T>(val > min ? min : val);
 }
 
 template <typename T>
@@ -81,7 +81,7 @@ static void math_max(InterpretContext* context)
 	T max = context->popValue<T>();
 	T val = context->popValue<T>();
 
-	context->pushValue<T>(val > max ? max : val);
+	context->pushValue<T>(val < max ? max : val);
 }
 
 NativeModule ds::modules::system::math::createModule(LanguageContext* to)
@@ -125,7 +125,7 @@ NativeModule ds::modules::system::math::createModule(LanguageContext* to)
 		floatInst, "absF", &math_abs<Float>));
 
 	out.addFunction(NativeFunction({ ds::FunctionArgument(intInst, "value") },
-		floatInst, "absI", &math_abs<Int>));
+		intInst, "absI", &math_abs<Int>));
 
 	out.addFunction(NativeFunction(
 		{ ds::FunctionArgument(floatInst, "value"),

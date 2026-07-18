@@ -5,6 +5,7 @@
 #include <ds/parser/types/functionType.hpp>
 #include <ds/parser/types/genericArgument.hpp>
 #include <ds/native/nativeGeneric.hpp>
+#include <ds/parser/types/iteratorType.hpp>
 
 using namespace ds;
 using namespace ds::modules::system;
@@ -77,8 +78,7 @@ static void string_concat(InterpretContext* context)
 static void string_indexString(InterpretContext* context)
 {
 	auto index = context->popValue<Int>();
-	auto first = context->popRuntimeString();
-	first.classPtr->addRef();
+	auto first = context->popRuntimeStringRef();
 
 	if (index >= first.length() || index < 0)
 	{
@@ -92,10 +92,8 @@ static void string_indexString(InterpretContext* context)
 static void string_setIndexCopy(InterpretContext* context)
 {
 	auto index = context->popValue<Int>();
-	auto str = context->popRuntimeString();
-	str.classPtr->addRef();
+	auto str = context->popRuntimeStringRef();
 	Char newChar = context->popValue<Char>();
-	str.classPtr->addRef();
 
 	if (index >= str.length() || index < 0)
 	{
@@ -301,6 +299,188 @@ static void map_contains(InterpretContext* context)
 	context->pushValue<Bool>(node != nullptr);
 }
 
+static void MapIterator_delete(InterpretContext* context)
+{
+	auto iterator = context->popPtr<MapIterator>();
+	context->destruct(iterator->map);
+}
+
+static void MapIterator_next(InterpretContext* context)
+{
+	ClassRef<MapIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
+
+	ClassRef<MapData> map = iterator->map;
+
+	auto& nodes = iterator->nodes;
+
+	if (!nodes)
+	{
+		nodes = new MapIteratedNode();
+		nodes->node = map->rootNode;
+	}
+	else
+	{
+		do
+		{
+			switch (nodes->iterationIndex++)
+			{
+			case 0: {
+				if (nodes->node->a)
+				{
+					MapIteratedNode* previous = nodes;
+					nodes = new MapIteratedNode();
+					nodes->previous = previous;
+					nodes->node = previous->node->a;
+					break;
+				}
+				nodes->iterationIndex++;
+				[[fallthrough]];
+			}
+			case 1:
+				if (nodes->node->b)
+				{
+					MapIteratedNode* previous = nodes;
+					nodes = new MapIteratedNode();
+					nodes->previous = previous;
+					nodes->node = previous->node->b;
+					break;
+				}
+				nodes->iterationIndex++;
+				[[fallthrough]];
+			case 2: {
+				MapIteratedNode* previous = nodes;
+				nodes = nodes->previous;
+				delete previous;
+				break;
+			}
+			}
+		} while (nodes && nodes->visited);
+	}
+
+	if (nodes)
+	{
+		nodes->visited = true;
+	}
+
+	context->pushValue<Bool>(nodes);
+}
+
+static void MapKeyValue_delete(InterpretContext* context)
+{
+	ClassPtr<MapKeyValue> keyValue = context->popPtr<MapKeyValue>();
+
+	if (keyValue->keyIsClass)
+	{
+		context->destruct(MapData::getClass(keyValue->key));
+	}
+	delete[] keyValue->key;
+	if (keyValue->valueIsClass)
+	{
+		context->destruct(MapData::getClass(keyValue->value));
+	}
+	delete[] keyValue->value;
+}
+
+static void MapKeyValue_getKey(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapKeyValue> keyValue = context->popValue<RuntimeClass*>();
+
+	if (keyValue->keyIsClass)
+	{
+		MapData::getClass(keyValue->key)->addRef();
+	}
+	context->pushBytes(keyValue->key, key.typeSize);
+}
+
+static void MapKeyValue_getValue(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapKeyValue> keyValue = context->popValue<RuntimeClass*>();
+
+	if (keyValue->valueIsClass)
+	{
+		MapData::getClass(keyValue->value)->addRef();
+	}
+	context->pushBytes(keyValue->value, value.typeSize);
+}
+
+static RuntimeFunction mapKeyValueVTable[] = {
+	RuntimeFunction{
+		.nativeFn = &MapKeyValue_delete,
+	}
+};
+
+static void MapIterator_get(InterpretContext* context)
+{
+	ClassRef<MapIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
+
+	auto& node = iterator->nodes->node;
+
+	auto keyBuffer = new uint8_t[iterator->key.typeSize];
+	auto valueBuffer = new uint8_t[iterator->value.typeSize];
+
+	memcpy(keyBuffer, node->key, iterator->key.typeSize);
+
+	if (iterator->key.isClassType)
+	{
+		MapData::getClass(keyBuffer)->addRef();
+	}
+
+	memcpy(valueBuffer, node->value, iterator->value.typeSize);
+
+	if (iterator->value.isClassType)
+	{
+		MapData::getClass(valueBuffer)->addRef();
+	}
+
+	context->pushValue(NativeModule::makeClass<MapKeyValue>(
+		MapKeyValue{
+			.key = keyBuffer,
+			.value = valueBuffer,
+			.keyIsClass = iterator->key.isClassType,
+			.valueIsClass = iterator->value.isClassType,
+		},
+		typeIdFromName("MapIterator") + iterator->key.id + iterator->value.id, mapKeyValueVTable));
+}
+
+static RuntimeFunction mapIteratorVTable[] = {
+	RuntimeFunction{
+		.nativeFn = MapIterator_delete,
+	},
+	RuntimeFunction{
+		.nativeFn = MapIterator_next,
+	},
+	RuntimeFunction{
+		.nativeFn = MapIterator_get,
+	},
+};
+
+static void map_getIterator(InterpretContext* context)
+{
+	auto value = GenericData(context);
+	auto key = GenericData(context);
+	ClassRef<MapData> map = context->popValue<RuntimeClass*>();
+
+	auto t = typeIdFromName("system::MapIterator") + value.id + key.id;
+	auto t2 = typeIdFromName("iterator") + value.id + key.id;
+
+	auto cls = NativeModule::makeClass<MapIterator>(
+		MapIterator{
+			.map = map.classPtr,
+			.nodes = nullptr,
+			.key = key,
+			.value = value,
+		},
+		t, mapIteratorVTable);
+
+	NativeModule::implementInterface(cls, t2, mapIteratorVTable, DS_OFFSETOF(MapIterator, iterator));
+	map.classPtr->addRef();
+	context->pushValue(cls->getBody());
+}
+
 MapData::Node*& ds::modules::system::MapData::getMinimumNode(Node*& at)
 {
 	Node** found = &at;
@@ -496,7 +676,7 @@ bool ds::modules::system::MapData::lessThan(uint8_t* a, uint8_t* b, GenericData 
 		return *(Pointer*)(a) < *(Pointer*)(b);
 	}
 
-	return 0;
+	return memcmp(a, b, type.typeSize);
 }
 
 static void array_new(InterpretContext* context)
@@ -611,6 +791,73 @@ static void array_removeIndex(InterpretContext* context)
 	}
 }
 
+static void ArrayIterator_delete(InterpretContext* context)
+{
+	auto iterator = context->popPtr<ArrayIterator>();
+	context->destruct(iterator->array);
+}
+
+static void ArrayIterator_next(InterpretContext* context)
+{
+	ClassRef<ArrayIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
+
+	ClassRef<ArrayData> array = iterator->array;
+
+	auto* pos = &iterator->position;
+
+	iterator->position++;
+
+	context->pushValue<Bool>(iterator->position < array->length);
+}
+
+static void ArrayIterator_get(InterpretContext* context)
+{
+	ClassRef<ArrayIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
+
+	ClassRef<ArrayData> array = iterator->array;
+
+	uint8_t* pos = (uint8_t*)array->data + iterator->itemSize * iterator->position;
+
+	if (array->isClassType)
+	{
+		(*reinterpret_cast<RuntimeClass**>(pos))->addRef();
+	}
+	context->pushBytes(pos, iterator->itemSize);
+}
+
+static RuntimeFunction arrayIteratorVTable[] = {
+	RuntimeFunction{
+		.nativeFn = ArrayIterator_delete,
+	},
+	RuntimeFunction{
+		.nativeFn = ArrayIterator_next,
+	},
+	RuntimeFunction{
+		.nativeFn = ArrayIterator_get,
+	},
+};
+
+static void array_getIterator(InterpretContext* context)
+{
+	auto generic = GenericData(context);
+	ClassRef<ArrayData> array = context->popValue<RuntimeClass*>();
+
+	auto t = typeIdFromName("system::ArrayIterator") + generic.id;
+	auto t2 = typeIdFromName("iterator") + generic.id;
+
+	auto cls = NativeModule::makeClass<ArrayIterator>(
+		ArrayIterator{
+			.array = array.classPtr,
+			.itemSize = generic.typeSize,
+			.position = -1,
+		},
+		t, arrayIteratorVTable);
+
+	NativeModule::implementInterface(cls, t2, arrayIteratorVTable, DS_OFFSETOF(ArrayIterator, iterator));
+	array.classPtr->addRef();
+	context->pushValue(cls->getBody());
+}
+
 static void array_at(InterpretContext* context)
 {
 	uint32_t elementSize = context->popValue<uint32_t>();
@@ -700,10 +947,62 @@ static void fn_new_native(InterpretContext* context)
 	context->pushValue(RuntimeClass::allocateClass(0, 0, entries));
 }
 
+static void RangeIterator_next(InterpretContext* context)
+{
+	ClassRef<RangeIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
+
+	iterator->position++;
+
+	context->pushValue<Bool>(iterator->position < iterator->target);
+}
+
+static void RangeIterator_get(InterpretContext* context)
+{
+	ClassRef<RangeIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
+	context->pushValue(iterator->position);
+}
+
+static RuntimeFunction rangeIteratorVTable[] = {
+	RuntimeFunction{},
+	RuntimeFunction{
+		.nativeFn = RangeIterator_next,
+	},
+	RuntimeFunction{
+		.nativeFn = RangeIterator_get,
+	},
+};
+
+static void RangeIterator_new(InterpretContext* context)
+{
+	ClassRef<RangeIterator> iter = context->popValue<RuntimeClass*>();
+
+	Int count = context->popValue<Int>();
+	Int start = context->popValue<Int>();
+
+	auto t = typeIdFromName("system::RangeIterator");
+	auto t2 = typeIdFromName("iterator") + typeIdFromName("int");
+
+	iter->position = start - 1;
+	iter->target = start + count;
+
+	NativeModule::implementInterface(iter.classPtr, t2, rangeIteratorVTable, DS_OFFSETOF(RangeIterator, iterator));
+	context->pushValue(iter);
+}
+
+static void RangeIterator_getIterator(InterpretContext* context)
+{
+	ClassRef<RangeIterator> iterator = context->popValue<RuntimeClass*>();
+	iterator.classPtr->addRef();
+	context->pushValue(&iterator->iterator);
+}
+
 ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 {
 	NativeModule out;
 	out.name = "system";
+
+	auto firstGeneric = GenericArgumentType::getInstance(0, false);
+	auto secondGeneric = GenericArgumentType::getInstance(1, false);
 
 	auto intType = to->registry->getEntry<IntType>();
 	auto stringType = to->registry->getEntry<StringType>();
@@ -728,6 +1027,10 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	out.addFunction(NativeFunction(
 		{ FunctionArgument(intType, Token("index")) }, nullptr,
 		"array.removeIndex", &array_removeIndex));
+
+	out.addFunction(NativeFunction(
+		{}, IteratorType::getInstance(firstGeneric, to->registry),
+		"array.getIterator", &array_getIterator));
 
 	out.addFunction(NativeFunction(
 		{}, nullptr,
@@ -786,9 +1089,6 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 
 	out.addClassConstructor(mapType, NativeFunction({}, nullptr, "Map.new", map_new));
 
-	auto firstGeneric = GenericArgumentType::getInstance(0, false);
-	auto secondGeneric = GenericArgumentType::getInstance(1, false);
-
 	mapType->members.push_back(ClassMember{
 		.name = "comparator",
 		.offset = offsetof(MapData, comparator),
@@ -815,6 +1115,37 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 		NativeFunction(
 			{ FunctionArgument(firstGeneric, "key") },
 			nullptr, "remove", &map_remove));
+
+	auto mapKeyValue = out.createGenericClass<MapKeyValue>("MapKeyValue", { GenericArgument("K"), GenericArgument("V") });
+
+	out.addClassMethod(mapKeyValue, NativeFunction({}, firstGeneric, "getKey", &MapKeyValue_getKey));
+	out.addClassMethod(mapKeyValue, NativeFunction({}, secondGeneric, "getValue", &MapKeyValue_getValue));
+
+	auto genericMapKV = mapKeyValue->instantiateGeneric({ firstGeneric, secondGeneric }, Token(), nullptr, to->registry);
+
+	out.addClassMethod(mapType,
+		NativeFunction({},
+			IteratorType::getInstance(genericMapKV, to->registry), "getIterator", &map_getIterator));
+
+	auto mapIterator = out.createGenericClass<MapIterator>("MapIterator", { GenericArgument("K"), GenericArgument("V") },
+		IteratorType::getInstance(genericMapKV, to->registry));
+
+	auto arrayIterator = out.createGenericClass<ArrayIterator>("ArrayIterator", { GenericArgument("T") },
+		IteratorType::getInstance(firstGeneric, to->registry));
+
+	arrayIterator->allowDirectConstructorCall = false;
+
+	out.setClassDestructor(arrayIterator, NativeFunction({}, nullptr, "ArrayIterator.delete", &ArrayIterator_delete));
+
+	auto rangeIterator = out.createClass<RangeIterator>("RangeIterator", IteratorType::getInstance(intType, to->registry));
+
+	out.addClassMethod(rangeIterator,
+		NativeFunction({}, IteratorType::getInstance(intType, to->registry),
+			"getIterator", &RangeIterator_getIterator));
+
+	out.addClassConstructor(rangeIterator,
+		NativeFunction({ FunctionArgument(intType, "start"), FunctionArgument(intType, "count") },
+			nullptr, "RangeIterator.new", &RangeIterator_new));
 
 	return out;
 }

@@ -1,0 +1,15 @@
+using system
+using system::io
+
+module test_io
+
+[EntryPoint]
+fn main()
+{
+	File f = new("system.io.ds")
+
+	while not f.isEmpty()
+	{
+		writeln(f.readln())
+	}
+}

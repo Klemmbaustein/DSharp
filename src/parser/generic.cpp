@@ -86,14 +86,14 @@ BytecodeBuffer ds::compileGenericArguments(std::vector<Type*> types)
 
 	for (size_t i = 0; i < types.size(); i++)
 	{
-		result.pushInt(types[i]->id);
-		result.pushInt(types[i]->size);
+		BinaryBuffer genericData;
+		genericData.addValue(types[i]->id);
+		genericData.addValue(types[i]->size);
 
-		BinaryBuffer buf;
 		auto classType = types[i]->asClass();
 
-		buf.addValue(classType && !classType->isByValueType);
-		result.addOperation(BytecodeOp::push, buf);
+		genericData.addValue<Bool>(classType && !classType->isByValueType);
+		result.addOperation(BytecodeOp::push, genericData);
 	}
 
 	return result;

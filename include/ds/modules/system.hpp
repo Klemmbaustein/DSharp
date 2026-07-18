@@ -136,6 +136,53 @@ namespace ds::modules
 			bool valueIsClassType = false;
 		};
 
+		class ArrayIterator
+		{
+		public:
+			RuntimeClass iterator;
+
+			RuntimeClass* array;
+			Size itemSize;
+			Int position;
+		};
+
+		class RangeIterator
+		{
+		public:
+			RuntimeClass iterator;
+
+			Int position;
+			Int target;
+		};
+
+		struct MapIteratedNode
+		{
+			MapData::Node* node = nullptr;
+			MapIteratedNode* previous = nullptr;
+			Int iterationIndex = 0;
+			bool visited = false;
+		};
+
+		class MapIterator
+		{
+		public:
+			RuntimeClass iterator;
+			RuntimeClass* map;
+			MapIteratedNode* nodes;
+			bool empty;
+			GenericData key;
+			GenericData value;
+		};
+
+		class MapKeyValue
+		{
+		public:
+			uint8_t* key = nullptr;
+			uint8_t* value = nullptr;
+			bool keyIsClass = false;
+			bool valueIsClass = false;
+		};
+
 		RuntimeClass* createArrayObject();
 
 		template <typename T>

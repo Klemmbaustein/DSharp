@@ -9,6 +9,7 @@ namespace ds
 	{
 	public:
 		FunctionType(Type* returnType, std::vector<Type*> arguments);
+		~FunctionType();
 		Type* returnType;
 		std::vector<Type*> arguments;
 

@@ -6,6 +6,7 @@
 #include <ds/service/languageService.hpp>
 #include <ds/parser/parseExpression.hpp>
 #include <ds/parser/bytecode/constantEvaluate.hpp>
+#include <ds/parser/types/iteratorType.hpp>
 using namespace ds;
 
 void ds::ParsedScope::returnCompletedTask(TaskType* taskType)
@@ -805,30 +806,29 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 		return;
 	}
 
-	auto arrayType = dynamic_cast<ArrayType*>(arrayExpression.type);
+	auto arrayType = arrayExpression.type->asClass();
 
 	if (!arrayType)
 	{
 		errors->error(ErrorCode::parseUnexpectedToken, var->equals,
-			"For loop expression needs to be an array. Got: " + Type::toString(arrayExpression.type));
+			"For loop expression needs to be a class. Got: " + Type::toString(arrayExpression.type));
 		return;
 	}
 
 	// Increment the scope depth so the loop has it's own scope to store the iterated array
 	this->depth++;
 
-	this->code->addBuffer(arrayExpression.code);
-	pushVariableValue(arrayExpression.type, true);
+	auto getIteratorCall = arrayType->compileMethodDirect(Token("getIterator"), arrayExpression, errors, this);
 
-	// Save the array to a temporary variable so the array lives for the entire loop
-	// For example, with for int i = [1, 2]
-	// The array would need to be reloaded for each iteration unless it's a variable
-	auto& iterated = addVariable(Token(".for_iterated" + std::to_string(tempCounter++)), arrayType, errors);
-	iterated.isInternal = true;
+	if (!getIteratorCall.valid)
+	{
+		errors->error(ErrorCode::parseInvalidType, var->equals,
+			"For loop expression needs to implement getIterator");
+		return;
+	}
 
-	// The iterator is an int that stores the current index of the array
-	auto iterType = context->registry->getEntry<IntType>();
-	this->code->addBuffer(iterType->defaultValue().code);
+	this->code->addBuffer(getIteratorCall.code);
+	auto iterType = dynamic_cast<IteratorType*>(getIteratorCall.type);
 	pushVariableValue(iterType, true);
 	auto& iterator = addVariable(Token(".for_iterator" + std::to_string(tempCounter++)), iterType, errors);
 	iterator.isInternal = true;
@@ -839,20 +839,17 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 	auto continueLabel = std::make_shared<BytecodeJumpLabel>("for_continue");
 	this->code->add(beginLabel);
 
-	// The end of the loop, when
 	auto endLabel = std::make_shared<BytecodeJumpLabel>("for_end");
-	this->code->addBuffer(arrayType->getLength(iterated.readValue(this), context).code);
-	this->code->addBuffer(iterator.readValue(this));
-	this->code->addOperation(BytecodeOp::greaterInt);
+	// Move to the next iterated value.
+	this->code->addBuffer(iterType->compileNext(iterator.readValue(this), errors, this));
 
-	// Go to the endif the array length is not greater than the iterator
+	// Go to the end label if compileNext pushed false onto the stack (the iterator has ended)
 	this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
 
-	// Increment the scope for the for loop variable, which technically isn't part of the for loop's scope
 	this->depth++;
 
-	auto index = arrayType->compileIndex(iterated.readExpression(this), iterator.readExpression(this),
-		errors, false, this);
+	// Get the iterated value, move it to a variable and parse the inner scope
+	auto index = iterType->compileGet(iterator.readValue(this), errors, this);
 
 	if (!var->type)
 	{
@@ -868,11 +865,6 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 	this->code->add(continueLabel);
 	code->addBuffer(compileScopeExit(this->depth, true));
-	// Increment the iterator
-	this->code->addBuffer(iterator.readValue(this));
-	this->code->pushInt(1);
-	this->code->addOperation(BytecodeOp::addInt);
-	this->code->addBuffer(iterator.writeValue());
 
 	// jump to the start and repeat the loop again, it will jump back to the end label if the loop should end
 	this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel.get());

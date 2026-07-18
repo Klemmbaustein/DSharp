@@ -21,7 +21,6 @@ namespace ds::jit
 
 		void getUnwindData(void* atPtr, std::vector<Pointer>& outPointers);
 
-		[[noreturn]]
 		void unwindStack(void* atPtr, JustInTimeRuntime* rt);
 
 	private:

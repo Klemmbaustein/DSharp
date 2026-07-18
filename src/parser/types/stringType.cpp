@@ -25,6 +25,14 @@ ds::StringType::StringType(TypeRegistry* registry)
 			this, "system::string.substr", "substr") });
 }
 
+ds::StringType::~StringType()
+{
+	for (auto& i : this->methods)
+	{
+		delete i.second.function;
+	}
+}
+
 ExpressionResult ds::StringType::compileOperator(Operator operatorType, ExpressionResult& first,
 	ExpressionResult& second, ParsedScope* with)
 {

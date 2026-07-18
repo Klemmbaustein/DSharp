@@ -6,7 +6,7 @@ using namespace ds;
 
 static bool runTestFile(const char* file, LanguageContext& context)
 {
-	auto compiler = context.createCompiler();
+	auto compiler = context.createCompiler({ .printAssembly = true });
 
 	compiler->addFile(file);
 
@@ -25,7 +25,6 @@ static bool runTestFile(const char* file, LanguageContext& context)
 
 	for (int useJIT = 0; useJIT < 2; useJIT++)
 	{
-
 		std::cout << "=== Run (Use JIT: " << useJIT << ") ===" << std::endl;
 		auto runtime = context.createRuntime({ .useJustInTimeCompiler = bool(useJIT) });
 
@@ -41,7 +40,10 @@ static bool runTestFile(const char* file, LanguageContext& context)
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 		std::cout << "=== Took " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " microseconds ===" << std::endl;
 	}
-	return okay;
+
+	std::cout << "Classes leaked: " << RuntimeClass::classRefCount << std::endl;
+
+	return okay && !RuntimeClass::classRefCount;
 }
 
 int main(int argc, char** argv)

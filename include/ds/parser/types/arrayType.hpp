@@ -10,6 +10,7 @@ namespace ds
 	{
 	public:
 		ArrayType(Type* baseType, TypeRegistry* registry);
+		~ArrayType();
 
 		ExpressionResult compileOperator(Operator operatorType, ExpressionResult& first,
 			ExpressionResult& second, ParsedScope* with) override;
