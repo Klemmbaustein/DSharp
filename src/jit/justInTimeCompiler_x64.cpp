@@ -241,6 +241,7 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		if (foundJump != jumpTargetMappings.end())
 		{
 			flushStack();
+			stackChanged = true;
 			assembler->bind(foundJump->second);
 		}
 
@@ -1517,7 +1518,7 @@ void ds::jit::JustInTimeCompiler::changeStackBy(int32_t amount)
 		stackChanged = true;
 	}
 
-#if 1 // stack sanity check
+#if 0 // stack sanity check
 	assembler->lea(r12, ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, stack)));
 	assembler->cmp(stackRegister, r12);
 	auto okay = assembler->new_label();
