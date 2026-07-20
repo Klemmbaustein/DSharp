@@ -140,7 +140,14 @@ BytecodeOffset ds::BytecodeCallFunction::getArgsSize()
 
 ds::BytecodeFunctionAddress::BytecodeFunctionAddress(std::string callName, bool native)
 {
-	this->operation = BytecodeOp::pushAddr;
+	if (native)
+	{
+		this->operation = BytecodeOp::push;
+	}
+	else
+	{
+		this->operation = BytecodeOp::pushAddr;
+	}
 	this->callName = callName;
 	this->native = native;
 }
@@ -168,7 +175,6 @@ void ds::BytecodeFunctionAddress::getArgs(BinaryBuffer& stream, BytecodeCompiler
 		{
 			position = foundPosition->second;
 		}
-
 		stream.addValue<Pointer>(position);
 	}
 	else

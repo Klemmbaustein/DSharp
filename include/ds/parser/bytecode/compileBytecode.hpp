@@ -61,7 +61,7 @@ namespace ds
 		{
 			return false;
 		}
-		
+
 		virtual void unrefHere(BytecodeBuffer* buffer)
 		{
 

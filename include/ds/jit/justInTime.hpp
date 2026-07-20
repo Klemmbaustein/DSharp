@@ -30,6 +30,5 @@ namespace ds::jit
 	private:
 		JustInTimeCode* code = nullptr;
 		LanguageContext* language = nullptr;
-		std::vector<ExternalFunctionPointer> externals;
 	};
 } // namespace ds::jit

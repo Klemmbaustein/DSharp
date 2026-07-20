@@ -18,8 +18,8 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 	runtime->debug = &code->debug;
 	runtime->unwindBuffer = code->unwind;
 	runtime->reflect = &code->reflect;
-	this->externals.clear();
-	this->externals.reserve(code->externalFunctions.size());
+	runtime->externals.clear();
+	runtime->externals.reserve(code->externalFunctions.size());
 
 	for (auto& i : code->externalFunctions)
 	{
@@ -33,7 +33,7 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 		{
 			if (fn->getFullName() == i)
 			{
-				this->externals.push_back(fn->function);
+				runtime->externals.push_back(fn->function);
 				found = true;
 				break;
 			}
@@ -53,7 +53,7 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 		if (native)
 		{
 			runtime->vTable.push_back(RuntimeFunction{
-				.nativeFn = externals[native] });
+				.nativeFn = runtime->externals[native] });
 		}
 		else
 		{
@@ -63,8 +63,8 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 	}
 
 	JustInTimeCompiler compiler;
-	this->code = compiler.compileBytecode(code->code, externals, runtime->vTable, code->reflect, runtime->unwindBuffer,
-		runtime->debug);
+	this->code = compiler.compileBytecode(code->code, runtime->externals, runtime->vTable, code->reflect,
+		runtime->unwindBuffer, runtime->debug);
 }
 
 void ds::jit::JustInTimeRuntime::run(Pointer atOffset)
