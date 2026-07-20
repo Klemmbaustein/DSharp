@@ -122,7 +122,6 @@ bool ds::Token::unquoteString()
 		return false;
 	}
 	string = string.substr(1, string.size() - 2);
-	replace(string, "\\n", "\n");
 	return true;
 }
 
@@ -229,9 +228,15 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 						currentWord.addChar('"');
 						newChar = 0;
 					}
+					else if (newChar == 'n')
+					{
+						currentWord.addChar('\n');
+						newChar = 0;
+					}
 					else
 					{
 						currentWord.addChar('\\');
+						currentWord.addChar(newChar);
 					}
 				}
 				else
