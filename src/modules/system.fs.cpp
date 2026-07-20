@@ -53,6 +53,48 @@ static void fs_path_getFiles(InterpretContext* context)
 	context->pushValue(f);
 }
 
+static void fs_path_create(InterpretContext* context)
+{
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
+
+	try
+	{
+		std::filesystem::create_directories(path->pathString.ptr());
+	}
+	catch (std::filesystem::filesystem_error& e)
+	{
+		context->runtimePanic(e.what());
+	}
+}
+
+static void fs_path_remove(InterpretContext* context)
+{
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
+
+	try
+	{
+		std::filesystem::remove_all(path->pathString.ptr());
+	}
+	catch (std::filesystem::filesystem_error& e)
+	{
+		context->runtimePanic(e.what());
+	}
+}
+
+static void fs_path_exists(InterpretContext* context)
+{
+	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
+
+	try
+	{
+		context->pushValue<Bool>(std::filesystem::exists(path->pathString.ptr()));
+	}
+	catch (std::filesystem::filesystem_error& e)
+	{
+		context->runtimePanic(e.what());
+	}
+}
+
 static void fs_path_getFull(InterpretContext* context)
 {
 	ClassRef<fs::FilePath> path = context->popValue<RuntimeClass*>();
@@ -108,6 +150,7 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 	out.name = "system::fs";
 
 	StringType* strType = to->registry->getEntry<StringType>();
+	BoolType* boolType = to->registry->getEntry<BoolType>();
 
 	ClassType* pathType = out.createClass<fs::FilePath>("FilePath");
 
@@ -135,6 +178,21 @@ ds::NativeModule fs::createModule(LanguageContext* to)
 		NativeFunction(
 			{}, strType,
 			"name", &fs_path_getName));
+
+	out.addClassMethod(pathType,
+		NativeFunction(
+			{}, nullptr,
+			"createDirectory", &fs_path_create));
+
+	out.addClassMethod(pathType,
+		NativeFunction(
+			{}, nullptr,
+			"remove", &fs_path_remove));
+
+	out.addClassMethod(pathType,
+		NativeFunction(
+			{}, boolType,
+			"exists", &fs_path_exists));
 
 	pathType->members.push_back(ClassMember{
 		.name = "pathString",

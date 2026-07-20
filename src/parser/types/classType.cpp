@@ -111,7 +111,10 @@ ScannedType ds::ClassType::toScanned()
 
 	for (auto& i : this->methods)
 	{
-		out.methods.push_back(ScannedFunction(i.second.function, Token(), ScannedFunction::Kind::classMember));
+		if (name.find('.') == std::string::npos)
+		{
+			out.methods.push_back(ScannedFunction(i.second.function, Token(), ScannedFunction::Kind::classMember));
+		}
 	}
 
 	if (this->languageClass && this->languageClass->definitionFile)
