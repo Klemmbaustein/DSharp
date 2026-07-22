@@ -443,32 +443,45 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* parent, ParseContext* context,
 	ErrorContext* errors, ParsedFile* file)
 {
-	for (auto& m : parent->methods)
+	BytecodeOffset initialIndex = BytecodeOffset(context->virtualTable.size());
+
+	std::vector<ds::ClassMethod*> sortedParentMethods;
+
+	for (auto& i : parent->methods)
 	{
-		if (!m.second.function->isVirtual())
+		if (!i.second.function->isVirtual())
 		{
 			continue;
 		}
 
-		if (m.second.interfaceSource != nullptr)
+		if (i.second.interfaceSource != nullptr)
 		{
 			continue;
 		}
 
+		sortedParentMethods.push_back(&i.second);
+	}
+
+	std::sort(sortedParentMethods.begin(), sortedParentMethods.end(), [](ds::ClassMethod* a, ds::ClassMethod* b) {
+		return a->function->getVirtualOffset() < b->function->getVirtualOffset();
+	});
+
+	for (auto& m : sortedParentMethods)
+	{
 		bool found = false;
 
 		for (auto& i : this->methods)
 		{
-			if (!i->isOverride || i->getShortName() != m.second.function->getShortName())
+			if (!i->isOverride || i->getShortName() != m->function->getShortName())
 			{
 				continue;
 			}
-			if (!Function::signaturesMatch(i, m.second.function))
+			if (!Function::signaturesMatch(i, m->function))
 			{
 				errors->error(ErrorCode::parseInvalidOverride, i->name,
 					"Function signatures of " + i->getFullName() + " and " +
-						m.second.function->getFullName() + " do not match.\nExpected signature: " +
-						m.second.function->getSignatureText() + "\nGot:                " + i->getSignatureText());
+						m->function->getFullName() + " do not match.\nExpected signature: " +
+						m->function->getSignatureText() + "\nGot:                " + i->getSignatureText());
 			}
 
 			context->virtualTable.push_back(i);
@@ -481,7 +494,7 @@ void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* 
 		{
 			continue;
 		}
-		context->virtualTable.push_back(m.second.function);
+		context->virtualTable.push_back(m->function);
 		vTableIndex++;
 	}
 }
@@ -498,12 +511,17 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 
 	for (auto& i : interface->methods)
 	{
+		if (!i.second.function->isVirtual())
+		{
+			continue;
+		}
 		sortedInterfaceMethods.push_back(&i.second);
 	}
 
-	std::sort(sortedInterfaceMethods.begin(), sortedInterfaceMethods.end(), [](ds::ClassMethod* a, ds::ClassMethod* b) {
-		return a->function->getVirtualOffset() < b->function->getVirtualOffset();
-	});
+	std::sort(sortedInterfaceMethods.begin(), sortedInterfaceMethods.end(),
+		[](ds::ClassMethod* a, ds::ClassMethod* b) {
+			return a->function->getVirtualOffset() < b->function->getVirtualOffset();
+		});
 
 	for (auto& m : sortedInterfaceMethods)
 	{
@@ -719,6 +737,21 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 
 void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
+	// TODO: build vtable offsets in scan phase?
+	if (compiled)
+	{
+		return;
+	}
+
+	if (thisType->parent && thisType->parent->languageClass)
+	{
+		errors->currentFile = thisType->parent->languageClass->definitionFile->name;
+		thisType->parent->languageClass->compile(context, errors, thisType->parent->languageClass->definitionFile);
+	}
+	errors->currentFile = file->name;
+
+	compiled = true;
+
 	compileDestructor(context, errors, file);
 
 	this->thisType->vTableOffset = BytecodeOffset(context->virtualTable.size());

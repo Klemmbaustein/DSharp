@@ -35,10 +35,17 @@ namespace ds
 		RuntimeClass* create(InterpretContext* context) const;
 	};
 
+	struct CastResult
+	{
+		bool success = false;
+		bool isInterface = false;
+		Int interfaceOffset = 0;
+	};
+
 	struct ReflectInfo
 	{
 		bool isSubclassOf(TypeId toCheck, TypeId superClass) const;
-		std::pair<bool, Int> tryCast(TypeId toCheck, TypeId superClass) const;
+		CastResult tryCast(TypeId toCheck, TypeId superClass) const;
 
 		std::map<TypeId, TypeInfo> types;
 	};
