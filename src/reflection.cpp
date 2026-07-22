@@ -67,7 +67,7 @@ bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const
 	return false;
 }
 
-std::pair<bool, Int> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass) const
+CastResult ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass) const
 {
 	auto t = this->types.find(toCheck);
 
@@ -77,14 +77,14 @@ std::pair<bool, Int> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass)
 		{
 			if (t->second.superClass == superClass)
 			{
-				return { true, 0 };
+				return { true, false, 0 };
 			}
 			else
 			{
-				auto [success, offset] = tryCast(t->second.superClass, superClass);
-				if (success)
+				auto result = tryCast(t->second.superClass, superClass);
+				if (result.success)
 				{
-					return { true, offset };
+					return result;
 				}
 			}
 		}
@@ -92,14 +92,14 @@ std::pair<bool, Int> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass)
 		{
 			if (i.first == superClass)
 			{
-				return { true, i.second };
+				return { true, true, Int(i.second) };
 			}
 			else
 			{
-				auto [success, offset] = tryCast(i.first, superClass);
-				if (success)
+				auto result = tryCast(i.first, superClass);
+				if (result.success)
 				{
-					return { true, offset };
+					return result;
 				}
 			}
 		}
@@ -111,14 +111,14 @@ std::pair<bool, Int> ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass)
 		{
 			if (i.first == toCheck)
 			{
-				return { true, -i.second - Int(sizeof(RuntimeClass)) * 2 };
+				return { true, true, Int(-i.second - Int(sizeof(RuntimeClass)) * 2) };
 			}
 			else
 			{
-				auto [success, offset] = tryCast(i.first, toCheck);
-				if (success)
+				auto result = tryCast(i.first, toCheck);
+				if (result.success)
 				{
-					return { true, -offset - Int(sizeof(RuntimeClass)) * 2 };
+					return { true, true, Int(-i.second - Int(sizeof(RuntimeClass)) * 2) };
 				}
 			}
 		}

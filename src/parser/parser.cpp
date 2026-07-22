@@ -392,6 +392,7 @@ void ds::ParseContext::resetModules(LanguageContext* context)
 		for (auto& i : file.classes)
 		{
 			i.scanned = false;
+			i.compiled = false;
 		}
 	}
 

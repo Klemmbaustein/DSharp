@@ -474,11 +474,11 @@ void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 				TypeId id = *(TypeId*)&argumentBuffer[0];
 				if (id != ptr->type)
 				{
-					auto [success, offset] = this->runtime->reflect->tryCast(ptr->type, id);
+					auto [success, isInterface, offset] = this->runtime->reflect->tryCast(ptr->type, id);
 
 					if (success)
 					{
-						ptr = reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset);
+						ptr = isInterface ? reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset) : ptr;
 					}
 					else
 					{

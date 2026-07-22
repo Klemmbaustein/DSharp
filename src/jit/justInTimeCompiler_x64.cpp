@@ -52,11 +52,11 @@ static RuntimeClass* jit_classAs(JustInTimeRuntime* rt, RuntimeClass* ptr, ds::T
 {
 	if (ptr && id != ptr->type)
 	{
-		auto [success, offset] = rt->runtime->reflect->tryCast(ptr->type, id);
+		auto [success, isInterface, offset] = rt->runtime->reflect->tryCast(ptr->type, id);
 
 		if (success)
 		{
-			ptr = reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset);
+			ptr = isInterface ? reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset) : ptr;
 		}
 		else
 		{
@@ -619,15 +619,36 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 				break;
 			default:
 				isStandardSize = false;
-				abort();
+				break;
 			}
 
 			if (isStandardSize)
 			{
 				assembler->sete(ptr_8(stackRegister, size * -2));
+				changeStackBy(size * -2 + sizeof(Bool));
+			}
+			else
+			{
+				assembler->lea(rsi, ptr_8(stackRegister, -size));
+				assembler->lea(rdi, ptr_8(stackRegister, -size * 2));
+				assembler->mov(rcx, size);
+				assembler->mov(al, 0);
+				assembler->stc();
+				auto repeatLabel = assembler->new_label();
+				assembler->bind(repeatLabel);
+
+				assembler->cmps(ptr_8(rsi), ptr_8(rdi));
+				auto endLabel = assembler->new_label();
+				assembler->jne(endLabel);
+				assembler->dec(rcx);
+				assembler->test(rcx, 0);
+				assembler->jne(repeatLabel);
+				assembler->mov(al, 1);
+				assembler->bind(endLabel);
+				changeStackBy(size * -2);
+				compilePushValue(al);
 			}
 
-			changeStackBy(size * -2 + sizeof(Bool));
 			break;
 		}
 		case ds::BytecodeOp::ret:
