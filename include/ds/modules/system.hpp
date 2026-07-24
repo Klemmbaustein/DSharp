@@ -97,6 +97,7 @@ namespace ds::modules
 				assert(index < length);
 				return reinterpret_cast<T*>(data)[index];
 			}
+			void append(void* bytes, size_t size);
 			bool isClassType = false;
 		};
 
