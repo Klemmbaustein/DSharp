@@ -144,6 +144,7 @@ void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
 	conditionScope.tempCounter = this->tempCounter;
 	conditionScope.breakTarget = breakTarget;
 	conditionScope.inClass = inClass;
+	conditionScope.returnThis = !options.isLambda && returnThis;
 	conditionScope.continueTarget = continueTarget;
 	conditionScope.taskVariable = options.isLambda ? nullptr : this->taskVariable;
 	conditionScope.breakContinueDepth = breakContinueDepth;
@@ -493,6 +494,10 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		if (taskType)
 		{
 			returnCompletedTask(taskType);
+		}
+		else if (returnThis)
+		{
+			code->addBuffer(thisVariable->readValue(this));
 		}
 
 		code->addBuffer(compileScopeExit(0, false));

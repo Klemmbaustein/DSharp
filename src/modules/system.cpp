@@ -721,6 +721,19 @@ static void array_push(InterpretContext* context)
 	}
 }
 
+void ds::modules::system::ArrayData::append(void* bytes, size_t size)
+{
+	this->length++;
+
+	void* newData = realloc(this->data, this->length * size);
+
+	if (newData)
+	{
+		this->data = newData;
+		memcpy((uint8_t*)this->data + size * (this->length - 1), bytes, size);
+	}
+}
+
 static void array_pop(InterpretContext* context)
 {
 	auto generic = GenericData(context);
