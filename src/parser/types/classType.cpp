@@ -119,7 +119,7 @@ ScannedType ds::ClassType::toScanned()
 
 	if (this->languageClass && this->languageClass->definitionFile)
 	{
-		out.definition = SymbolDefinition(this->languageClass->definitionFile->name, this->languageClass->name);
+		out.definition = SymbolDefinition(this->languageClass->definitionFile->displayName, this->languageClass->name);
 	}
 
 	return out;
