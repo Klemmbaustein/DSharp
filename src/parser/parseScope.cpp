@@ -133,12 +133,13 @@ void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 #endif
 }
 
-void ds::ParsedScope::parseSubScope(ParsedFile* file, ErrorContext* errors,
+void ds::ParsedScope::parseSubScope(Token beginToken, ParsedFile* file, ErrorContext* errors,
 	BytecodeJumpLabel* breakTarget, BytecodeJumpLabel* continueTarget,
 	size_t breakContinueDepth, ScopeOptions options)
 {
 	// Create a sub scope that optionally takes in the ScopeOptions
 	ParsedScope conditionScope;
+	conditionScope.beginToken = beginToken;
 	conditionScope.scopeFunction = options.scopeFunction ? options.scopeFunction : this->scopeFunction;
 	conditionScope.code = options.targetBuffer ? options.targetBuffer : this->code;
 	conditionScope.tempCounter = this->tempCounter;
@@ -191,7 +192,7 @@ void ds::ParsedScope::serializeScope()
 {
 	if (context->service)
 	{
-		auto s = ScannedScope(tokenStream->first, tokenStream->last);
+		auto s = ScannedScope(beginToken.position, tokenStream->last);
 
 		for (auto& i : this->variables)
 		{
@@ -580,7 +581,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 
 		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
 
-		parseSubScope(file, errors, endLabel.get(), beginLabel.get(), this->depth + 1);
+		parseSubScope(line.previous(), file, errors, endLabel.get(), beginLabel.get(), this->depth + 1);
 		this->code->addNew<BytecodeJump>(BytecodeOp::jump, beginLabel.get());
 
 		this->code->add(endLabel);
@@ -713,7 +714,7 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 	{
 		if (constValue || isService)
 		{
-			parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+			parseSubScope(line.previous(), file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 		}
 		else
 		{
@@ -725,7 +726,7 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 	else
 	{
 		this->code->addNew<BytecodeJump>(BytecodeOp::jumpIfNot, endLabel.get());
-		parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+		parseSubScope(line.previous(), file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 	}
 	auto nextLine = this->tokenStream->peek(errors);
 
@@ -768,12 +769,12 @@ void ds::ParsedScope::compileIf(TokenLine line, ParsedFile* file, ErrorContext* 
 			if (!isConst)
 			{
 				this->code->add(endLabel);
-				parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+				parseSubScope(line.previous(), file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 				this->code->add(endElseLabel);
 			}
 			else if (!constValue || isService)
 			{
-				parseSubScope(file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
+				parseSubScope(line.previous(), file, errors, this->breakTarget, this->continueTarget, breakContinueDepth);
 			}
 			else
 			{
@@ -866,7 +867,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 	var->create(this, errors);
 
-	parseSubScope(file, errors, endLabel.get(), continueLabel.get(), this->depth + 1);
+	parseSubScope(line.previous(), file, errors, endLabel.get(), continueLabel.get(), this->depth + 1);
 
 	this->code->add(continueLabel);
 	code->addBuffer(compileScopeExit(this->depth, true));
