@@ -786,6 +786,11 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			if (isPtr)
 			{
 				assembler->mov(rsi, ptr_64(rsi, sizeof(RuntimeClass)));
+				assembler->test(rsi, rdi);
+				auto endNullCheck = assembler->new_label();
+				assembler->jnz(endNullCheck);
+				compileAbort("Attempted to read value from a native null reference");
+				assembler->bind(endNullCheck);
 			}
 			else
 			{
@@ -826,6 +831,12 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			if (isPtr)
 			{
 				assembler->mov(rdi, ptr_64(rdi, sizeof(RuntimeClass)));
+				assembler->test(rdi, rdi);
+				auto endNullCheck = assembler->new_label();
+				assembler->jnz(endNullCheck);
+				compileAbort("Attempted to write value from a native null reference");
+				assembler->bind(endNullCheck);
+
 			}
 			else
 			{

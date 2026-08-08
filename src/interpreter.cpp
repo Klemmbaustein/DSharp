@@ -343,14 +343,28 @@ void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
 			Size offset = popValue<Size>();
 			RuntimeClass* classPtr = popValue<RuntimeClass*>();
 			uint8_t* bodyPointer = *(uint8_t**)classPtr->getBody();
-			pushBytes(bodyPointer + offset, size);
+			if (bodyPointer)
+			{
+				pushBytes(bodyPointer + offset, size);
+			}
+			else
+			{
+				runtimePanic("Attempted to read value from a native null reference");
+			}
 			break;
 		}
 		case ds::BytecodeOp::setClassMemberPtr: {
 			Size size = popValue<Size>();
 			Size offset = popValue<Size>();
 			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			popBytes(*(uint8_t**)ptr->getBody() + offset, size);
+			if (*(void**)ptr->getBody())
+			{
+				popBytes(*(uint8_t**)ptr->getBody() + offset, size);
+			}
+			else
+			{
+				runtimePanic("Attempted to write value from a native null reference");
+			}
 			break;
 		}
 		case ds::BytecodeOp::setClassMemberPushAgain: {

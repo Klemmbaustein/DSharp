@@ -45,6 +45,7 @@ namespace ds
 		ParsedClass* inClass = nullptr;
 		ParseContext* context = nullptr;
 		TokenStream* tokenStream = nullptr;
+		Token beginToken;
 
 		size_t depth = 0;
 
@@ -93,7 +94,7 @@ namespace ds
 
 		std::optional<VariableInfo> parseVariableDefinition(TokenLine& line, ParsedFile* file, ErrorContext* errors, bool matchTypes = true);
 
-		void parseSubScope(ParsedFile* file, ErrorContext* errors, BytecodeJumpLabel* breakTarget,
+		void parseSubScope(Token beginToken, ParsedFile* file, ErrorContext* errors, BytecodeJumpLabel* breakTarget,
 			BytecodeJumpLabel* continueTarget, size_t breakContinueDepth,
 			ScopeOptions options = ScopeOptions{
 				.targetBuffer = nullptr,

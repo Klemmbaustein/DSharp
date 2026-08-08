@@ -121,6 +121,8 @@ namespace ds
 					cls->members.push_back(i);
 				}
 
+				cls->destructor = derived->destructor;
+
 				for (auto& i : derived->methods)
 				{
 					ClassMethod newMethod = i.second;
