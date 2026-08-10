@@ -19,7 +19,8 @@ RuntimeClass* TypeInfo::create(InterpretContext* context) const
 	}
 	return nullptr;
 }
-std::optional<std::string> ds::TypeMember::getParameterValue(const std::string& name) const
+
+std::optional<std::string> ds::AttributeData::getParameterValue(const std::string& name) const
 {
 	for (auto& i : this->parameterData)
 	{

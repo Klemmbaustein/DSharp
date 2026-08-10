@@ -85,6 +85,7 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 
 	jmp_buf returnTarget;
 	memcpy(&returnTarget, &returnBuffer, sizeof(jmp_buf));
+	rt->stackPos = 0;
 
 	for (int32_t i = 0; i < callStackPos; i++)
 	{
@@ -129,7 +130,6 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 			}
 		}
 	}
-	rt->stackPos = 0;
 	unwinding = false;
 
 	if (!isSuspended)
