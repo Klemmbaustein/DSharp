@@ -247,6 +247,7 @@ ExpressionResult ds::Expression::compileOperatorBetween(ExpressionResult a, Expr
 	Token opToken, ErrorContext* errors, bool setExpression, ParsedScope* scope)
 {
 	auto oldType = a.type;
+	auto oldBType = b.type;
 
 	if (!a.type || !b.type)
 	{
@@ -261,11 +262,12 @@ ExpressionResult ds::Expression::compileOperatorBetween(ExpressionResult a, Expr
 			a.code.addOperation(BytecodeOp::boolNot);
 		}
 	}
-	// a <= b is the same as !(b < a) and a >= b is the same thing as !(b > a)
+	// a <= b is the same as !(b > a) and a >= b is the same thing as !(b < a)
 	else if (op == Operator::greaterEquals || op == Operator::lessEquals)
 	{
+		std::swap(a, b);
 		op = op == Operator::greaterEquals ? Operator::greater : Operator::less;
-		a = a.type->compileOperator(op, b, a, scope);
+		a = a.type->compileOperator(op, a, b, scope);
 		a.code.addOperation(BytecodeOp::boolNot);
 	}
 	else if (a.type)
@@ -275,7 +277,7 @@ ExpressionResult ds::Expression::compileOperatorBetween(ExpressionResult a, Expr
 	if (!a.valid)
 	{
 		errors->error(ErrorCode::parseInvalidType, opToken,
-			"The operator '" + opToken.string + "' does not accept types '" + Type::toString(oldType) + "' and '" + Type::toString(b.type) + "'");
+			"The operator '" + opToken.string + "' does not accept types '" + Type::toString(oldType) + "' and '" + Type::toString(oldBType) + "'");
 	}
 	return a;
 }

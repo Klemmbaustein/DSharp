@@ -247,9 +247,9 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				{
 					members.push_back(TypeMember{
 						.type = m.second.type->id,
-						.attributeType = reflectAttribute->attribute->getType(),
 						.name = m.second.name.string,
-						.parameterData = reflectAttribute->parametersToString(),
+						.attribute = AttributeData{ .type = reflectAttribute->attribute->getType(),
+							.parameterData = reflectAttribute->parametersToString() },
 						.offset = m.second.offset,
 					});
 				}
@@ -262,12 +262,22 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				superClasses.insert({ super->id, offset });
 			}
 
+			std::vector<AttributeData> attributes;
+
+			for (auto& attr : cls.attributes)
+			{
+				attributes.push_back(
+					AttributeData{ .type = attr.attribute->getType(),
+						.parameterData = attr.parametersToString() });
+			}
+
 			toStream.reflect.types[cls.thisType->id] = TypeInfo{
 				.hash = cls.thisType->id,
 				.name = Type::toFullString(cls.thisType),
 				.vTableOffset = cls.thisType->vTableOffset,
 				.constructor = this->compiler.functions[cls.getDefaultConstructor()->getFullName()].offset,
 				.bodySize = cls.thisType->classSize,
+				.attributes = attributes,
 				.members = members,
 				.superClass = cls.thisType->parent ? cls.thisType->parent->id : 0,
 				.interfaces = superClasses,

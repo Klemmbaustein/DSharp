@@ -8,14 +8,19 @@
 
 namespace ds
 {
-	struct TypeMember
+	struct AttributeData
 	{
 		TypeId type = 0;
-		TypeId attributeType = 0;
-		std::string name;
 		std::vector<std::string> parameterData;
 
 		std::optional<std::string> getParameterValue(const std::string& name) const;
+	};
+
+	struct TypeMember
+	{
+		TypeId type = 0;
+		std::string name;
+		AttributeData attribute;
 
 		BytecodeOffset offset = 0;
 	};
@@ -27,6 +32,8 @@ namespace ds
 		Size vTableOffset = 0;
 		Pointer constructor = 0;
 		size_t bodySize = 0;
+
+		std::vector<AttributeData> attributes;
 
 		std::vector<TypeMember> members;
 		TypeId superClass = 0;
