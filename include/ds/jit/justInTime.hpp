@@ -28,7 +28,7 @@ namespace ds::jit
 		bool canAwait = false;
 
 	private:
-		JustInTimeCode* code = nullptr;
+		std::shared_ptr<JustInTimeCode> code = nullptr;
 		LanguageContext* language = nullptr;
 	};
 } // namespace ds::jit

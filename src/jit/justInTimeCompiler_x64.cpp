@@ -81,7 +81,7 @@ static void jit_awaitTask(RuntimeClass* task, RuntimeClass* returnTask, JustInTi
 	rt->pushValue(returnTask);
 }
 
-JustInTimeCode* ds::jit::JustInTimeCompiler::compileBytecode(BinaryBuffer& code,
+std::shared_ptr<JustInTimeCode> ds::jit::JustInTimeCompiler::compileBytecode(BinaryBuffer& code,
 	const std::vector<ds::ExternalFunctionPointer>& pointers,
 	std::vector<ds::RuntimeFunction>& vTable, ReflectInfo& reflect, UnwindInfo& unwind,
 	DebugInfo* debug)
