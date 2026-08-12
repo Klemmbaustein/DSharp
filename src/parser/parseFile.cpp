@@ -11,6 +11,7 @@ void ds::ParsedFile::scan(ErrorContext* errors)
 	this->enums.clear();
 	this->attributes.clear();
 	this->functions.clear();
+	this->temporaryFunctions.clear();
 	this->classes.clear();
 	std::vector<AttribInfo> currentAttributes;
 	while (scanLine(currentAttributes, errors)) {}
@@ -221,6 +222,15 @@ void ds::ParsedFile::compile(ParseContext* context)
 			scanInfo->functions.push_back(ScannedFunction(&fn, fn.name, ScannedFunction::Kind::functionDefinition));
 		}
 #endif
+		fn.registerFunction(context);
+		fn.compile(context, this, &context->errors);
+	}
+	for (auto& fn : this->temporaryFunctions)
+	{
+		if (fn.isLambda)
+		{
+			continue;
+		}
 		fn.registerFunction(context);
 		fn.compile(context, this, &context->errors);
 	}
