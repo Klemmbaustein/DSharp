@@ -8,6 +8,7 @@ using namespace ds;
 ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 {
 	this->name = baseType->getName() + "[]";
+	this->module = baseType->module;
 	this->size = sizeof(Pointer);
 	this->vTableOffset = UINT32_MAX;
 	this->baseType = baseType;
