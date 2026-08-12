@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <utility>
+#include <memory>
 #include <ds/languageTypes.hpp>
 #include <ds/jit/justInTime.hpp>
 #include <ds/jit/justInTimeCode_x64.hpp>
@@ -27,7 +28,7 @@ namespace ds::jit
 	class JustInTimeCompiler
 	{
 	public:
-		JustInTimeCode* compileBytecode(BinaryBuffer& code,
+		std::shared_ptr<JustInTimeCode> compileBytecode(BinaryBuffer& code,
 			const std::vector<ds::ExternalFunctionPointer>& pointers,
 			std::vector<ds::RuntimeFunction>& vTable,
 			ReflectInfo& reflect,
@@ -58,7 +59,7 @@ namespace ds::jit
 		const asmjit::x86::Mem stackPos = ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, stackPos));
 		const asmjit::x86::Mem varStackPos = ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, variableStackPos));
 
-		JustInTimeCode* result = new JustInTimeCode();
+		std::shared_ptr<JustInTimeCode> result = std::make_shared<JustInTimeCode>();
 		asmjit::x86::Assembler* assembler = nullptr;
 		asmjit::x86::Mem runtime = asmjit::x86::ptr_64(asmjit::x86::rsp, 32);
 
