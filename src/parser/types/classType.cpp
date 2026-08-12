@@ -111,7 +111,7 @@ ScannedType ds::ClassType::toScanned()
 
 	for (auto& i : this->methods)
 	{
-		if (name.find('.') == std::string::npos)
+		if (i.first.find('.') == std::string::npos)
 		{
 			out.methods.push_back(ScannedFunction(i.second.function, Token(), ScannedFunction::Kind::classMember));
 		}
