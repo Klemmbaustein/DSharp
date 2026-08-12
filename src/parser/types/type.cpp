@@ -224,7 +224,7 @@ ScannedType ds::Type::toScanned()
 {
 	return ScannedType{
 		.name = toString(this),
-		.id = typeIdFromName(toFullString(this)),
+		.id = this->id,
 	};
 }
 
