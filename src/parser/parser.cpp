@@ -138,12 +138,6 @@ BytecodeStream ds::ParseContext::compile()
 
 	if (!errors.isOk() && !this->service)
 	{
-		// #ifdef WITH_LANGUAGE_SERVICE
-		//		if (this->service)
-		//		{
-		//			emitServiceTypes();
-		//		}
-		// #endif
 		return BytecodeStream();
 	}
 
@@ -393,12 +387,16 @@ void ds::ParseContext::emitServiceTypesForModule(Module* mod)
 void ds::ParseContext::resetModules(LanguageContext* context)
 {
 	this->virtualTable.clear();
-	delete this->registry;
-	this->registry = new TypeRegistry(*context->registry);
+	if (this->registry)
+	{
+		delete this->registry;
+		this->registry = new TypeRegistry(*context->registry);
+	}
 	this->compiler.functions.clear();
 
 	for (ParsedFile& file : this->files)
 	{
+		file.temporaryFunctions.clear();
 		for (auto& i : file.classes)
 		{
 			i.scanned = false;

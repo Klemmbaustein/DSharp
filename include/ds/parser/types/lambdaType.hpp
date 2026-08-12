@@ -33,6 +33,5 @@ namespace ds
 		ParsedFunction* compileDestructorFor(std::vector<ScopeVariable*> variables, Token lambdaName, ParsedScope* with);
 
 		static inline LambdaType* instance = nullptr;
-
 	};
 }

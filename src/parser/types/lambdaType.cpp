@@ -42,7 +42,7 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 		stream.fromTokens(functionBody);
 	}
 
-	auto& newFunction = with->scopeFile->functions.emplace_back();
+	auto& newFunction = with->scopeFile->temporaryFunctions.emplace_back();
 	newFunction.isAsync = isAsync;
 
 	std::string name = with->scopeFunction->name.string;
@@ -136,7 +136,7 @@ ParsedFunction* ds::LambdaType::compileDestructorFor(std::vector<ScopeVariable*>
 		}
 	}
 
-	auto& newFunction = with->scopeFile->functions.emplace_back();
+	auto& newFunction = with->scopeFile->temporaryFunctions.emplace_back();
 	newFunction.name = Token(lambdaName.string + ".delete");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.registerFunction(with->context);

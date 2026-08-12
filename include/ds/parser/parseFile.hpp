@@ -12,6 +12,8 @@ namespace ds
 		TokenStream stream;
 		/// All functions found in this file.
 		std::list<ParsedFunction> functions;
+		/// Temporary file functions, such as lambdas etc.
+		std::list<ParsedFunction> temporaryFunctions;
 		/// All classes found in this file.
 		std::list<ParsedClass> classes;
 		/// All enums found in this file. (WIP)
