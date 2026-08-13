@@ -157,6 +157,15 @@ void ds::ParsedScope::parseSubScope(Token beginToken, ParsedFile* file, ErrorCon
 	{
 		conditionScope.addTask(reinterpret_cast<TaskType*>(conditionScope.scopeFunction->returnType));
 	}
+	if (conditionScope.isLambda)
+	{
+		conditionScope.lambdaRootScope = &conditionScope;
+	}
+	else
+	{
+		conditionScope.lambdaRootScope = this->lambdaRootScope;
+	}
+	conditionScope.lambdaVariable = this->lambdaVariable;
 
 	for (auto& i : this->variables)
 	{
@@ -298,7 +307,7 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 		{
 			continue;
 		}
-		bool isLambdaOwned = !this->isLambda || i.second.ownedBy == this;
+		bool isLambdaOwned = !this->lambdaRootScope || i.second.ownedBy == this;
 		if (i.second.depth < toDepth || !isLambdaOwned)
 		{
 			continue;
@@ -889,7 +898,7 @@ BytecodeBuffer ds::ScopeVariable::readValue(ParsedScope* with) const
 	}
 
 	BytecodeBuffer result;
-	if (with->isLambda && ownedBy != with)
+	if (with->lambdaRootScope && ownedBy != with->lambdaRootScope && (ownedBy->depth < with->lambdaRootScope->depth))
 	{
 		bool found = false;
 

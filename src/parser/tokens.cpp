@@ -143,13 +143,32 @@ void ds::TokenStream::fromTokens(const std::vector<Token> from)
 {
 	currentLine = &this->lineTokens.emplace_back();
 	size_t lastLine = SIZE_MAX;
+	size_t depth = 0;
 	for (auto& i : from)
 	{
-		if (lastLine != i.position.line && !currentLine->empty())
+		if (lastLine != i.position.line && !currentLine->empty() && depth == 0)
+		{
+			if (i != "{")
+			{
+				currentLine = &this->lineTokens.emplace_back();
+			}
+		}
+		else if (!currentLine->empty() && i == "}")
 		{
 			currentLine = &this->lineTokens.emplace_back();
 		}
+
 		lastLine = i.position.line;
+
+		if (i == "(" || i == "[")
+		{
+			depth++;
+		}
+		if (i == ")" || i == ")" && depth)
+		{
+			depth--;
+		}
+
 		addToken(i);
 	}
 }
@@ -561,6 +580,9 @@ std::vector<Token> ds::TokenLine::getUntil(std::string token, ErrorContext* erro
 			else if (scopeDepth > 0)
 			{
 				scopeDepth--;
+				get();
+				result.push_back(next);
+				continue;
 			}
 			// Skip last )
 			if (scopeDepth == 0 && token != "}")

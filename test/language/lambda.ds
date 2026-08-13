@@ -1,0 +1,35 @@
+using system::io
+using system
+
+module lambda
+
+[EntryPoint]
+fn test()
+{
+	string s = "hello"
+
+	const l1 = fn()
+	{
+		if s == "hello"
+		{
+			const l2 = fn()
+			{
+				writeln(s)
+			}
+
+			l2.call()
+		}
+	}
+	const l2 = fn()
+	{
+		const l3 = fn()
+		{
+			writeln(s)
+		}
+
+		l3.call()
+	}
+
+	l1.call()
+	l2.call()
+}

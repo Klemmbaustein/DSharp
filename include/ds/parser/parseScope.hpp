@@ -45,6 +45,7 @@ namespace ds
 		ParsedClass* inClass = nullptr;
 		ParseContext* context = nullptr;
 		TokenStream* tokenStream = nullptr;
+		ParsedScope* lambdaRootScope = nullptr;
 		Token beginToken;
 
 		size_t depth = 0;
