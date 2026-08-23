@@ -235,5 +235,6 @@ namespace ds
 		virtual ExpressionResult compileValue(Token first, TokenLine& line,
 			ErrorContext* errors, ParsedScope* with, Type* hintType) override;
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
+		constexpr static TypeId BOOL_ID = typeIdFromName("bool");
 	};
 } // namespace ds
