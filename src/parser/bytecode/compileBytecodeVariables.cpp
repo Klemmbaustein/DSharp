@@ -4,11 +4,12 @@
 
 using namespace ds;
 
-ds::BytecodePushVariable::BytecodePushVariable(std::string name, Type* variableType)
+ds::BytecodePushVariable::BytecodePushVariable(std::string name, Type* variableType, bool isInternal)
 {
 	this->name = name;
 	this->variableType = variableType;
 	this->operation = BytecodeOp::pushVariable;
+	this->isInternal = isInternal;
 }
 
 std::string BytecodePushVariable::toString()
@@ -21,7 +22,7 @@ std::string BytecodePushVariable::toString()
 #endif
 }
 
-void ds::BytecodePushVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
+void ds::BytecodePushVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section, ds::DebugSection* debug)
 {
 	section.parts.push_back(UnwindPart{
 		.op = UnwindOp::pushBytes,
@@ -136,10 +137,14 @@ void BytecodePopVariable::getArgs(BinaryBuffer& stream, BytecodeCompiler* compil
 	stream.addValue<Size>(this->popSize);
 }
 
-void ds::BytecodePopVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
+void ds::BytecodePopVariable::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section, ds::DebugSection* debug)
 {
 	if (!this->isScopeExit)
 	{
+		//debug->variables.push_back(DebugVariableInfo{
+		//	.name = this->
+		//	});
+
 		section.parts.push_back(UnwindPart{
 			.op = UnwindOp::popBytes,
 			.size = uint8_t(this->popSize),

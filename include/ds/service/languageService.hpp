@@ -69,7 +69,6 @@ namespace ds
 			"continue",
 			"while",
 			"break",
-			"throw",
 			"const",
 			"var",
 			"new",

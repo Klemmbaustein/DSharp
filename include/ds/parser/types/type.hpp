@@ -149,12 +149,7 @@ namespace ds
 		Type(const Type&) = default;
 	};
 
-	class PrimitiveType : public Type
-	{
-	public:
-	};
-
-	class IntType : public PrimitiveType
+	class IntType : public Type
 	{
 	public:
 		IntType()
@@ -176,7 +171,7 @@ namespace ds
 		constexpr static TypeId INT_ID = typeIdFromName("int");
 	};
 
-	class CharType : public PrimitiveType
+	class CharType : public Type
 	{
 	public:
 		CharType()
@@ -194,7 +189,7 @@ namespace ds
 		virtual ExpressionResult compileCast(ExpressionResult value, ParsedScope* with) override;
 	};
 
-	class FloatType : public PrimitiveType
+	class FloatType : public Type
 	{
 	public:
 		FloatType()
@@ -219,7 +214,7 @@ namespace ds
 		constexpr static TypeId FLOAT_ID = typeIdFromName("float");
 	};
 
-	class BoolType : public PrimitiveType
+	class BoolType : public Type
 	{
 	public:
 		BoolType()

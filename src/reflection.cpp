@@ -11,9 +11,7 @@ RuntimeClass* TypeInfo::create(InterpretContext* context) const
 	context->pushValue(cls);
 
 	auto stack = context->stackPos;
-	context->run(this->constructor);
-
-	if (stack == context->stackPos && context->stackPos != 0)
+	if (context->run(this->constructor) == RunResult::ok)
 	{
 		return context->popValue<RuntimeClass*>();
 	}

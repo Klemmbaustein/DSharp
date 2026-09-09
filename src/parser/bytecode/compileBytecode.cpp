@@ -24,7 +24,7 @@ BytecodeOffset ds::BytecodeOperation::getArgsSize()
 	return BytecodeOffset(this->arguments.buffer.size());
 }
 
-void ds::BytecodeInstruction::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section)
+void ds::BytecodeInstruction::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section, ds::DebugSection* debug)
 {
 }
 
@@ -357,7 +357,7 @@ void ds::BytecodeCompiler::printAssembly()
 	}
 }
 
-void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable)
+void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, bool emitDebug)
 {
 	BytecodeOffset bytecodePos = stream.code.streamPos;
 
@@ -438,24 +438,30 @@ void ds::BytecodeCompiler::compileTo(BytecodeStream& stream, std::vector<Functio
 	BinaryBuffer argsBuffer;
 	for (auto& code : orderedFunctions)
 	{
-		stream.debug.sections.push_back(DebugSection{
-			.offset = code->offset,
-			.name = code->name,
-		});
+		DebugSection* d;
+
+		if (emitDebug)
+		{
+			d = &stream.debug.sections.emplace_back(DebugSection{
+				.offset = code->offset,
+				.name = code->name,
+				.file = code->file,
+			});
+		}
+		else
+		{
+			d = nullptr;
+		}
 
 		auto& s = stream.unwind.sections.emplace_back(code->offset);
 
 		for (auto& instr : code->instructions)
 		{
-			instr->addUnwindInfo(this, s);
+			instr->addUnwindInfo(this, s, d);
 			argsBuffer.clear();
 			instr->getArgs(argsBuffer, this);
 			if (instr->baseSize != 0)
 			{
-				if (argsBuffer.buffer.size() != instr->getArgsSize())
-				{
-					abort();
-				}
 				stream.addOperation(instr->operation, argsBuffer);
 			}
 		}

@@ -22,6 +22,7 @@ namespace ds
 	struct ParserOptions
 	{
 		bool printAssembly : 1 = false;
+		bool emitDebugData : 1 = true;
 	};
 
 	struct ParseContext

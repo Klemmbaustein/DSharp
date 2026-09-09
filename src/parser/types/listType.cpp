@@ -61,7 +61,7 @@ ExpressionResult ds::ListType::compileValue(Token first, TokenLine& line,
 
 		if (!nextValue.type && nextValue.valid)
 		{
-			errors->error(ErrorCode::parseInvalidType, inListLine.previous(), "Expected a type");
+			errors->error(ErrorCode::parseInvalidType, inListLine.previous(), "Expected a typed value in list, got <void>");
 			break;
 		}
 

@@ -9,12 +9,14 @@ namespace ds
 		popBytes,
 		pushBytes,
 		popClass,
+		debugPopPrimitive,
 	};
 
 	struct UnwindPart
 	{
 		UnwindOp op = UnwindOp::popBytes;
 		uint16_t size = 0;
+		uint32_t debugId = 0;
 		Pointer start = 0;
 		Pointer offset = 0;
 	};

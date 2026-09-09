@@ -59,7 +59,7 @@ namespace ds
 		ScopeVariable* lambdaVariable = nullptr;
 
 		void pushVariableValue(Type* type, bool copy);
-		ScopeVariable& addVariable(Token name, Type* type, ErrorContext* errors);
+		ScopeVariable& addVariable(Token name, Type* type, ErrorContext* errors, bool isInternal);
 		BytecodeBuffer compileScopeExit(size_t toDepth, bool isEnd, bool dereferenceAll = true,
 			bool unreachable = false);
 
@@ -82,6 +82,8 @@ namespace ds
 		void compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		void compileIf(TokenLine line, ParsedFile* file, ErrorContext* errors);
 		void compileFor(TokenLine line, ParsedFile* file, ErrorContext* errors);
+
+		void emitLineDebugInfo(TokenLine& line, ParsedFile* file);
 
 		struct ScopeOptions
 		{
