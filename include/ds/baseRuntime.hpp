@@ -1,38 +1,55 @@
 #pragma once
-#include <ds/runtimeString.hpp>
-#include <ds/class.hpp>
-#include <array>
-#include <thread>
-#include <vector>
+#include "class.hpp"
+#include "debug/debugState.hpp"
 #include "native/externalFunction.hpp"
+#include "runtimeString.hpp"
 #include "unwindInfo.hpp"
+#include <array>
 #include <functional>
 #include <list>
 #include <map>
+#include <thread>
+#include <vector>
 
 namespace ds
 {
 	class LanguageRuntime;
 	class LanguageContext;
 
+	enum class RunResult
+	{
+		ok,
+		error
+	};
+
 	class InterpretContext
 	{
 	public:
 		virtual ~InterpretContext() = default;
-		virtual void run(Pointer position = 0) = 0;
+		[[nodiscard]]
+		virtual RunResult run(Pointer position = 0) = 0;
 		virtual void doUnwind() = 0;
 		virtual bool resumeSuspend() = 0;
 		virtual std::vector<DebugSection*> getStackTrace() const = 0;
 		virtual void loadBytecode(BytecodeStream* code) = 0;
 		virtual InterpretContext* createCopy() = 0;
+		virtual bool setDebugBreakpoint(size_t instructionOffset)
+		{
+			return false;
+		}
+		virtual void removeDebugBreakpoint(size_t instructionOffset)
+		{
+		}
 
 		void destruct(RuntimeClass* classObject);
 
 		template <typename T>
 		T popValue()
 		{
+			T result;
 			stackPos -= sizeof(T);
-			return *(T*)&this->stack[stackPos];
+			memcpy(&result, &stack[stackPos], sizeof(T));
+			return result;
 		}
 
 		std::string popString();
@@ -48,7 +65,7 @@ namespace ds
 		template <typename T>
 		void pushValue(const T& value)
 		{
-			*((T*)&this->stack[stackPos]) = value;
+			memcpy(&this->stack[stackPos], &value, sizeof(T));
 			stackPos += sizeof(value);
 		}
 
@@ -87,20 +104,21 @@ namespace ds
 				return T();
 			}
 			pushValue(targetObject);
-			virtualCall(entry);
+			auto result = virtualCall(entry);
 
 			return popValue<T>();
 		}
 
-		void callVirtualMethodVoid(RuntimeClass* targetObject, BytecodeOffset vTableIndex)
+		[[nodiscard]]
+		RunResult callVirtualMethodVoid(RuntimeClass* targetObject, BytecodeOffset vTableIndex)
 		{
 			auto entry = targetObject->vtable[vTableIndex];
 			if (!entry)
 			{
-				return;
+				return RunResult::ok;
 			}
 			pushValue(targetObject);
-			virtualCall(entry);
+			return virtualCall(entry);
 		}
 
 		uint32_t getVarArgsCount()
@@ -108,7 +126,7 @@ namespace ds
 			return popValue<uint32_t>();
 		}
 
-		void virtualCall(RuntimeFunction target);
+		RunResult virtualCall(RuntimeFunction target);
 
 		void runtimePanic(const char* message);
 
@@ -153,6 +171,7 @@ namespace ds
 		std::map<size_t, std::thread*> backgroundThreads;
 		std::function<void(std::function<void()>)> createBackgroundThread;
 		std::function<void(const char*)> writeError;
+		std::function<bool(InterpretContext*, Pointer bytecodePosition, DebugState* state)> onDebugBreak;
 
 		void loadBytecode(BytecodeStream* code);
 
@@ -162,7 +181,8 @@ namespace ds
 
 		std::list<InterpretContext*> asyncContexts;
 
-		void run(BytecodeOffset position = 0);
+		[[nodiscard]]
+		RunResult run(BytecodeOffset position = 0);
 	};
 
 } // namespace ds

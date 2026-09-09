@@ -71,9 +71,9 @@ void ds::LanguageRuntime::loadBytecode(BytecodeStream* code)
 	this->baseContext->loadBytecode(code);
 }
 
-void ds::LanguageRuntime::run(BytecodeOffset position)
+RunResult ds::LanguageRuntime::run(BytecodeOffset position)
 {
-	baseContext->run(position);
+	return baseContext->run(position);
 }
 
 void ds::InterpretContext::pushRuntimeString(RuntimeStr str)
@@ -121,24 +121,24 @@ void ds::InterpretContext::runtimePanic(const char* message)
 			std::printf("%s", errorString.c_str());
 		}
 	}
-
 	doUnwind();
 }
 
-void ds::InterpretContext::virtualCall(RuntimeFunction target)
+RunResult ds::InterpretContext::virtualCall(RuntimeFunction target)
 {
 	if (!target)
 	{
-		return;
+		return RunResult::ok;
 	}
 
 	if (target.nativeFn)
 	{
 		target.nativeFn(this);
+		return RunResult::ok;
 	}
 	else
 	{
-		run(target.codeOffset);
+		return run(target.codeOffset);
 	}
 }
 

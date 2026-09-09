@@ -155,7 +155,7 @@ BytecodeStream ds::ParseContext::compile()
 		{
 			return BytecodeStream();
 		}
-		this->compiler.compileTo(initialCode, virtualTable);
+		this->compiler.compileTo(initialCode, virtualTable, options.emitDebugData);
 	}
 #ifdef WITH_LANGUAGE_SERVICE
 	else
@@ -202,13 +202,18 @@ void ds::ParseContext::initializeModules()
 void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 {
 	// Registry contains all native types.
-	for (auto& type : this->registry->getAllTypes())
-	{
+
+	auto reflectEmitType = [this, &toStream](Type* type) {
 		auto cls = type->asClass();
 
-		if (!cls || cls->isByValueType || !cls->id)
+		if (!cls || !cls->id)
 		{
-			continue;
+			return;
+		}
+
+		if (toStream.reflect.types.contains(cls->id))
+		{
+			return;
 		}
 
 		std::map<TypeId, BytecodeOffset> superClasses;
@@ -218,6 +223,19 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 			superClasses.insert({ super->id, offset });
 		}
 
+		if (options.emitDebugData)
+		{
+			for (auto& i : cls->members)
+			{
+				toStream.debug.classInfo[cls->id].members.push_back(DebugMember{
+					.name = i.name.string,
+					.offset = i.offset,
+					.type = i.type->id,
+					.isPointerMember = i.isPointerMember,
+					.isPrimitive = !i.type->asClass() || i.type->asClass()->isByValueType,
+				});
+			}
+		}
 		toStream.reflect.types[cls->id] = TypeInfo{
 			.hash = cls->id,
 			.name = Type::toFullString(cls),
@@ -225,6 +243,11 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 			.superClass = cls->parent ? cls->parent->id : 0,
 			.interfaces = superClasses,
 		};
+	};
+
+	for (auto& type : this->registry->getAllTypes())
+	{
+		reflectEmitType(type);
 	}
 
 	for (auto& i : this->files)
@@ -245,6 +268,19 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 						.attribute = AttributeData{ .type = reflectAttribute->attribute->getType(),
 							.parameterData = reflectAttribute->parametersToString() },
 						.offset = m.second.offset,
+					});
+				}
+			}
+			if (options.emitDebugData)
+			{
+				for (auto& i : cls.thisType->members)
+				{
+					toStream.debug.classInfo[cls.thisType->id].members.push_back(DebugMember {
+						.name = i.name.string,
+						.offset = i.offset,
+						.type = i.type->id,
+						.isPointerMember = i.isPointerMember,
+						.isPrimitive = !i.type->asClass() || i.type->asClass()->isByValueType,
 					});
 				}
 			}
@@ -276,6 +312,19 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				.superClass = cls.thisType->parent ? cls.thisType->parent->id : 0,
 				.interfaces = superClasses,
 			};
+		}
+	}
+
+	for (auto& mod : this->programModules)
+	{
+		for (auto& [_, type] : mod.second.moduleTypes)
+		{
+			if (!type)
+			{
+				continue;
+			}
+
+			reflectEmitType(type);
 		}
 	}
 }

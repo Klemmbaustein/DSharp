@@ -67,9 +67,10 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 		runtime->unwindBuffer, runtime->debug);
 }
 
-void ds::jit::JustInTimeRuntime::run(Pointer atOffset)
+RunResult ds::jit::JustInTimeRuntime::run(Pointer atOffset)
 {
 	code->run(atOffset, this);
+	return RunResult::ok;
 }
 
 void ds::jit::JustInTimeRuntime::doUnwind()

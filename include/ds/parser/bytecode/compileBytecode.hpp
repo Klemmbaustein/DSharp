@@ -49,7 +49,7 @@ namespace ds
 		virtual void getArgs(BinaryBuffer& stream, BytecodeCompiler* compiler) = 0;
 		virtual BytecodeOffset getArgsSize() = 0;
 		virtual std::string toString() { return ""; }
-		virtual void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section);
+		virtual void addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section, ds::DebugSection* debug);
 		std::string toStringDefault(const BinaryBuffer& arguments) const;
 
 		/**
@@ -200,6 +200,7 @@ namespace ds
 		bool isEntryPoint = false;
 		bool isPreCompiled = false;
 		std::string name;
+		std::string file;
 		BytecodeOffset offset = 0;
 	};
 
@@ -222,6 +223,6 @@ namespace ds
 		 * @param virtualTable
 		 * The virtual table to reference when compiling virtual functions.
 		 */
-		void compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable);
+		void compileTo(BytecodeStream& stream, std::vector<Function*> virtualTable, bool emitDebug);
 	};
 } // namespace ds

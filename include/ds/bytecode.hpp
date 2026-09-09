@@ -139,6 +139,9 @@ namespace ds
 		/// adding the given offset to it and pushing it back on the stack.
 		/// Arguments: 4 bytes offset, 1 byte uncast (reverse direction of cast)
 		castInterface,
+
+
+		debugBreak = 255,
 	};
 
 	struct VTableFunction

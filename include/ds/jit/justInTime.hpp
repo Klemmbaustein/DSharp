@@ -13,10 +13,9 @@ namespace ds::jit
 		JustInTimeRuntime(LanguageContext* from);
 		~JustInTimeRuntime();
 
-
 		// Inherited via InterpretContext
 		void loadBytecode(BytecodeStream* code) override;
-		void run(Pointer position) override;
+		RunResult run(Pointer position) override;
 		void doUnwind() override;
 		bool resumeSuspend() override;
 		std::vector<DebugSection*> getStackTrace() const override;

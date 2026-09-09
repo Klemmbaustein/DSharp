@@ -659,7 +659,13 @@ bool ds::modules::system::MapData::lessThan(uint8_t* a, uint8_t* b, GenericData 
 	{
 		context->pushBytes(b, type.typeSize);
 		context->pushBytes(a, type.typeSize);
-		context->virtualCall(comparator->vtable[1]);
+		auto result = context->virtualCall(comparator->vtable[1]);
+
+		if (result == RunResult::error)
+		{
+			context->runtimePanic("Map compare failed due to inner error.");
+		}
+
 		return context->popValue<Bool>();
 	}
 

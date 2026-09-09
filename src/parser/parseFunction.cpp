@@ -39,7 +39,7 @@ void ds::ParsedFunction::addArguments(ParsedScope& scope, ErrorContext* errors)
 	for (auto it = arguments.rbegin(); it < arguments.rend(); it++)
 	{
 		scope.pushVariableValue(it->type, false);
-		auto& var = scope.addVariable(it->name, it->type, errors);
+		auto& var = scope.addVariable(it->name, it->type, errors, false);
 #ifdef WITH_LANGUAGE_SERVICE
 		if (scope.scopeFile->context->service)
 		{
@@ -61,6 +61,7 @@ void ds::ParsedFunction::registerFunction(ParseContext* context)
 {
 	auto& bytecodeFunction = context->compiler.functions[getFullName()];
 	functionCode = &bytecodeFunction;
+	bytecodeFunction.file = this->functionFile ? this->functionFile->displayName : "";
 	bytecodeFunction.isEntryPoint = getAttribute<modules::system::EntryPointAttribute>();
 }
 

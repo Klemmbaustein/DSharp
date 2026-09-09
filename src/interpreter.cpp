@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 #include <cmath>
+#include <ds/debug/interpreterDebugState.hpp>
 
 using namespace ds;
 
@@ -15,17 +16,19 @@ ds::RuntimeInterpretContext::RuntimeInterpretContext(LanguageRuntime* runtime)
 	this->usedVTable = &runtime->vTable;
 }
 
-void ds::RuntimeInterpretContext::run(Pointer position)
+RunResult ds::RuntimeInterpretContext::run(Pointer position)
 {
 	callStack[callStackPos++] = BytecodeOffset(code.streamPos);
 	BytecodeOffset baseCallStackPos = this->callStackPos;
-	this->code.streamPos = position;
+	code.streamPos = position;
 
+	lastResult = RunResult::ok;
 	runLoop(baseCallStackPos);
 	if (callStackPos)
 	{
 		code.streamPos = callStack[--callStackPos];
 	}
+	return lastResult;
 }
 
 bool ds::RuntimeInterpretContext::resumeSuspend()
@@ -42,6 +45,7 @@ bool ds::RuntimeInterpretContext::resumeSuspend()
 
 void ds::RuntimeInterpretContext::doUnwind()
 {
+	lastResult = RunResult::error;
 	auto& buffer = runtime->unwindBuffer;
 
 	callStack[callStackPos++] = BytecodeOffset(code.streamPos);
@@ -95,440 +99,457 @@ void ds::RuntimeInterpretContext::doUnwind()
 	code.streamPos = SIZE_MAX;
 }
 
-void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
+[[msvc::forceinline]]
+bool ds::RuntimeInterpretContext::runInstruction(BytecodeOp op, uint8_t argsSize, BytecodeOffset& baseCallStackPos)
 {
 	std::array<uint8_t, 255> argumentBuffer{};
 
+	if (argsSize)
+	{
+		code.get(argumentBuffer.data(), argsSize);
+	}
+
+	switch (op)
+	{
+	case ds::BytecodeOp::pushAddr:
+	case ds::BytecodeOp::push:
+		pushBytes(argumentBuffer.data(), Size(argsSize));
+		break;
+	case ds::BytecodeOp::pop: {
+		stackPos -= *(Size*)&argumentBuffer[0];
+		break;
+	}
+	case ds::BytecodeOp::copy: {
+		Size size = *(Size*)&argumentBuffer[0];
+		copyBytes(size);
+		break;
+	}
+	case ds::BytecodeOp::jump: {
+		code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+		break;
+	}
+	case ds::BytecodeOp::jumpIf: {
+		Bool cond = popValue<Bool>();
+		if (cond)
+		{
+			code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+		}
+		break;
+	}
+	case ds::BytecodeOp::jumpIfNot: {
+		Bool cond = popValue<Bool>();
+		if (!cond)
+		{
+			code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
+		}
+		break;
+	}
+	case ds::BytecodeOp::addInt:
+		pushValue(popValue<Int>() + popValue<Int>());
+		break;
+	case ds::BytecodeOp::subInt: {
+		Int first = popValue<Int>();
+		pushValue(popValue<Int>() - first);
+		break;
+	}
+	case ds::BytecodeOp::mulInt:
+		pushValue(popValue<Int>() * popValue<Int>());
+		break;
+	case ds::BytecodeOp::divInt: {
+		Int first = popValue<Int>();
+		pushValue(popValue<Int>() / first);
+		break;
+	}
+	case ds::BytecodeOp::modInt: {
+		Int first = popValue<Int>();
+		pushValue(popValue<Int>() % first);
+		break;
+	}
+	case ds::BytecodeOp::negativeInt: {
+		pushValue(-popValue<Int>());
+		break;
+	}
+	case ds::BytecodeOp::greaterInt: {
+		Int first = popValue<Int>();
+		pushValue<Bool>(popValue<Int>() > first);
+		break;
+	}
+	case ds::BytecodeOp::equals: {
+		Size size = *(Size*)&argumentBuffer[0];
+		Bool same = memcmp(
+						&this->stack[stackPos - size],
+						&this->stack[stackPos - size * 2], size) == 0;
+		stackPos -= size * 2;
+		pushValue<Bool>(same);
+		break;
+	}
+	case ds::BytecodeOp::addFloat:
+		pushValue(popValue<Float>() + popValue<Float>());
+		break;
+	case ds::BytecodeOp::subFloat: {
+		Float first = popValue<Float>();
+		pushValue(popValue<Float>() - first);
+		break;
+	}
+	case ds::BytecodeOp::mulFloat:
+		pushValue(popValue<Float>() * popValue<Float>());
+		break;
+	case ds::BytecodeOp::divFloat: {
+		Float first = popValue<Float>();
+		pushValue(popValue<Float>() / first);
+		break;
+	}
+	case ds::BytecodeOp::modFloat: {
+		Float first = popValue<Float>();
+		pushValue(std::fmod(popValue<Float>(), first));
+		break;
+	}
+	case ds::BytecodeOp::equalFloat: {
+		pushValue<Bool>(popValue<Float>() == popValue<Float>());
+		break;
+	}
+	case ds::BytecodeOp::negativeFloat: {
+		pushValue(-popValue<Float>());
+		break;
+	}
+	case ds::BytecodeOp::greaterFloat: {
+		Float first = popValue<Float>();
+		pushValue<Bool>(popValue<Float>() > first);
+		break;
+	}
+	case ds::BytecodeOp::intToFloat:
+		pushValue(Float(popValue<Int>()));
+		break;
+	case ds::BytecodeOp::floatToInt:
+		pushValue(int32_t(popValue<Float>()));
+		break;
+	case ds::BytecodeOp::boolNot:
+		pushValue<Bool>(!bool(popValue<Bool>()));
+		break;
+	case ds::BytecodeOp::boolAnd: {
+		Bool first = popValue<Bool>();
+		Bool second = popValue<Bool>();
+		pushValue<Bool>(bool(first && second));
+		break;
+	}
+	case ds::BytecodeOp::boolOr: {
+		Bool first = popValue<Bool>();
+		Bool second = popValue<Bool>();
+		pushValue<Bool>(bool(first || second));
+		break;
+	}
+	case ds::BytecodeOp::call:
+		callStack[callStackPos++] = BytecodeOffset(code.streamPos);
+		code.streamPos = size_t(*(BytecodeOffset*)&argumentBuffer[0]);
+		break;
+	case ds::BytecodeOp::callExternal:
+		runtime->externals[*(Size*)&argumentBuffer[0]](this);
+		break;
+	case ds::BytecodeOp::awaitTask: {
+		ClassRef<modules::system::async::Task> task = popValue<RuntimeClass*>();
+		ClassRef<modules::system::async::Task> returnTask = popValue<RuntimeClass*>();
+		Size resultSize = *(Size*)&argumentBuffer[0];
+		Pointer newPos = Pointer(*(Size*)&argumentBuffer[sizeof(resultSize)]);
+		if (task->completed)
+		{
+			modules::system::async::pushTaskResult(task.get(), resultSize, this);
+			code.streamPos = newPos;
+		}
+		else
+		{
+			// if (canAwait)
+			//{
+			//	suspended = true;
+			//	suspendStackPos = baseCallStackPos;
+			//	task->awaiter = this;
+			//	code.streamPos = newPos;
+			//	return false;
+			// }
+			auto& rt = this->runtime->asyncContexts.emplace_back(createSuspendedCopy(callStackPos, newPos));
+			task->awaiter = rt;
+			pushValue(returnTask);
+		}
+		break;
+	}
+	case ds::BytecodeOp::ret:
+		if (callStackPos == baseCallStackPos)
+		{
+			return false;
+		}
+		code.streamPos = callStack[--callStackPos];
+		break;
+	case ds::BytecodeOp::pushVariable: {
+		Size size = *(Size*)&argumentBuffer[0];
+		variableStackPos += size;
+		break;
+	}
+	case ds::BytecodeOp::storeVariable: {
+		Size size = *(Size*)&argumentBuffer[0];
+		Size offset = *(Size*)&argumentBuffer[sizeof(size)];
+		popBytes(&variableStack[variableStackPos - offset], size);
+		break;
+	}
+	case ds::BytecodeOp::readVariable: {
+		Size size = *(Size*)&argumentBuffer[0];
+		Size offset = *(Size*)&argumentBuffer[sizeof(size)];
+		pushBytes(&variableStack[variableStackPos - offset], size);
+		break;
+	}
+	case ds::BytecodeOp::popVariable: {
+		Size size = *(Size*)&argumentBuffer[0];
+		variableStackPos -= size;
+		break;
+	}
+	case ds::BytecodeOp::allocClass: {
+		Size size = popValue<Size>();
+		Size typeId = *(Size*)&argumentBuffer[0];
+		BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(typeId)];
+		pushValue(RuntimeClass::allocateClass(size, typeId, vTableOffset != UINT32_MAX ? runtime->vTable.data() + vTableOffset : nullptr));
+		break;
+	}
+	case ds::BytecodeOp::implInterface: {
+		RuntimeClass* classPtr = popValue<RuntimeClass*>();
+		BytecodeOffset offset = *(BytecodeOffset*)&argumentBuffer[0];
+		BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(offset)];
+
+		RuntimeClass* cls = reinterpret_cast<RuntimeClass*>(classPtr->getBody() + offset);
+		*cls = RuntimeClass{
+			.vtable = vTableOffset != UINT32_MAX ? runtime->vTable.data() + vTableOffset : nullptr,
+			.type = classPtr->type,
+			.references = offset,
+			.referencesAreOffset = true,
+		};
+
+		pushValue(cls);
+		break;
+	}
+	case ds::BytecodeOp::classMember: {
+		Size size = popValue<Size>();
+		Size offset = popValue<Size>();
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		pushBytes(ptr->getBody() + offset, size);
+		break;
+	}
+	case ds::BytecodeOp::setClassMember: {
+		Size size = popValue<Size>();
+		Size offset = popValue<Size>();
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		popBytes(ptr->getBody() + offset, size);
+		break;
+	}
+	case ds::BytecodeOp::classMemberPtr: {
+		Size size = popValue<Size>();
+		Size offset = popValue<Size>();
+		RuntimeClass* classPtr = popValue<RuntimeClass*>();
+		uint8_t* bodyPointer = *(uint8_t**)classPtr->getBody();
+		if (bodyPointer)
+		{
+			pushBytes(bodyPointer + offset, size);
+		}
+		else
+		{
+			runtimePanic("Attempted to read value from a native null reference");
+		}
+		break;
+	}
+	case ds::BytecodeOp::setClassMemberPtr: {
+		Size size = popValue<Size>();
+		Size offset = popValue<Size>();
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		if (*(void**)ptr->getBody())
+		{
+			popBytes(*(uint8_t**)ptr->getBody() + offset, size);
+		}
+		else
+		{
+			runtimePanic("Attempted to write value from a native null reference");
+		}
+		break;
+	}
+	case ds::BytecodeOp::setClassMemberPushAgain: {
+		Size size = popValue<Size>();
+		Size offset = popValue<Size>();
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		popBytes(ptr->getBody() + offset, size);
+		pushValue(ptr);
+		break;
+	}
+	case ds::BytecodeOp::refClass: {
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		if (ptr)
+		{
+			ptr->addRef();
+		}
+		pushValue(ptr);
+		break;
+	}
+	case ds::BytecodeOp::unrefClass: {
+		auto ptr = popValue<RuntimeClass*>();
+
+		RuntimeFunction destructor = RuntimeClass::unref(ptr);
+
+		if (destructor)
+		{
+			pushValue(ptr);
+			if (destructor.nativeFn)
+			{
+				destructor.nativeFn(this);
+			}
+			else
+			{
+				callStack[callStackPos++] = BytecodeOffset(code.streamPos);
+				code.streamPos = destructor.codeOffset;
+			}
+		}
+
+		break;
+	}
+	case ds::BytecodeOp::virtualCall: {
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		BytecodeOffset called = *(BytecodeOffset*)&argumentBuffer[0];
+		auto& entry = ptr->vtable[called];
+		pushValue(ptr);
+		if (entry.nativeFn)
+		{
+			entry.nativeFn(this);
+		}
+		else
+		{
+			callStack[callStackPos++] = BytecodeOffset(code.streamPos);
+			code.streamPos = entry.codeOffset;
+		}
+
+		break;
+	}
+	case ds::BytecodeOp::nullCheck: {
+		Pointer ptr = popValue<Pointer>();
+		if (!ptr) [[unlikely]]
+		{
+			runtimePanic("Attempted to use null reference");
+			return false;
+		}
+		pushValue(ptr);
+		break;
+	}
+	case ds::BytecodeOp::getStructMember: {
+		Size size = *(Size*)&argumentBuffer[0];
+		Size offset = *(Size*)&argumentBuffer[sizeof(size)];
+		Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
+		auto targetPos = stackPos - offset - size;
+		stackPos -= structSize;
+		pushBytes(&stack[targetPos], size);
+		break;
+	}
+	case ds::BytecodeOp::setStructMember: {
+		Size size = *(Size*)&argumentBuffer[0];
+		Size offset = *(Size*)&argumentBuffer[sizeof(size)];
+		Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
+		auto targetPos = stackPos - offset - size;
+		memcpy(&stack[targetPos], &this->stack[stackPos - structSize - size], size);
+		memmove(&stack[stackPos - structSize - size], &this->stack[stackPos - structSize], structSize);
+		stackPos -= size;
+		break;
+	}
+	case ds::BytecodeOp::suspend: {
+		suspended = true;
+		suspendStackPos = baseCallStackPos;
+		return false;
+	}
+	case ds::BytecodeOp::unwind: {
+		doUnwind();
+		return false;
+	}
+	case ds::BytecodeOp::classIs: {
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		if (ptr)
+		{
+			TypeId id = *(TypeId*)&argumentBuffer[0];
+			if (id == ptr->type || this->runtime->reflect->isSubclassOf(ptr->type, id))
+			{
+				pushValue<Bool>(true);
+			}
+			else
+			{
+				pushValue<Bool>(false);
+			}
+		}
+		else
+		{
+			pushValue<Bool>(false);
+		}
+		break;
+	}
+	case ds::BytecodeOp::classAs: {
+		RuntimeClass* ptr = popValue<RuntimeClass*>();
+		Bool isNullable = *(Bool*)&argumentBuffer[sizeof(TypeId)];
+		if (ptr)
+		{
+			TypeId id = *(TypeId*)&argumentBuffer[0];
+			if (id != ptr->type)
+			{
+				auto [success, isInterface, offset] = this->runtime->reflect->tryCast(ptr->type, id);
+
+				if (success)
+				{
+					ptr = isInterface ? reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset) : ptr;
+				}
+				else
+				{
+					ptr = nullptr;
+				}
+			}
+		}
+		if (!isNullable && !ptr)
+		{
+			runtimePanic("Non nullable cast failed.");
+		}
+		pushValue(ptr);
+		break;
+	}
+	case ds::BytecodeOp::noReturn: {
+		runtimePanic("Function did not return");
+		break;
+	}
+	case ds::BytecodeOp::castInterface: {
+		Int offset = *(Int*)&argumentBuffer[0];
+		Bool unCast = *(Bool*)&argumentBuffer[sizeof(offset)];
+		RuntimeClass* classPtr = popValue<RuntimeClass*>();
+		if (unCast)
+		{
+			classPtr = (RuntimeClass*)((uint8_t*)classPtr - offset - sizeof(RuntimeClass));
+		}
+		else
+		{
+			classPtr = (RuntimeClass*)((uint8_t*)classPtr + offset + sizeof(RuntimeClass));
+		}
+		pushValue(classPtr);
+		break;
+	}
+	case ds::BytecodeOp::debugBreak: {
+
+		this->debugBreak(baseCallStackPos);
+
+		break;
+	}
+	default:
+		abort();
+		break;
+	}
+
+	return true;
+}
+
+void ds::RuntimeInterpretContext::runLoop(BytecodeOffset& baseCallStackPos)
+{
 	while (!code.empty())
 	{
 		auto op = code.getValue<BytecodeOp>();
 
 		uint8_t argsSize = code.getValue<uint8_t>();
 
-		if (argsSize)
+		if (!runInstruction(op, argsSize, baseCallStackPos))
 		{
-			code.get(argumentBuffer.data(), argsSize);
-		}
-
-		switch (op)
-		{
-		case ds::BytecodeOp::pushAddr:
-		case ds::BytecodeOp::push:
-			pushBytes(argumentBuffer.data(), Size(argsSize));
-			break;
-		case ds::BytecodeOp::pop: {
-			stackPos -= *(Size*)&argumentBuffer[0];
-			break;
-		}
-		case ds::BytecodeOp::copy: {
-			Size size = *(Size*)&argumentBuffer[0];
-			copyBytes(size);
-			break;
-		}
-		case ds::BytecodeOp::jump: {
-			code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
-			break;
-		}
-		case ds::BytecodeOp::jumpIf: {
-			Bool cond = popValue<Bool>();
-			if (cond)
-			{
-				code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
-			}
-			break;
-		}
-		case ds::BytecodeOp::jumpIfNot: {
-			Bool cond = popValue<Bool>();
-			if (!cond)
-			{
-				code.streamPos = Pointer(*(Size*)&argumentBuffer[0]);
-			}
-			break;
-		}
-		case ds::BytecodeOp::addInt:
-			pushValue(popValue<Int>() + popValue<Int>());
-			break;
-		case ds::BytecodeOp::subInt: {
-			Int first = popValue<Int>();
-			pushValue(popValue<Int>() - first);
-			break;
-		}
-		case ds::BytecodeOp::mulInt:
-			pushValue(popValue<Int>() * popValue<Int>());
-			break;
-		case ds::BytecodeOp::divInt: {
-			Int first = popValue<Int>();
-			pushValue(popValue<Int>() / first);
-			break;
-		}
-		case ds::BytecodeOp::modInt: {
-			Int first = popValue<Int>();
-			pushValue(popValue<Int>() % first);
-			break;
-		}
-		case ds::BytecodeOp::negativeInt: {
-			pushValue(-popValue<Int>());
-			break;
-		}
-		case ds::BytecodeOp::greaterInt: {
-			Int first = popValue<Int>();
-			pushValue<Bool>(popValue<Int>() > first);
-			break;
-		}
-		case ds::BytecodeOp::equals: {
-			Size size = *(Size*)&argumentBuffer[0];
-			Bool same = memcmp(
-							&this->stack[stackPos - size],
-							&this->stack[stackPos - size * 2], size) == 0;
-			stackPos -= size * 2;
-			pushValue<Bool>(same);
-			break;
-		}
-		case ds::BytecodeOp::addFloat:
-			pushValue(popValue<Float>() + popValue<Float>());
-			break;
-		case ds::BytecodeOp::subFloat: {
-			Float first = popValue<Float>();
-			pushValue(popValue<Float>() - first);
-			break;
-		}
-		case ds::BytecodeOp::mulFloat:
-			pushValue(popValue<Float>() * popValue<Float>());
-			break;
-		case ds::BytecodeOp::divFloat: {
-			Float first = popValue<Float>();
-			pushValue(popValue<Float>() / first);
-			break;
-		}
-		case ds::BytecodeOp::modFloat: {
-			Float first = popValue<Float>();
-			pushValue(std::fmod(popValue<Float>(), first));
-			break;
-		}
-		case ds::BytecodeOp::equalFloat: {
-			pushValue<Bool>(popValue<Float>() == popValue<Float>());
-			break;
-		}
-		case ds::BytecodeOp::negativeFloat: {
-			pushValue(-popValue<Float>());
-			break;
-		}
-		case ds::BytecodeOp::greaterFloat: {
-			Float first = popValue<Float>();
-			pushValue<Bool>(popValue<Float>() > first);
-			break;
-		}
-		case ds::BytecodeOp::intToFloat:
-			pushValue(Float(popValue<Int>()));
-			break;
-		case ds::BytecodeOp::floatToInt:
-			pushValue(int32_t(popValue<Float>()));
-			break;
-		case ds::BytecodeOp::boolNot:
-			pushValue<Bool>(!bool(popValue<Bool>()));
-			break;
-		case ds::BytecodeOp::boolAnd: {
-			Bool first = popValue<Bool>();
-			Bool second = popValue<Bool>();
-			pushValue<Bool>(bool(first && second));
-			break;
-		}
-		case ds::BytecodeOp::boolOr: {
-			Bool first = popValue<Bool>();
-			Bool second = popValue<Bool>();
-			pushValue<Bool>(bool(first || second));
-			break;
-		}
-		case ds::BytecodeOp::call:
-			callStack[callStackPos++] = BytecodeOffset(code.streamPos);
-			code.streamPos = size_t(*(BytecodeOffset*)&argumentBuffer[0]);
-			break;
-		case ds::BytecodeOp::callExternal:
-			runtime->externals[*(Size*)&argumentBuffer[0]](this);
-			break;
-		case ds::BytecodeOp::awaitTask: {
-			ClassRef<modules::system::async::Task> task = popValue<RuntimeClass*>();
-			ClassRef<modules::system::async::Task> returnTask = popValue<RuntimeClass*>();
-			Size resultSize = *(Size*)&argumentBuffer[0];
-			Pointer newPos = Pointer(*(Size*)&argumentBuffer[sizeof(resultSize)]);
-			if (task->completed)
-			{
-				modules::system::async::pushTaskResult(task.get(), resultSize, this);
-				code.streamPos = newPos;
-			}
-			else
-			{
-				//if (canAwait)
-				//{
-				//	suspended = true;
-				//	suspendStackPos = baseCallStackPos;
-				//	task->awaiter = this;
-				//	code.streamPos = newPos;
-				//	return;
-				//}
-				auto& rt = this->runtime->asyncContexts.emplace_back(createSuspendedCopy(callStackPos, newPos));
-				task->awaiter = rt;
-				pushValue(returnTask);
-			}
-			break;
-		}
-		case ds::BytecodeOp::ret:
-			if (callStackPos == baseCallStackPos)
-			{
-				return;
-			}
-			code.streamPos = callStack[--callStackPos];
-			break;
-		case ds::BytecodeOp::pushVariable: {
-			Size size = *(Size*)&argumentBuffer[0];
-			variableStackPos += size;
-			break;
-		}
-		case ds::BytecodeOp::storeVariable: {
-			Size size = *(Size*)&argumentBuffer[0];
-			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
-			popBytes(&variableStack[variableStackPos - offset], size);
-			break;
-		}
-		case ds::BytecodeOp::readVariable: {
-			Size size = *(Size*)&argumentBuffer[0];
-			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
-			pushBytes(&variableStack[variableStackPos - offset], size);
-			break;
-		}
-		case ds::BytecodeOp::popVariable: {
-			Size size = *(Size*)&argumentBuffer[0];
-			variableStackPos -= size;
-			break;
-		}
-		case ds::BytecodeOp::allocClass: {
-			Size size = popValue<Size>();
-			Size typeId = *(Size*)&argumentBuffer[0];
-			BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(typeId)];
-			pushValue(RuntimeClass::allocateClass(size, typeId, vTableOffset != UINT32_MAX ? runtime->vTable.data() + vTableOffset : nullptr));
-			break;
-		}
-		case ds::BytecodeOp::implInterface: {
-			RuntimeClass* classPtr = popValue<RuntimeClass*>();
-			BytecodeOffset offset = *(BytecodeOffset*)&argumentBuffer[0];
-			BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(offset)];
-
-			RuntimeClass* cls = reinterpret_cast<RuntimeClass*>(classPtr->getBody() + offset);
-			*cls = RuntimeClass{
-				.vtable = vTableOffset != UINT32_MAX ? runtime->vTable.data() + vTableOffset : nullptr,
-				.type = classPtr->type,
-				.references = offset,
-				.referencesAreOffset = true,
-			};
-
-			pushValue(cls);
-			break;
-		}
-		case ds::BytecodeOp::classMember: {
-			Size size = popValue<Size>();
-			Size offset = popValue<Size>();
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			pushBytes(ptr->getBody() + offset, size);
-			break;
-		}
-		case ds::BytecodeOp::setClassMember: {
-			Size size = popValue<Size>();
-			Size offset = popValue<Size>();
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			popBytes(ptr->getBody() + offset, size);
-			break;
-		}
-		case ds::BytecodeOp::classMemberPtr: {
-			Size size = popValue<Size>();
-			Size offset = popValue<Size>();
-			RuntimeClass* classPtr = popValue<RuntimeClass*>();
-			uint8_t* bodyPointer = *(uint8_t**)classPtr->getBody();
-			if (bodyPointer)
-			{
-				pushBytes(bodyPointer + offset, size);
-			}
-			else
-			{
-				runtimePanic("Attempted to read value from a native null reference");
-			}
-			break;
-		}
-		case ds::BytecodeOp::setClassMemberPtr: {
-			Size size = popValue<Size>();
-			Size offset = popValue<Size>();
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			if (*(void**)ptr->getBody())
-			{
-				popBytes(*(uint8_t**)ptr->getBody() + offset, size);
-			}
-			else
-			{
-				runtimePanic("Attempted to write value from a native null reference");
-			}
-			break;
-		}
-		case ds::BytecodeOp::setClassMemberPushAgain: {
-			Size size = popValue<Size>();
-			Size offset = popValue<Size>();
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			popBytes(ptr->getBody() + offset, size);
-			pushValue(ptr);
-			break;
-		}
-		case ds::BytecodeOp::refClass: {
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			if (ptr)
-			{
-				ptr->addRef();
-			}
-			pushValue(ptr);
-			break;
-		}
-		case ds::BytecodeOp::unrefClass: {
-			auto ptr = popValue<RuntimeClass*>();
-
-			RuntimeFunction destructor = RuntimeClass::unref(ptr);
-
-			if (destructor)
-			{
-				pushValue(ptr);
-				if (destructor.nativeFn)
-				{
-					destructor.nativeFn(this);
-				}
-				else
-				{
-					callStack[callStackPos++] = BytecodeOffset(code.streamPos);
-					code.streamPos = destructor.codeOffset;
-				}
-			}
-
-			break;
-		}
-		case ds::BytecodeOp::virtualCall: {
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			BytecodeOffset called = *(BytecodeOffset*)&argumentBuffer[0];
-			auto& entry = ptr->vtable[called];
-			pushValue(ptr);
-			if (entry.nativeFn)
-			{
-				entry.nativeFn(this);
-			}
-			else
-			{
-				callStack[callStackPos++] = BytecodeOffset(code.streamPos);
-				code.streamPos = entry.codeOffset;
-			}
-
-			break;
-		}
-		case ds::BytecodeOp::nullCheck: {
-			Pointer ptr = popValue<Pointer>();
-			if (!ptr) [[unlikely]]
-			{
-				runtimePanic("Attempted to use null reference");
-				return;
-			}
-			pushValue(ptr);
-			break;
-		}
-		case ds::BytecodeOp::getStructMember: {
-			Size size = *(Size*)&argumentBuffer[0];
-			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
-			Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
-			auto targetPos = stackPos - offset - size;
-			stackPos -= structSize;
-			pushBytes(&stack[targetPos], size);
-			break;
-		}
-		case ds::BytecodeOp::setStructMember: {
-			Size size = *(Size*)&argumentBuffer[0];
-			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
-			Size structSize = *(Size*)&argumentBuffer[sizeof(size) + sizeof(offset)];
-			auto targetPos = stackPos - offset - size;
-			memcpy(&stack[targetPos], &this->stack[stackPos - structSize - size], size);
-			memmove(&stack[stackPos - structSize - size], &this->stack[stackPos - structSize], structSize);
-			stackPos -= size;
-			break;
-		}
-		case ds::BytecodeOp::suspend: {
-			suspended = true;
-			suspendStackPos = baseCallStackPos;
 			return;
-		}
-		case ds::BytecodeOp::unwind: {
-			doUnwind();
-			return;
-		}
-		case ds::BytecodeOp::classIs: {
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			if (ptr)
-			{
-				TypeId id = *(TypeId*)&argumentBuffer[0];
-				if (id == ptr->type || this->runtime->reflect->isSubclassOf(ptr->type, id))
-				{
-					pushValue<Bool>(true);
-				}
-				else
-				{
-					pushValue<Bool>(false);
-				}
-			}
-			else
-			{
-				pushValue<Bool>(false);
-			}
-			break;
-		}
-		case ds::BytecodeOp::classAs: {
-			RuntimeClass* ptr = popValue<RuntimeClass*>();
-			Bool isNullable = *(Bool*)&argumentBuffer[sizeof(TypeId)];
-			if (ptr)
-			{
-				TypeId id = *(TypeId*)&argumentBuffer[0];
-				if (id != ptr->type)
-				{
-					auto [success, isInterface, offset] = this->runtime->reflect->tryCast(ptr->type, id);
-
-					if (success)
-					{
-						ptr = isInterface ? reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset) : ptr;
-					}
-					else
-					{
-						ptr = nullptr;
-					}
-				}
-			}
-			if (!isNullable && !ptr)
-			{
-				runtimePanic("Non nullable cast failed.");
-			}
-			pushValue(ptr);
-			break;
-		}
-		case ds::BytecodeOp::noReturn: {
-			runtimePanic("Function did not return");
-			break;
-		}
-		case ds::BytecodeOp::castInterface: {
-			Int offset = *(Int*)&argumentBuffer[0];
-			Bool unCast = *(Bool*)&argumentBuffer[sizeof(offset)];
-			RuntimeClass* classPtr = popValue<RuntimeClass*>();
-			if (unCast)
-			{
-				classPtr = (RuntimeClass*)((uint8_t*)classPtr - offset - sizeof(RuntimeClass));
-			}
-			else
-			{
-				classPtr = (RuntimeClass*)((uint8_t*)classPtr + offset + sizeof(RuntimeClass));
-			}
-			pushValue(classPtr);
-			break;
-		}
-		default:
-			abort();
-			break;
 		}
 	}
 }
@@ -607,6 +628,59 @@ InterpretContext* ds::RuntimeInterpretContext::createCopy()
 	return other;
 
 }
+
+bool ds::RuntimeInterpretContext::setDebugBreakpoint(size_t instructionOffset)
+{
+	breakpointInstructions[instructionOffset] = BreakpointData{
+		.oldOp = BytecodeOp(this->code.buf->buffer[instructionOffset]),
+		.oldArgLength = code.buf->buffer[instructionOffset + sizeof(BytecodeOp)]
+	};
+	code.buf->buffer[instructionOffset] = uint8_t(BytecodeOp::debugBreak);
+	code.buf->buffer[instructionOffset + sizeof(BytecodeOp)] = 0;
+
+	return true;
+}
+
+void ds::RuntimeInterpretContext::removeDebugBreakpoint(size_t instructionOffset)
+{
+	auto oldInstruction = breakpointInstructions.find(instructionOffset);
+
+	code.buf->buffer[instructionOffset] = uint8_t(oldInstruction->second.oldOp);
+	code.buf->buffer[instructionOffset + sizeof(BytecodeOp)] = oldInstruction->second.oldArgLength;
+
+	breakpointInstructions.erase(oldInstruction);
+}
+
+void ds::RuntimeInterpretContext::continueFromBreakpoint(size_t instructionOffset, BytecodeOffset& baseCallStackPos)
+{
+	auto oldOp = this->breakpointInstructions[instructionOffset];
+
+	runInstruction(oldOp.oldOp, oldOp.oldArgLength, baseCallStackPos);
+}
+
+void ds::RuntimeInterpretContext::debugBreak(BytecodeOffset& baseCallStackPos)
+{
+	Pointer codePos = this->code.streamPos - 2;
+	if (!runtime->onDebugBreak)
+	{
+		continueFromBreakpoint(codePos, baseCallStackPos);
+		return;
+	}
+
+	auto state = new InterpreterDebugState(this, codePos);
+	auto result = runtime->onDebugBreak(this, codePos, state);
+	delete state;
+
+	if (result)
+	{
+		continueFromBreakpoint(codePos, baseCallStackPos);
+	}
+	else
+	{
+		doUnwind();
+	}
+}
+
 InterpretContext* RuntimeInterpretContext::createSuspendedCopy(BytecodeOffset stackOffset, size_t streamPosition)
 {
 	auto other = reinterpret_cast<RuntimeInterpretContext*>(createCopy());

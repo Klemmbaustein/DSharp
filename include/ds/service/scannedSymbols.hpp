@@ -17,17 +17,6 @@ namespace ds
 
 	struct ScannedFunction
 	{
-		Token at;
-		TokenPos argEnd;
-		std::string name;
-		std::string shortName;
-		std::optional<SymbolDefinition> definition;
-		std::string returnType;
-		TypeId returnTypeId = 0;
-		std::vector<std::pair<std::string, std::string>> arguments;
-
-		bool isVirtual = false;
-
 		enum class Kind
 		{
 			functionCall,
@@ -37,7 +26,18 @@ namespace ds
 			constructor,
 		};
 
+		Token at;
+		TokenPos argEnd;
 		Kind kind = Kind::functionCall;
+		std::string name;
+		std::string shortName;
+		std::optional<SymbolDefinition> definition;
+		std::string returnType;
+
+		TypeId returnTypeId = 0;
+		std::vector<std::pair<std::string, std::string>> arguments;
+
+		bool isVirtual = false;
 
 		ScannedFunction(Function* from, Token atToken, Kind kind, TokenPos argEnd = TokenPos());
 		ScannedFunction(Function* from, const GenericParseData* generic, Token atToken, Kind kind, TokenPos argEnd = TokenPos());

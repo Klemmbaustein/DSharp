@@ -48,7 +48,7 @@ namespace ds
 		{
 			if constexpr (std::is_same_v<TReturn, void>)
 			{
-				interpreter->callVirtualMethodVoid(callablePtr, 1);
+				(void)interpreter->callVirtualMethodVoid(callablePtr, 1);
 			}
 			else
 			{

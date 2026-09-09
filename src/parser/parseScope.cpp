@@ -7,6 +7,7 @@
 #include <ds/parser/parseExpression.hpp>
 #include <ds/parser/bytecode/constantEvaluate.hpp>
 #include <ds/parser/types/iteratorType.hpp>
+#include <ds/parser/bytecode/compileBytecodeDebug.hpp>
 using namespace ds;
 
 void ds::ParsedScope::returnCompletedTask(TaskType* taskType)
@@ -122,7 +123,7 @@ void ds::VariableInfo::create(ParsedScope* in, ErrorContext* errors) const
 	in->code->addBuffer(this->assignedValue.code);
 	in->pushVariableValue(type, true);
 
-	auto& newVariable = in->addVariable(this->name, type, errors);
+	auto& newVariable = in->addVariable(this->name, type, errors, false);
 	newVariable.readOnly = isConst;
 #ifdef WITH_LANGUAGE_SERVICE
 	if (in->context->service)
@@ -229,7 +230,7 @@ BytecodeBuffer ds::ParsedScope::addTemporaryVariable(Type* type)
 
 	std::string tempName = ".temp_" + std::to_string(tempCounter++);
 
-	auto instruction = std::make_shared<BytecodePushVariable>(tempName, type);
+	auto instruction = std::make_shared<BytecodePushVariable>(tempName, type, true);
 
 	buffer.add(instruction);
 
@@ -264,9 +265,9 @@ void ds::ParsedScope::pushVariableValue(Type* type, bool copy)
 	code->addOperation(BytecodeOp::storeVariable, args);
 }
 
-ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext* errors)
+ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext* errors, bool isInternal)
 {
-	auto instruction = std::make_shared<BytecodePushVariable>(name.string, type);
+	auto instruction = std::make_shared<BytecodePushVariable>(name.string, type, isInternal);
 	code->add(instruction);
 
 	auto found = this->variables.find(name);
@@ -285,6 +286,7 @@ ScopeVariable& ds::ParsedScope::addVariable(Token name, Type* type, ErrorContext
 			.ownedBy = this,
 			.depth = this->depth,
 			.type = type,
+			.isInternal = isInternal,
 		} });
 
 	this->variableStackPosition += type->size;
@@ -319,23 +321,28 @@ BytecodeBuffer ds::ParsedScope::compileScopeExit(size_t toDepth, bool isEnd, boo
 		bool varIsThisTask = &i.second == taskVariable;
 		bool shouldUnrefThis = ((!isDestructor && !returnThis) || isConstructor);
 
-		if (dereferenceAll && !unreachable && !varIsThisTask && (!varIsThis || shouldUnrefThis))
+		if (dereferenceAll && !varIsThisTask && (!varIsThis || shouldUnrefThis))
 		{
 			auto unrefCode = i.second.type->compileUnref();
 			if (unrefCode.instructions.size())
 			{
-				if (isEnd)
+				if (isEnd && !varIsThisTask)
 					code.addNew<BytecodeUnwindClass>(i.second.variableInstruction);
-				code.addBuffer(i.second.readValue(this));
-				code.addBuffer(unrefCode);
+				if (!unreachable)
+				{
+					code.addBuffer(i.second.readValue(this));
+					code.addBuffer(unrefCode);
+				}
 			}
+			else if (isEnd && context->options.emitDebugData)
+				code.addNew<BytecodeDebugUnwindPrimitive>(i.second.variableInstruction);
 
-			if (isEnd && &i.second != thisVariable)
+			if (isEnd && &i.second != thisVariable && !unreachable)
 			{
 				toErase.push_back(i.first);
 			}
 		}
-		else if (isEnd && dereferenceAll && !unreachable && varIsThisTask)
+		else if (isEnd && dereferenceAll && varIsThisTask)
 		{
 			code.addNew<BytecodeUnwindClass>(i.second.variableInstruction);
 		}
@@ -382,7 +389,7 @@ void ds::ParsedScope::setClass(ParsedClass* inClass, bool copy)
 		this->code->addBuffer(inClass->thisType->compileMove(this));
 	}
 	pushVariableValue(inClass->thisType, false);
-	this->thisVariable = &addVariable(Token("this"), inClass->thisType, nullptr);
+	this->thisVariable = &addVariable(Token("this"), inClass->thisType, nullptr, false);
 	this->thisVariable->readOnly = true;
 	this->thisVariable->isThis = true;
 }
@@ -392,8 +399,7 @@ void ds::ParsedScope::addTask(TaskType* taskType)
 	this->code->addBuffer(taskType->compileTask().code);
 	this->code->addBuffer(taskType->compileMove(this));
 	pushVariableValue(taskType, false);
-	this->taskVariable = &addVariable(Token(".task" + std::to_string(tempCounter++)), taskType, nullptr);
-	this->taskVariable->isInternal = true;
+	this->taskVariable = &addVariable(Token(".task" + std::to_string(tempCounter++)), taskType, nullptr, true);
 }
 
 void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
@@ -404,8 +410,7 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 	if (isLambda)
 	{
 		pushVariableValue(LambdaType::getInstance(), true);
-		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance(), nullptr);
-		lambdaVariable->isInternal = true;
+		lambdaVariable = &addVariable(Token(".lambda"), LambdaType::getInstance(), nullptr, true);
 		this->scopeFunction->addArguments(*this, errors);
 	}
 
@@ -467,6 +472,11 @@ void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorCont
 
 void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext* errors)
 {
+	if (context->options.emitDebugData)
+	{
+		emitLineDebugInfo(line, file);
+	}
+
 	auto& first = line.get();
 
 	if (first == "return" && scopeFunction)
@@ -554,6 +564,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		{
 			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
 			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->breakTarget);
+			line.expectEndOfLine(errors);
 			return;
 		}
 	}
@@ -563,7 +574,8 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		if (this->continueTarget)
 		{
 			code->addBuffer(this->compileScopeExit(breakContinueDepth, false));
-			this->code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget);
+			code->addNew<BytecodeJump>(BytecodeOp::jump, this->continueTarget);
+			line.expectEndOfLine(errors);
 			return;
 		}
 	}
@@ -845,7 +857,7 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 	this->code->addBuffer(getIteratorCall.code);
 	auto iterType = dynamic_cast<IteratorType*>(getIteratorCall.type);
 	pushVariableValue(iterType, true);
-	auto& iterator = addVariable(Token(".for_iterator" + std::to_string(tempCounter++)), iterType, errors);
+	auto& iterator = addVariable(Token(".for_iterator" + std::to_string(tempCounter++)), iterType, errors, true);
 	iterator.isInternal = true;
 
 	// The label for restarting the loop
@@ -887,6 +899,11 @@ void ds::ParsedScope::compileFor(TokenLine line, ParsedFile* file, ErrorContext*
 
 	this->depth -= 2;
 	code->addBuffer(compileScopeExit(this->depth + 1, true));
+}
+
+void ds::ParsedScope::emitLineDebugInfo(TokenLine& line, ParsedFile* file)
+{
+	this->code->addNew<BytecodeDebugLine>(line.peek().position.line);
 }
 
 BytecodeBuffer ds::ScopeVariable::readValue(ParsedScope* with) const

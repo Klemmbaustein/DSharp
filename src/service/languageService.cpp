@@ -6,7 +6,9 @@ using namespace ds;
 
 ds::LanguageService::LanguageService(LanguageContext* context)
 {
-	this->parser = new ParseContext(context, {});
+	this->parser = new ParseContext(context, ParserOptions{
+		.emitDebugData = false,
+		});
 	this->parser->service = this;
 	this->language = context;
 }

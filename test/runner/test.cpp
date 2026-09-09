@@ -35,7 +35,11 @@ static bool runTestFile(const char* file, LanguageContext& context)
 
 		runtime->loadBytecode(&source);
 		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-		runtime->run();
+		if (runtime->run() == RunResult::error)
+		{
+			delete runtime;
+			return false;
+		}
 		delete runtime;
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 		std::cout << "=== Took " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " microseconds ===" << std::endl;
