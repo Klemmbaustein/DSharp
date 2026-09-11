@@ -628,6 +628,19 @@ bool ds::TokenLine::contains(std::string token) const
 	return false;
 }
 
+size_t ds::TokenLine::count(std::string token) const
+{
+	size_t count = 0;
+	for (auto& i : *this->lineTokens)
+	{
+		if (i.string == token)
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
 const Token& ds::TokenLine::previous()
 {
 	return this->lineTokens && this->lineTokens->size()
@@ -705,18 +718,22 @@ void ds::TokenStream::getScope(TokenStream& addTo, ErrorContext* errors, size_t 
 		}
 		addTo.last = functionLine.lineTokens->at(functionLine.lineTokens->size() - 1).position;
 
-		if (functionLine.contains("{"))
+		depth += functionLine.count("{");
+
+		size_t scopeEnds = functionLine.count("}");
+
+		if (scopeEnds >= depth)
 		{
-			depth++;
-		}
-		if (functionLine.contains("}"))
-		{
-			depth--;
-			if (depth == 0)
+			if (functionLine.peek() != "}" && functionLine.lineTokens->size() != 1)
 			{
-				break;
+				addTo.addLine(functionLine);
 			}
+
+			break;
 		}
+
+		depth -= scopeEnds;
+
 
 		addTo.addLine(functionLine);
 	}

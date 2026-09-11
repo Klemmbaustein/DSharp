@@ -653,6 +653,12 @@ void ds::RuntimeInterpretContext::removeDebugBreakpoint(size_t instructionOffset
 
 void ds::RuntimeInterpretContext::continueFromBreakpoint(size_t instructionOffset, BytecodeOffset& baseCallStackPos)
 {
+	if (!this->breakpointInstructions.contains(instructionOffset))
+	{
+		this->code.streamPos -= 2;
+		return;
+	}
+
 	auto oldOp = this->breakpointInstructions[instructionOffset];
 
 	runInstruction(oldOp.oldOp, oldOp.oldArgLength, baseCallStackPos);
