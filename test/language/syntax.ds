@@ -1,0 +1,14 @@
+using system
+using system::io
+
+module syntax
+
+fn getHello() -> string { return "hello" }
+
+[EntryPoint]
+fn main()
+{
+	writeln(getHello())
+
+	for const i = [fn(){writeln("from lambda")}, fn(){writeln("from lambda 2")}] { i.call() }
+}

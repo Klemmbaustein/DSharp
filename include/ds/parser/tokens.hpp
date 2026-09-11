@@ -80,6 +80,7 @@ namespace ds
 		std::vector<Token> getUntil(std::string token, ErrorContext* errors, bool allowNoFind = false);
 
 		bool contains(std::string token) const;
+		size_t count(std::string token) const;
 
 		const Token& previous();
 
