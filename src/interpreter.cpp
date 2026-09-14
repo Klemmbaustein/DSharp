@@ -99,7 +99,9 @@ void ds::RuntimeInterpretContext::doUnwind()
 	code.streamPos = SIZE_MAX;
 }
 
+#if _WIN32
 [[msvc::forceinline]]
+#endif
 bool ds::RuntimeInterpretContext::runInstruction(BytecodeOp op, uint8_t argsSize, BytecodeOffset& baseCallStackPos)
 {
 	std::array<uint8_t, 255> argumentBuffer{};

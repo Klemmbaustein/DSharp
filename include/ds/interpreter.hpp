@@ -15,7 +15,6 @@ namespace ds
 	class RuntimeInterpretContext : public InterpretContext
 	{
 	public:
-
 		RuntimeInterpretContext(LanguageRuntime* runtime);
 
 		// Inherited via InterpretContext
@@ -44,7 +43,9 @@ namespace ds
 	private:
 		RunResult lastResult = RunResult::ok;
 
+#if _WIN32
 		[[msvc::forceinline]]
+#endif
 		bool runInstruction(BytecodeOp op, uint8_t argsSize, BytecodeOffset& baseCallStackPos);
 		void runLoop(BytecodeOffset& baseCallStackPos);
 	};
