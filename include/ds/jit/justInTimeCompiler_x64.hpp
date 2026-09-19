@@ -20,9 +20,16 @@ namespace ds::jit
 		bool isVector = false;
 		asmjit::x86::Gp gpRegister;
 		asmjit::x86::Vec vecRegister;
-		size_t number = 0;
+		union
+		{
+			size_t number = 0;
+			float vecNumber;
+		};
 		size_t size = 0;
 		size_t stackDiff = 0;
+
+		void compileTwoOp(StackValue& b, std::function<void()> allNumbers,
+			std::function<void()> oneRegister, std::function<void()> allRegisters);
 	};
 
 	class JustInTimeCompiler
@@ -128,6 +135,7 @@ namespace ds::jit
 		 * it will never be pushed to the stack but instead stored in registers.
 		 */
 		void compilePushValue(size_t value, size_t size);
+		void compilePushValue(ds::Float value);
 
 		/**
 		 * @brief
@@ -156,6 +164,9 @@ namespace ds::jit
 		[[nodiscard]]
 		StackValue compilePopValue(size_t size, bool applyStackPos);
 
+		[[nodiscard]]
+		StackValue compilePopVec();
+
 		/**
 		 * @brief
 		 * Compiles popping a value from the stack
@@ -178,8 +189,54 @@ namespace ds::jit
 
 		void flushStack();
 
-		std::optional<StackValue> currentStackValue;
+		asmjit::x86::Gp getFreeRegister();
+		asmjit::x86::Gp getFreeHalfRegister();
+		asmjit::x86::Gp getFreeByteRegister();
+		asmjit::x86::Vec getFreeVecRegister();
+
+	private:
+		std::vector<StackValue> currentStack;
 
 		void generateEmbeddedStrings();
+		std::array<asmjit::x86::Gp, 5> tempRegisters = {
+			asmjit::x86::rax,
+			asmjit::x86::rcx,
+			asmjit::x86::rdx,
+			asmjit::x86::r8,
+			asmjit::x86::r9,
+		};
+		std::array<asmjit::x86::Gp, 5> tempHalfRegisters = {
+			asmjit::x86::eax,
+			asmjit::x86::ecx,
+			asmjit::x86::edx,
+			asmjit::x86::r8d,
+			asmjit::x86::r9d,
+		};
+		std::array<asmjit::x86::Gp, 5> tempByteRegisters = {
+			asmjit::x86::al,
+			asmjit::x86::cl,
+			asmjit::x86::dl,
+			asmjit::x86::r8b,
+			asmjit::x86::r9b,
+		};
+
+		std::array<asmjit::x86::Vec, 6> tempVectorRegisters = {
+			asmjit::x86::xmm1,
+			asmjit::x86::xmm2,
+			asmjit::x86::xmm3,
+			asmjit::x86::xmm4,
+			asmjit::x86::xmm5,
+		};
+
+		void freeRegister(asmjit::x86::Gp& reg);
+		void allocRegister(asmjit::x86::Gp& reg);
+		void freeRegister(asmjit::x86::Vec& reg);
+		void allocRegister(asmjit::x86::Vec& reg);
+
+		size_t getFreeTempRegisterIndex();
+		size_t getFreeTempVecRegisterIndex();
+
+		std::set<size_t> usedTempRegisters;
+		std::set<size_t> usedTempVecRegisters;
 	};
 } // namespace ds::jit

@@ -2,6 +2,7 @@
 #include <array>
 #include <ds/jit/justInTime.hpp>
 #include <ds/modules/system.async.hpp>
+#include <cassert>
 
 using namespace ds;
 using namespace ds::jit;
@@ -209,6 +210,34 @@ void ds::jit::JustInTimeCompiler::scanForFunctions(BinaryBuffer& code, std::vect
 	}
 }
 
+void ds::jit::StackValue::compileTwoOp(StackValue& b, std::function<void()> allNumbers,
+	std::function<void()> oneRegister, std::function<void()> allRegisters)
+{
+	if (this->isNumber)
+	{
+		if (b.isNumber)
+		{
+			allNumbers();
+		}
+		else
+		{
+			std::swap(*this, b);
+			oneRegister();
+		}
+	}
+	else
+	{
+		if (b.isNumber)
+		{
+			oneRegister();
+		}
+		else
+		{
+			allRegisters();
+		}
+	}
+}
+
 void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 	const std::vector<ds::ExternalFunctionPointer>& pointers,
 	std::vector<ds::RuntimeFunction>& vTable)
@@ -270,12 +299,12 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 
 		switch (op)
 		{
-		case ds::BytecodeOp::pushAddr:
-
-			flushStack();
-			assembler->lea(rax, ptr_64(functionMappings.at(*(int64_t*)&argumentBuffer[0])));
-			compilePushValue(rax);
+		case ds::BytecodeOp::pushAddr: {
+			auto reg = getFreeRegister();
+			assembler->lea(reg, ptr_64(functionMappings.at(*(int64_t*)&argumentBuffer[0])));
+			compilePushValue(reg);
 			break;
+		}
 		case ds::BytecodeOp::push:
 
 			switch (argsSize)
@@ -306,9 +335,9 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		case ds::BytecodeOp::pop: {
 			Size size = *(int64_t*)&argumentBuffer[0];
 
-			if (currentStackValue.has_value() && currentStackValue->size == size)
+			if (currentStack.size() && currentStack.rbegin()->size == size)
 			{
-				currentStackValue = {};
+				(void)compilePopValue(size, true);
 			}
 			else
 			{
@@ -350,11 +379,13 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		}
 		case ds::BytecodeOp::jump: {
 			flushStack();
+			flushStackRegisters();
 			assembler->jmp(jumpTargetMappings.at(*(BytecodeOffset*)&argumentBuffer[0]));
 			break;
 		}
 		case ds::BytecodeOp::jumpIfNot: {
 			auto val = compilePopValue(sizeof(Bool), true);
+			flushStackRegisters();
 			if (!val.isNumber)
 			{
 				assembler->test(val.gpRegister, val.gpRegister);
@@ -369,6 +400,7 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		}
 		case ds::BytecodeOp::jumpIf: {
 			auto val = compilePopValue(sizeof(Bool), true);
+			flushStackRegisters();
 			if (!val.isNumber)
 			{
 				assembler->test(val.gpRegister, val.gpRegister);
@@ -382,11 +414,12 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::boolNot: {
-			auto val = compilePopValue(1, true);
+			auto val = compilePopValue(sizeof(Bool), true);
+			flushStackRegisters();
 			if (val.isNumber)
 			{
 				bool valueBool = bool(val.number);
-				compilePushValue(!valueBool, 1);
+				compilePushValue(!valueBool, sizeof(Bool));
 			}
 			else
 			{
@@ -406,46 +439,38 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::addInt: {
-			auto result = compilePopValue(sizeof(Int), false);
+			auto b = compilePopValue(sizeof(Int), true);
+			auto a = compilePopValue(sizeof(Int), true);
 
-			int32_t stackValue = result.stackDiff + sizeof(Int);
-			if (result.isNumber)
-			{
-				assembler->add(ptr_32(stackRegister, -stackValue), result.number);
-			}
-			else
-			{
-				assembler->add(ptr_32(stackRegister, -stackValue), result.gpRegister);
-			}
-			changeStackBy(-(sizeof(Int) + result.stackDiff) + sizeof(Int));
+			a.compileTwoOp(b, [&a, &b, this] { compilePushValue(a.number + b.number, sizeof(Int)); }, [&a, &b, this] {
+				assembler->add(a.gpRegister, b.number);
+				compilePushValue(a.gpRegister); }, [&a, &b, this] {
+				assembler->add(a.gpRegister, b.gpRegister);
+				compilePushValue(a.gpRegister); });
 			break;
 		}
 		case ds::BytecodeOp::subInt: {
-			auto result = compilePopValue(sizeof(Int), false);
+			auto b = compilePopValue(sizeof(Int), true);
+			auto a = compilePopValue(sizeof(Int), true);
 
-			int32_t stackValue = result.stackDiff + sizeof(Int);
-			if (result.isNumber)
-			{
-				assembler->sub(ptr_32(stackRegister, -stackValue), result.number);
-			}
-			else
-			{
-				assembler->sub(ptr_32(stackRegister, -stackValue), result.gpRegister);
-			}
-			changeStackBy(-(sizeof(Int) + result.stackDiff) + sizeof(Int));
+			a.compileTwoOp(b, [&a, &b, this] { compilePushValue(a.number - b.number, sizeof(Int)); }, [&a, &b, this] {
+				assembler->sub(a.gpRegister, b.number);
+				compilePushValue(a.gpRegister); }, [&a, &b, this] {
+				assembler->sub(a.gpRegister, b.gpRegister);
+				compilePushValue(a.gpRegister); });
 			break;
 		}
-		case ds::BytecodeOp::mulInt:
-			flushStack();
-			// Upper stack value -> eax
-			assembler->mov(eax, ptr_32(stackRegister, -4));
-			// Lower stack value -> r8d
-			assembler->mov(r8d, ptr_32(stackRegister, -8));
-			assembler->imul(eax, r8d);
-			// Move the result back into the stack
-			assembler->mov(ptr_32(stackRegister, -8), eax);
-			changeStackBy(-4);
+		case ds::BytecodeOp::mulInt: {
+			auto b = compilePopValue(sizeof(Int), true);
+			auto a = compilePopValue(sizeof(Int), true);
+
+			a.compileTwoOp(b, [&a, &b, this] { compilePushValue(a.number * b.number, sizeof(Int)); }, [&a, &b, this] {
+				assembler->imul(a.gpRegister, b.number);
+				compilePushValue(a.gpRegister); }, [&a, &b, this] {
+				assembler->imul(a.gpRegister, b.gpRegister);
+				compilePushValue(a.gpRegister); });
 			break;
+		}
 		case ds::BytecodeOp::divInt:
 			flushStack();
 			// Upper stack value -> eax
@@ -487,22 +512,31 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::addFloat: {
-			auto result = compilePopValueToRegister(xmm0, false);
-
-			int32_t stackValue = result + sizeof(Float);
-			assembler->addss(xmm0, ptr_32(stackRegister, -stackValue));
-			changeStackBy(-stackValue);
-			compilePushValue(xmm0);
+			auto reg = compilePopVec();
+			auto reg2 = compilePopVec();
+			reg.compileTwoOp(reg2, [&reg, &reg2, this] { compilePushValue(reg.vecNumber + reg2.vecNumber); }, [&reg, &reg2, this] {
+				auto toRegister = getFreeVecRegister();
+				auto tempRegister = getFreeHalfRegister();
+				assembler->mov(tempRegister, reg2.number);
+				assembler->movd(toRegister, tempRegister);
+				assembler->addss(reg.vecRegister, toRegister);
+				compilePushValue(reg.vecRegister); }, [&reg, &reg2, this] {
+				assembler->addss(reg.vecRegister, reg2.vecRegister);
+				compilePushValue(reg.vecRegister); });
 			break;
 		}
 		case ds::BytecodeOp::subFloat: {
-			auto result = compilePopValueToRegister(xmm0, false);
-			int32_t stackValue = result + sizeof(Float);
-			assembler->movq(xmm1, ptr_32(stackRegister, -stackValue));
-
-			assembler->subss(xmm1, xmm0);
-			changeStackBy(-stackValue);
-			compilePushValue(xmm1);
+			auto reg2 = compilePopVec();
+			auto reg = compilePopVec();
+			reg.compileTwoOp(reg2, [&reg, &reg2, this] { compilePushValue(reg.vecNumber - reg2.vecNumber); }, [&reg, &reg2, this] {
+				auto toRegister = getFreeVecRegister();
+				auto tempRegister = getFreeHalfRegister();
+				assembler->mov(tempRegister, reg2.number);
+				assembler->movd(toRegister, tempRegister);
+				assembler->subss(reg.vecRegister, toRegister);
+				compilePushValue(reg.vecRegister); }, [&reg, &reg2, this] {
+				assembler->subss(reg.vecRegister, reg2.vecRegister);
+				compilePushValue(reg.vecRegister); });
 			break;
 		}
 		case ds::BytecodeOp::mulFloat:
@@ -526,18 +560,19 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			changeStackBy(-4);
 			break;
 		case ds::BytecodeOp::modFloat: {
-			auto size = compilePopValueToRegister(xmm2, false);
-			assembler->movd(xmm3, ptr_32(stackRegister, -sizeof(Float) - size));
+			flushStack();
+			compilePopValueToRegister(xmm2, true);
+			compilePopValueToRegister(xmm3, true);
 			assembler->movaps(xmm0, xmm3);
 			assembler->divss(xmm3, xmm2);
 			assembler->roundss(xmm1, xmm3, 3);
 			assembler->mulss(xmm1, xmm2);
 			assembler->subss(xmm0, xmm1);
-			changeStackBy(-size - sizeof(Float));
 			compilePushValue(xmm0);
 			break;
 		}
 		case ds::BytecodeOp::equalFloat: {
+			flushStack();
 			auto size = compilePopValueToRegister(xmm1, false);
 			assembler->movd(xmm0, ptr_32(stackRegister, -sizeof(Float) - size));
 			assembler->ucomiss(xmm0, xmm1);
@@ -567,22 +602,17 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::greaterInt: {
-			auto argument = compilePopValue(4, false);
-			int32_t stackPosition = -(sizeof(Int) + argument.stackDiff);
-			if (argument.isNumber)
-			{
-				assembler->cmp(ptr_32(stackRegister, stackPosition), argument.number);
-			}
-			else
-			{
-				assembler->cmp(ptr_32(stackRegister, stackPosition), argument.gpRegister);
-			}
-			auto successLabel = assembler->new_label();
-			auto failLabel = assembler->new_label();
-
-			assembler->setg(al);
-			changeStackBy(-(sizeof(Int) + argument.stackDiff));
-			compilePushValue(al);
+			auto b = compilePopValue(sizeof(Int), true);
+			auto a = compilePopValue(sizeof(Int), true);
+			a.compileTwoOp(b, [&a, &b, this] { compilePushValue(a.number > b.number, sizeof(Bool)); }, [&a, &b, this] {
+				assembler->cmp(a.gpRegister, b.number);
+				auto result = getFreeByteRegister();
+				assembler->setg(result);
+				compilePushValue(result); }, [&a, &b, this] {
+				assembler->cmp(a.gpRegister, b.gpRegister);
+				auto result = getFreeByteRegister();
+				assembler->setg(result);
+				compilePushValue(result); });
 			break;
 		}
 		case ds::BytecodeOp::greaterFloat: {
@@ -598,24 +628,14 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::equals: {
-			flushStack();
 			auto size = *(Size*)&argumentBuffer[0];
 
 			bool isStandardSize = true;
 			switch (size)
 			{
 			case 1:
-				assembler->mov(al, ptr_8(stackRegister, -1));
-				assembler->cmp(ptr_8(stackRegister, -2), al);
-				break;
-			case 4: {
-				assembler->mov(eax, ptr_32(stackRegister, -4));
-				assembler->cmp(ptr_32(stackRegister, -8), eax);
-				break;
-			}
+			case 4:
 			case 8:
-				assembler->mov(rax, ptr_64(stackRegister, -8));
-				assembler->cmp(ptr_64(stackRegister, -16), rax);
 				break;
 			default:
 				isStandardSize = false;
@@ -624,8 +644,20 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 
 			if (isStandardSize)
 			{
-				assembler->sete(ptr_8(stackRegister, size * -2));
-				changeStackBy(size * -2 + sizeof(Bool));
+				StackValue b = compilePopValue(size, true);
+				StackValue a = compilePopValue(size, true);
+
+				// Thank you, John ClangFormat
+				// I should seriously think of abandoning it for built in IDE formatting...
+				a.compileTwoOp(b, [&a, &b, this] { compilePushValue(a.number == b.number, sizeof(Bool)); }, [&a, &b, this] {
+					assembler->cmp(a.gpRegister, b.number);
+					auto reg = getFreeByteRegister();
+					assembler->sete(reg);
+					compilePushValue(reg); }, [&a, &b, this] {
+					assembler->cmp(a.gpRegister, b.gpRegister);
+					auto reg = getFreeByteRegister();
+					assembler->sete(reg);
+					compilePushValue(reg); });
 			}
 			else
 			{
@@ -709,7 +741,6 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::readVariable: {
-			flushStack();
 			Size size = *(Size*)&argumentBuffer[0];
 			Size offset = *(Size*)&argumentBuffer[sizeof(size)];
 
@@ -719,22 +750,24 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			switch (size)
 			{
 			case 1:
-				assembler->mov(al, ptr_8(variableStackRegister, -offset));
-				target = al;
+				target = getFreeByteRegister();
+				assembler->mov(target, ptr_8(variableStackRegister, -offset));
 				isDefaultSize = true;
 				break;
 			case 4: {
-				assembler->mov(eax, ptr_32(variableStackRegister, -offset));
-				target = eax;
+				target = getFreeHalfRegister();
+				assembler->mov(target, ptr_32(variableStackRegister, -offset));
 				isDefaultSize = true;
 				break;
 			}
-			case 8:
-				assembler->mov(rax, ptr_64(variableStackRegister, -offset));
-				target = rax;
+			case 8: {
+				target = getFreeRegister();
+				assembler->mov(target, ptr_64(variableStackRegister, -offset));
 				isDefaultSize = true;
 				break;
+			}
 			default:
+				flushStack();
 				assembler->mov(rdi, stackRegister);
 				assembler->lea(rsi, ptr_64(variableStackRegister, -offset));
 				compileMemoryCopy(size);
@@ -750,26 +783,36 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		}
 		case ds::BytecodeOp::pushVariable: {
 			Size size = *(Size*)&argumentBuffer[0];
-			assembler->add(varStackPos, size);
 			assembler->add(variableStackRegister, size);
+			variableStackChanged = true;
 			break;
 		}
 		case ds::BytecodeOp::popVariable: {
 			Size size = *(Size*)&argumentBuffer[0];
-			assembler->sub(varStackPos, size);
 			assembler->sub(variableStackRegister, size);
+			variableStackChanged = true;
 			break;
 		}
 		case ds::BytecodeOp::allocClass: {
-			int32_t size = compilePopValueToRegister(halfArgumentRegisters[0], false);
+			auto v = compilePopValue(sizeof(Size), true);
+			flushStack();
+
+			if (v.isNumber)
+			{
+				assembler->mov(halfArgumentRegisters[0], v.number);
+			}
+			else if (!halfArgumentRegisters[0].is_same(v.gpRegister))
+			{
+				assembler->mov(halfArgumentRegisters[0], v.gpRegister);
+			}
+
 			Size typeId = *(Size*)&argumentBuffer[0];
 			BytecodeOffset vTableOffset = *(BytecodeOffset*)&argumentBuffer[sizeof(typeId)];
 			assembler->mov(halfArgumentRegisters[1], typeId);
 			auto offsetPtr = vTableOffset != UINT32_MAX ? (&vTable[vTableOffset]) : nullptr;
 			assembler->mov(argumentRegisters[2], offsetPtr);
 			assembler->call(RuntimeClass::allocateClass);
-			assembler->mov(ptr_64(stackRegister, -size), rax);
-			changeStackBy(sizeof(Pointer) - size);
+			compilePushValue(rax);
 			break;
 		}
 		case ds::BytecodeOp::classMemberPtr:
@@ -836,7 +879,6 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 				assembler->jnz(endNullCheck);
 				compileAbort("Attempted to write value from a native null reference");
 				assembler->bind(endNullCheck);
-
 			}
 			else
 			{
@@ -862,21 +904,33 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::refClass: {
-			compilePopValueToRegister(rax, true);
-			auto nullLabel = assembler->new_label();
+			auto val = compilePopValue(sizeof(ds::RuntimeClass*), true);
+			// Any compile time known value will not be a valid reference, so probably null.
+			if (!val.isNumber)
+			{
+				flushStack();
+				auto nullLabel = assembler->new_label();
 
-			assembler->test(rax, rax);
-			assembler->jz(nullLabel);
+				assembler->test(val.gpRegister, val.gpRegister);
+				assembler->jz(nullLabel);
 
-			auto ref = [](RuntimeClass* target) {
-				target->addRef();
-			};
-			assembler->mov(tempStack, rax);
-			assembler->mov(argumentRegisters[0], rax);
-			assembler->call((void (*)(RuntimeClass*))ref);
-			assembler->mov(rax, tempStack);
-			assembler->bind(nullLabel);
-			compilePushValue(rax);
+				auto ref = [](RuntimeClass* target) {
+					target->addRef();
+				};
+				assembler->mov(tempStack, val.gpRegister);
+				if (!val.gpRegister.is_same(argumentRegisters[0]))
+				{
+					assembler->mov(argumentRegisters[0], val.gpRegister);
+				}
+				assembler->call((void (*)(RuntimeClass*))ref);
+				assembler->mov(val.gpRegister, tempStack);
+				assembler->bind(nullLabel);
+				compilePushValue(val.gpRegister);
+			}
+			else
+			{
+				compilePushValue(val.number, val.size);
+			}
 			break;
 		}
 		case ds::BytecodeOp::unrefClass: {
@@ -977,26 +1031,33 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::castInterface: {
-			compilePopValueToRegister(rax, true);
+			auto v = compilePopValue(sizeof(RuntimeClass*), true);
 
-			Int offset = *(Int*)&argumentBuffer[0];
-			Bool unCast = *(Bool*)&argumentBuffer[sizeof(offset)];
-
-			if (unCast)
+			if (!v.isNumber)
 			{
-				assembler->sub(rax, offset + sizeof(RuntimeClass));
+				Int offset = *(Int*)&argumentBuffer[0];
+				Bool unCast = *(Bool*)&argumentBuffer[sizeof(offset)];
+
+				if (unCast)
+				{
+					assembler->sub(v.gpRegister, offset + sizeof(RuntimeClass));
+				}
+				else
+				{
+					assembler->add(v.gpRegister, offset + sizeof(RuntimeClass));
+				}
+				compilePushValue(v.gpRegister);
 			}
 			else
 			{
-				assembler->add(rax, offset + sizeof(RuntimeClass));
+				compilePushValue(v.number, sizeof(RuntimeClass*));
 			}
-
-			compilePushValue(rax);
 
 			break;
 		}
 		case ds::BytecodeOp::implInterface: {
 
+			flushStack();
 			compilePopValueToRegister(rax, true);
 			BytecodeOffset offset = *(BytecodeOffset*)&argumentBuffer[0];
 			BytecodeOffset offsetBytes = offset + sizeof(RuntimeClass);
@@ -1053,18 +1114,20 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::classIs: {
-			compilePopValueToRegister(r8, true);
+			auto reg = getFreeRegister();
+			compilePopValueToRegister(reg, true);
+			flushStack();
 
 			TypeId id = *(TypeId*)&argumentBuffer[0];
 
 			auto nullLabel = assembler->new_label();
 
-			assembler->test(r8, r8);
+			assembler->test(reg, reg);
 			assembler->setnz(al);
 			assembler->jz(nullLabel);
 
+			assembler->mov(argumentRegisters[1], reg);
 			assembler->mov(argumentRegisters[0], runtimeRegister);
-			assembler->mov(argumentRegisters[1], r8);
 			assembler->mov(argumentRegisters[2], id);
 			assembler->call(jit_classIs);
 			restoreRegisters();
@@ -1077,10 +1140,12 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		case ds::BytecodeOp::classAs: {
 			TypeId id = *(TypeId*)&argumentBuffer[0];
 			Bool isNullable = *(Bool*)&argumentBuffer[sizeof(TypeId)];
-			compilePopValueToRegister(rax, true);
+			auto reg = getFreeRegister();
+			compilePopValueToRegister(reg, true);
+			flushStack();
 
+			assembler->mov(argumentRegisters[1], reg);
 			assembler->mov(argumentRegisters[0], runtimeRegister);
-			assembler->mov(argumentRegisters[1], rax);
 			assembler->mov(argumentRegisters[2], id);
 			assembler->call(jit_classAs);
 			if (!isNullable)
@@ -1090,7 +1155,6 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 				auto notNullLabel = assembler->new_label();
 
 				assembler->jnz(notNullLabel);
-				// TODO: replace with unwinding
 				compileAbort("Non nullable cast failed.");
 				assembler->bind(notNullLabel);
 			}
@@ -1115,18 +1179,23 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			break;
 		}
 		case ds::BytecodeOp::nullCheck: {
-			compilePopValueToRegister(rax, true);
+			auto v = compilePopValue(sizeof(RuntimeClass*), true);
 
-			assembler->test(rax, rax);
-			auto notNullLabel = assembler->new_label();
+			if (v.isNumber)
+			{
+				compileAbort("Attempted to use null reference");
+			}
+			else
+			{
+				assembler->test(v.gpRegister, v.gpRegister);
+				auto notNullLabel = assembler->new_label();
 
-			assembler->jnz(notNullLabel);
+				assembler->jnz(notNullLabel);
+				compileAbort("Attempted to use null reference");
+				assembler->bind(notNullLabel);
 
-			compileAbort("Attempted to use null reference");
-
-			assembler->bind(notNullLabel);
-
-			compilePushValue(rax);
+				compilePushValue(v.gpRegister);
+			}
 			break;
 		}
 		case ds::BytecodeOp::awaitTask: {
@@ -1315,29 +1384,26 @@ void ds::jit::JustInTimeCompiler::buildProlog()
 
 void ds::jit::JustInTimeCompiler::compilePushValue(asmjit::x86::Gp gpRegister)
 {
-	if (currentStackValue)
-	{
-		flushStack();
-	}
-	currentStackValue = StackValue{ .gpRegister = gpRegister };
+	allocRegister(gpRegister);
+	currentStack.push_back(StackValue{ .gpRegister = gpRegister });
 }
 
 void ds::jit::JustInTimeCompiler::compilePushValue(asmjit::x86::Vec vecRegister)
 {
-	if (currentStackValue)
-	{
-		flushStack();
-	}
-	currentStackValue = StackValue{ .isVector = true, .vecRegister = vecRegister };
+	allocRegister(vecRegister);
+	currentStack.push_back(StackValue{ .isVector = true, .vecRegister = vecRegister });
 }
 
 void ds::jit::JustInTimeCompiler::compilePushValue(size_t value, size_t size)
 {
-	if (currentStackValue)
-	{
-		flushStack();
-	}
-	currentStackValue = StackValue{ .isNumber = true, .number = value, .size = size };
+	currentStack.push_back(StackValue{ .isNumber = true, .number = value, .size = size });
+}
+
+void ds::jit::JustInTimeCompiler::compilePushValue(Float value)
+{
+	size_t val = 0;
+	memcpy(&val, &value, sizeof(Float));
+	currentStack.push_back(StackValue{ .isNumber = true, .number = val, .size = sizeof(Float) });
 }
 
 void ds::jit::JustInTimeCompiler::compileMemoryCopy(size_t size)
@@ -1393,21 +1459,26 @@ void ds::jit::JustInTimeCompiler::compileAbort(const char* msg)
 
 StackValue ds::jit::JustInTimeCompiler::compilePopValue(size_t size, bool applyStackPos)
 {
-	if (currentStackValue)
+	if (!currentStack.empty())
 	{
-		if (currentStackValue->isNumber && currentStackValue->size != size)
+		auto highest = currentStack.rbegin();
+
+		if (highest->isNumber && highest->size != size)
 		{
 			abort();
 		}
-		else if (!currentStackValue->isVector && !currentStackValue->isNumber && currentStackValue->gpRegister.size() != size)
+		else if (!highest->isVector && !highest->isNumber)
 		{
-			int s = currentStackValue->gpRegister.size();
-			throw s;
+			if (highest->gpRegister.size() != size)
+			{
+				int s = highest->gpRegister.size();
+				throw s;
+			}
 		}
 
-		StackValue result = *currentStackValue;
+		StackValue result = *highest;
 
-		currentStackValue = {};
+		currentStack.pop_back();
 
 		return result;
 	}
@@ -1417,55 +1488,77 @@ StackValue ds::jit::JustInTimeCompiler::compilePopValue(size_t size, bool applyS
 	switch (size)
 	{
 	case 1:
-		result = al;
+		result = getFreeByteRegister();
 		assembler->mov(result, ptr_8(stackRegister, -size));
 		break;
 	case 4: {
-		result = eax;
+		result = getFreeHalfRegister();
 		assembler->mov(result, ptr_32(stackRegister, -size));
 		break;
 	}
 	case 8:
-		result = rax;
+		result = getFreeRegister();
 		assembler->mov(result, ptr_64(stackRegister, -size));
 		break;
 	default:
-		result = rax;
+		result = getFreeRegister();
 		assembler->lea(result, ptr_64(stackRegister, -size));
 		break;
 	}
+	allocRegister(result);
 	if (applyStackPos)
 	{
 		changeStackBy(-size);
 	}
-	return StackValue{ .gpRegister = result, .stackDiff = size };
+	return StackValue{ .gpRegister = result, .size = size, .stackDiff = size };
+}
+
+StackValue ds::jit::JustInTimeCompiler::compilePopVec()
+{
+	auto v = compilePopValue(sizeof(Float), true);
+
+	if (!v.isNumber && !v.isVector)
+	{
+		auto reg = getFreeVecRegister();
+		allocRegister(reg);
+		assembler->movd(reg, v.gpRegister);
+		return StackValue{
+			.isVector = true,
+			.vecRegister = reg,
+			.stackDiff = 0,
+		};
+	}
+
+	return v;
 }
 
 int32_t ds::jit::JustInTimeCompiler::compilePopValueToRegister(asmjit::x86::Gp target, bool applyStackPos)
 {
-	if (currentStackValue)
+	if (!currentStack.empty())
 	{
-		if (currentStackValue->isNumber)
+		auto highest = currentStack.rbegin();
+		if (highest->isNumber)
 		{
-			if (currentStackValue->size != target.size())
+			if (highest->size != target.size())
 			{
 				abort();
 			}
-			assembler->mov(target, currentStackValue->number);
+			assembler->mov(target, highest->number);
 		}
 		else
 		{
-			if (currentStackValue->gpRegister.size() != target.size())
+			freeRegister(highest->gpRegister);
+			if (highest->gpRegister.size() != target.size())
 			{
 				abort();
 			}
-			if (currentStackValue->gpRegister != target)
+			if (highest->gpRegister != target)
 			{
-				assembler->mov(target, currentStackValue->gpRegister);
+				assembler->mov(target, highest->gpRegister);
 			}
 		}
 
-		currentStackValue = {};
+		currentStack.pop_back();
 		return 0;
 	}
 
@@ -1496,26 +1589,29 @@ int32_t ds::jit::JustInTimeCompiler::compilePopValueToRegister(asmjit::x86::Gp t
 
 int32_t ds::jit::JustInTimeCompiler::compilePopValueToRegister(asmjit::x86::Vec target, bool applyStackPos)
 {
-	if (currentStackValue)
+	if (!currentStack.empty())
 	{
-		if (currentStackValue->isNumber)
+		auto highest = currentStack.rbegin();
+		if (highest->isNumber)
 		{
-			assembler->mov(eax, currentStackValue->number);
+			assembler->mov(eax, highest->number);
 			assembler->movd(target, eax);
 		}
-		else if (currentStackValue->isVector)
+		else if (highest->isVector)
 		{
-			if (currentStackValue->vecRegister != target)
+			if (highest->vecRegister != target)
 			{
-				assembler->movss(target, currentStackValue->vecRegister);
+				freeRegister(highest->vecRegister);
+				assembler->movss(target, highest->vecRegister);
 			}
 		}
 		else
 		{
-			assembler->movd(target, currentStackValue->gpRegister);
+			freeRegister(highest->gpRegister);
+			assembler->movd(target, highest->gpRegister);
 		}
 
-		currentStackValue = {};
+		currentStack.pop_back();
 		return 0;
 	}
 	assembler->movss(target, ptr_32(stackRegister, -4));
@@ -1562,57 +1658,83 @@ void ds::jit::JustInTimeCompiler::changeStackBy(int32_t amount)
 
 void ds::jit::JustInTimeCompiler::flushStack()
 {
-	if (!currentStackValue)
+	usedTempRegisters.clear();
+	usedTempVecRegisters.clear();
+	int32_t stackChange = 0;
+	for (auto Item = currentStack.begin(); Item != currentStack.end(); Item++)
 	{
-		return;
-	}
+		StackValue& val = *Item;
 
-	StackValue& val = *currentStackValue;
-	currentStackValue = {};
+		if (val.isNumber)
+		{
+			switch (val.size)
+			{
+			case 1:
+				assembler->mov(ptr_8(stackRegister, stackChange), val.number);
+				break;
+			case 4: {
+				assembler->mov(ptr_32(stackRegister, stackChange), val.number);
+				break;
+			}
+			case 8:
+				assembler->mov(ptr_64(stackRegister, stackChange), val.number);
+				break;
+			default:
+				abort();
+			}
+			stackChange += val.size;
+		}
+		else if (val.isVector)
+		{
+			assembler->movd(ptr_32(stackRegister, stackChange), val.vecRegister);
+			stackChange += sizeof(Float);
+		}
+		else
+		{
+			switch (val.gpRegister.size())
+			{
+			case 1:
+				assembler->mov(ptr_8(stackRegister, stackChange), val.gpRegister);
+				break;
+			case 4: {
+				assembler->mov(ptr_32(stackRegister, stackChange), val.gpRegister);
+				break;
+			}
+			case 8:
+				assembler->mov(ptr_64(stackRegister, stackChange), val.gpRegister);
+				break;
+			default:
+				abort();
+			}
+			stackChange += val.gpRegister.size();
+		}
+	}
+	changeStackBy(stackChange);
+	currentStack.clear();
+}
 
-	if (val.isNumber)
-	{
-		switch (val.size)
-		{
-		case 1:
-			assembler->mov(ptr_8(stackRegister), val.number);
-			break;
-		case 4: {
-			assembler->mov(ptr_32(stackRegister), val.number);
-			break;
-		}
-		case 8:
-			assembler->mov(ptr_64(stackRegister), val.number);
-			break;
-		default:
-			abort();
-		}
-		changeStackBy(val.size);
-	}
-	else if (val.isVector)
-	{
-		assembler->movd(ptr_32(stackRegister), val.vecRegister);
-		changeStackBy(4);
-	}
-	else
-	{
-		switch (val.gpRegister.size())
-		{
-		case 1:
-			assembler->mov(ptr_8(stackRegister), val.gpRegister);
-			break;
-		case 4: {
-			assembler->mov(ptr_32(stackRegister), val.gpRegister);
-			break;
-		}
-		case 8:
-			assembler->mov(ptr_64(stackRegister), val.gpRegister);
-			break;
-		default:
-			abort();
-		}
-		changeStackBy(val.gpRegister.size());
-	}
+asmjit::x86::Gp ds::jit::JustInTimeCompiler::getFreeRegister()
+{
+	auto r = getFreeTempRegisterIndex();
+	return tempRegisters[r];
+}
+
+asmjit::x86::Gp ds::jit::JustInTimeCompiler::getFreeHalfRegister()
+{
+	auto r = getFreeTempRegisterIndex();
+	return tempHalfRegisters[r];
+}
+
+asmjit::x86::Gp ds::jit::JustInTimeCompiler::getFreeByteRegister()
+{
+	auto r = getFreeTempRegisterIndex();
+	return tempByteRegisters[r];
+}
+
+asmjit::x86::Vec ds::jit::JustInTimeCompiler::getFreeVecRegister()
+{
+	auto r = getFreeTempVecRegisterIndex();
+	return tempVectorRegisters[r];
 }
 
 void ds::jit::JustInTimeCompiler::generateEmbeddedStrings()
@@ -1626,4 +1748,127 @@ void ds::jit::JustInTimeCompiler::generateEmbeddedStrings()
 		assembler->bind(i.second);
 		assembler->embed_data_array(asmjit::TypeId::kUInt8, i.first.data(), i.first.size());
 	}
+}
+
+void ds::jit::JustInTimeCompiler::freeRegister(asmjit::x86::Gp& reg)
+{
+	for (auto& i : usedTempRegisters)
+	{
+		bool found = false;
+		switch (reg.size())
+		{
+		case 1:
+			found = reg.is_same(tempByteRegisters[i]);
+			break;
+		case 4:
+			found = reg.is_same(tempHalfRegisters[i]);
+			break;
+		case 8:
+			found = reg.is_same(tempRegisters[i]);
+			break;
+		}
+
+		if (found)
+		{
+			usedTempRegisters.erase(i);
+			break;
+		}
+	}
+}
+
+void ds::jit::JustInTimeCompiler::allocRegister(asmjit::x86::Gp& reg)
+{
+	for (size_t i = 0; i < this->tempRegisters.size(); i++)
+	{
+		if (usedTempRegisters.contains(i))
+		{
+			continue;
+		}
+		bool found = false;
+		switch (reg.size())
+		{
+		case 1:
+			found = reg.is_same(tempByteRegisters[i]);
+			break;
+		case 4:
+			found = reg.is_same(tempHalfRegisters[i]);
+			break;
+		case 8:
+			found = reg.is_same(tempRegisters[i]);
+			break;
+		}
+
+		if (found)
+		{
+			usedTempRegisters.insert(i);
+			break;
+		}
+	}
+
+	if (usedTempRegisters.size() >= tempRegisters.size())
+	{
+		flushStack();
+	}
+}
+
+void ds::jit::JustInTimeCompiler::freeRegister(asmjit::x86::Vec& reg)
+{
+	for (auto& i : usedTempVecRegisters)
+	{
+		if (reg.is_same(tempVectorRegisters[i]))
+		{
+			usedTempVecRegisters.erase(i);
+			break;
+		}
+	}
+}
+
+void ds::jit::JustInTimeCompiler::allocRegister(asmjit::x86::Vec& reg)
+{
+	for (size_t i = 0; i < tempVectorRegisters.size(); i++)
+	{
+		if (usedTempVecRegisters.contains(i))
+		{
+			continue;
+		}
+
+		if (reg.is_same(tempVectorRegisters[i]))
+		{
+			usedTempVecRegisters.insert(i);
+			return;
+		}
+	}
+
+	if (usedTempVecRegisters.size() >= usedTempVecRegisters.size())
+	{
+		flushStack();
+	}
+}
+
+size_t ds::jit::JustInTimeCompiler::getFreeTempRegisterIndex()
+{
+	for (size_t i = 0; i < this->tempRegisters.size(); i++)
+	{
+		if (usedTempRegisters.contains(i))
+		{
+			continue;
+		}
+		return i;
+	}
+
+	throw "Out of register indices";
+}
+
+size_t ds::jit::JustInTimeCompiler::getFreeTempVecRegisterIndex()
+{
+	for (size_t i = 0; i < tempVectorRegisters.size(); i++)
+	{
+		if (usedTempVecRegisters.contains(i))
+		{
+			continue;
+		}
+		return i;
+	}
+
+	throw "Out of vec register indices";
 }
