@@ -1,0 +1,11 @@
+using system::io
+using system
+
+module basic
+
+[EntryPoint]
+fn main()
+{
+	float v = 4.0
+	writeInt(v - 3.0)
+}

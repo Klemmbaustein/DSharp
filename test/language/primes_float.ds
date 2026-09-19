@@ -32,7 +32,7 @@ fn main()
 	{
 		if testPrime(i)
 		{
-			writeInt(i)
+		 	writeInt(i)
 		}
 
 		i += 1.0

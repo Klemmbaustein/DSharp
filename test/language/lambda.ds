@@ -30,6 +30,16 @@ fn test()
 		l3.call()
 	}
 
+	const l3 = fn(string arg)
+	{
+		const l4 = fn()
+		{
+			writeln(arg)
+		}
+		l4.call()
+	}
+
 	l1.call()
 	l2.call()
+	l3.call("hello")
 }
