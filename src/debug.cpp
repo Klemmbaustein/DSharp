@@ -69,6 +69,12 @@ DebugLine* ds::DebugSection::getLineAt(uint32_t lineNumber)
 std::pair<DebugSection*, DebugLine*> ds::DebugInfo::getLineAt(Pointer offset)
 {
 	auto section = getSectionAt(offset);
+
+	if (!section)
+	{
+		return {};
+	}
+
 	DebugLine* last = nullptr;
 
 	for (auto& i : section->lines)

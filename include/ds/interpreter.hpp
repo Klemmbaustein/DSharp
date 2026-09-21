@@ -25,9 +25,9 @@ namespace ds
 		std::vector<DebugSection*> getStackTrace() const override;
 		void doUnwind() override;
 		InterpretContext* createCopy() override;
-		bool setDebugBreakpoint(size_t instructionOffset) override;
-		void removeDebugBreakpoint(size_t instructionOffset) override;
-		void continueFromBreakpoint(size_t instructionOffset, BytecodeOffset& baseCallStackPos);
+		bool setDebugBreakpoint(Pointer instructionOffset) override;
+		void removeDebugBreakpoint(Pointer instructionOffset) override;
+		void continueFromBreakpoint(Pointer instructionOffset, BytecodeOffset& baseCallStackPos);
 
 		BinaryBufferRef code;
 		bool suspended = false;

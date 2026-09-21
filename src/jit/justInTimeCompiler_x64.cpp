@@ -206,6 +206,10 @@ void ds::jit::JustInTimeCompiler::scanForFunctions(BinaryBuffer& code, std::vect
 		for (auto& i : debug->sections)
 		{
 			debugMappings.insert({ BytecodeOffset(i.offset), assembler->new_label() });
+			for (auto& j : i.lines)
+			{
+				debugMappings.insert({ BytecodeOffset(j.offset), assembler->new_label() });
+			}
 		}
 	}
 }
@@ -1287,6 +1291,11 @@ void ds::jit::JustInTimeCompiler::updateDebugOffsets(DebugInfo* debug)
 	for (auto& i : debug->sections)
 	{
 		i.offset = Pointer(result->entry) + result->compiled.label_offset(debugMappings.at(i.offset));
+
+		for (auto& j : i.lines)
+		{
+			j.offset = Pointer(result->entry) + result->compiled.label_offset(debugMappings.at(j.offset));
+		}
 	}
 }
 

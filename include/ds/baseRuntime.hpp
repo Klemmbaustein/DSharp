@@ -33,11 +33,11 @@ namespace ds
 		virtual std::vector<DebugSection*> getStackTrace() const = 0;
 		virtual void loadBytecode(BytecodeStream* code) = 0;
 		virtual InterpretContext* createCopy() = 0;
-		virtual bool setDebugBreakpoint(size_t instructionOffset)
+		virtual bool setDebugBreakpoint(Pointer instructionOffset)
 		{
 			return false;
 		}
-		virtual void removeDebugBreakpoint(size_t instructionOffset)
+		virtual void removeDebugBreakpoint(Pointer instructionOffset)
 		{
 		}
 
@@ -171,7 +171,7 @@ namespace ds
 		std::map<size_t, std::thread*> backgroundThreads;
 		std::function<void(std::function<void()>)> createBackgroundThread;
 		std::function<void(const char*)> writeError;
-		std::function<bool(InterpretContext*, Pointer bytecodePosition, DebugState* state)> onDebugBreak;
+		std::function<bool(InterpretContext*, DebugState*)> onDebugBreak;
 
 		void loadBytecode(BytecodeStream* code);
 

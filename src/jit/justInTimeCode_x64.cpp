@@ -1,10 +1,15 @@
 #include <ds/jit/justInTimeCode_x64.hpp>
 #include <ds/jit/justInTimeCompiler_x64.hpp>
+#include <ds/jit/windowsJitDebugger.hpp>
 
 using namespace ds;
 
 void ds::jit::JustInTimeCode::run(Pointer at, JustInTimeRuntime* runtime)
 {
+	if (this->debugger)
+	{
+		this->debugger->makeActive();
+	}
 	jmp_buf oldTarget;
 	memcpy(oldTarget, returnBuffer, sizeof(returnBuffer));
 
@@ -30,6 +35,10 @@ void ds::jit::JustInTimeCode::run(Pointer at, JustInTimeRuntime* runtime)
 
 void ds::jit::JustInTimeCode::resume(void* at, JustInTimeRuntime* runtime)
 {
+	if (this->debugger)
+	{
+		this->debugger->makeActive();
+	}
 	jmp_buf oldTarget;
 	memcpy(oldTarget, returnBuffer, sizeof(returnBuffer));
 
@@ -50,14 +59,86 @@ void ds::jit::JustInTimeCode::resume(void* at, JustInTimeRuntime* runtime)
 	memcpy(returnBuffer, oldTarget, sizeof(returnBuffer));
 }
 
-void ds::jit::JustInTimeCode::getUnwindData(void* atPtr, std::vector<Pointer>& outPointers)
+uint8_t ds::jit::JustInTimeCode::insertBreakpoint(void* at, uint8_t byte)
+{
+	if (!debugger)
+	{
+		return false;
+	}
+
+	asmjit::JitAllocator::Span breakpointSpan;
+	auto result = jit.allocator().query(asmjit::Out<asmjit::JitAllocator::Span>(breakpointSpan), at);
+
+	if (result != asmjit::Error::kOk)
+	{
+		throw result;
+	}
+
+	uint8_t interruptInstruction[] = { byte };
+
+	Pointer diff = Pointer(at) - Pointer(breakpointSpan.rx());
+	uint8_t oldByte = *(reinterpret_cast<uint8_t*>(breakpointSpan.rw()) + diff);
+
+	result = jit.allocator().write(breakpointSpan, diff, interruptInstruction, sizeof(interruptInstruction));
+
+	if (result != asmjit::Error::kOk)
+	{
+		throw result;
+	}
+
+	return oldByte;
+}
+
+void ds::jit::JustInTimeCode::insertBreakpoint(void* at)
+{
+	this->debugReplacedBytes.insert({ Pointer(at), insertBreakpoint(at, INSTRUCTION_INT3) });
+}
+
+void ds::jit::JustInTimeCode::restoreBreakpoint(void* at)
+{
+	auto old = debugReplacedBytes.find(Pointer(at));
+
+	if (old != debugReplacedBytes.end())
+	{
+		insertBreakpoint(at, INSTRUCTION_INT3);
+	}
+}
+
+bool ds::jit::JustInTimeCode::clearBreakpoint(void* at)
+{
+	auto old = debugReplacedBytes.find(Pointer(at));
+
+	if (old != debugReplacedBytes.end())
+	{
+		insertBreakpoint(at, old->second);
+		return true;
+	}
+	return false;
+}
+
+void ds::jit::JustInTimeCode::removeBreakpoint(void* at)
+{
+	auto old = debugReplacedBytes.find(Pointer(at));
+
+	if (old != debugReplacedBytes.end())
+	{
+		insertBreakpoint(at, old->second);
+		debugReplacedBytes.erase(old);
+	}
+}
+
+void ds::jit::JustInTimeCode::getUnwindData(void* atPtr, std::vector<Pointer>& outPointers, bool skipFirst)
 {
 	// Very goofy stack shenanigans. atPtr is a previously saved value of rbp.
 	uint64_t* functionPtr = reinterpret_cast<uint64_t*>(atPtr) - 9;
 
 	do
 	{
-		outPointers.push_back(*functionPtr);
+		if (!skipFirst)
+		{
+			outPointers.push_back(*functionPtr);
+		}
+		skipFirst = false;
 		// Move 80 bytes down the stack, which is where the next call location will be.
 		functionPtr += 10;
 	} while (*(functionPtr + 9) != JustInTimeCompiler::MANAGED_STACK_BEGIN_MARKER);
@@ -77,6 +158,12 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 	{
 		getUnwindData(atPtr, callAddresses);
 	}
+
+	doUnwind(callAddresses, rt, isSuspended);
+}
+
+void ds::jit::JustInTimeCode::doUnwind(std::vector<Pointer> callAddresses, JustInTimeRuntime* rt, bool isSuspended)
+{
 	unwinding = true;
 
 	auto& buffer = rt->runtime->unwindBuffer;
@@ -139,5 +226,18 @@ void ds::jit::JustInTimeCode::unwindStack(void* atPtr, JustInTimeRuntime* rt)
 		((_JUMP_BUFFER*)&returnTarget[0])->Frame = 0;
 #endif
 		longjmp(returnTarget, 1);
+	}
+}
+
+void ds::jit::JustInTimeCode::initializeBreakpointHandler(JustInTimeRuntime* rt)
+{
+	try
+	{
+#if _WIN64
+		debugger = new WindowsJitDebugger(rt);
+#endif
+	}
+	catch (JitDebugNotSupportedException& e)
+	{
 	}
 }

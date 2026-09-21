@@ -17,7 +17,7 @@ namespace ds
 	{
 	public:
 
-		virtual BytecodeOffset getOffset() = 0;
+		virtual Pointer getOffset() = 0;
 		virtual std::vector<DebugVariable> getVariables() = 0;
 	};
 

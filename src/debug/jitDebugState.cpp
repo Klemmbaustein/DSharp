@@ -1,37 +1,40 @@
-#include <ds/debug/interpreterDebugState.hpp>
+#include <ds/debug/jitDebugState.hpp>
+#include <ds/jit/justInTimeCode_x64.hpp>
+#include <cassert>
 
 using namespace ds;
 
-ds::InterpreterDebugState::InterpreterDebugState(RuntimeInterpretContext* fromContext, Pointer codePos)
+ds::JitDebugState::JitDebugState(jit::JustInTimeRuntime* fromContext, Pointer codePos)
 {
 	this->fromContext = fromContext;
 
-	InterpreterDebugFrame* lastFrame = new InterpreterDebugFrame(this, codePos, fromContext->variableStackPos);
 
-	frames.push_back(lastFrame);
+	callStack = { codePos };
+	JitDebugFrame* lastFrame = nullptr;
 
-	for (uint32_t i = fromContext->callStackPos - 1; i > 0; i--)
+	fromContext->code->getUnwindData(fromContext->lastStackPos, callStack, true);
+
+	for (auto& itm : callStack)
 	{
-		lastFrame = new InterpreterDebugFrame(this, fromContext->callStack[i], lastFrame->baseVariablePosition);
+		lastFrame = new JitDebugFrame(this, itm, lastFrame ? lastFrame->baseVariablePosition : fromContext->variableStackPos);
 		frames.push_back(lastFrame);
 	}
 }
 
-ds::InterpreterDebugState::~InterpreterDebugState()
+ds::JitDebugState::~JitDebugState()
 {
-	for (auto& i : frames)
+	for (auto& frame : frames)
 	{
-		delete i;
+		delete frame;
 	}
 }
 
-std::vector<DebugFrame*> ds::InterpreterDebugState::getFrames()
+std::vector<DebugFrame*> ds::JitDebugState::getFrames()
 {
 	return frames;
 }
 
-ds::InterpreterDebugFrame::InterpreterDebugFrame(InterpreterDebugState* fromState, Pointer callStackPosition,
-	Pointer variableStackPosition)
+ds::JitDebugFrame::JitDebugFrame(JitDebugState* fromState, Pointer callStackPosition, Pointer variableStackPosition)
 {
 	this->fromState = fromState;
 	codePosition = callStackPosition;
@@ -60,13 +63,16 @@ ds::InterpreterDebugFrame::InterpreterDebugFrame(InterpreterDebugState* fromStat
 		case UnwindOp::popClass: {
 			if (p.start > callStackPosition || p.debugId == UINT32_MAX)
 			{
+				assert(p.start != callStackPosition);
 				break;
 			}
 
 			auto& debugInfo = dbg->variables[p.debugId];
 
+			ds::RuntimeClass* cls = *reinterpret_cast<ds::RuntimeClass**>(&fromContext->variableStack[baseVariablePosition - p.size]);
+
 			variables.push_back(DebugVariable{
-				.pointer = *reinterpret_cast<ds::RuntimeClass**>(&fromContext->variableStack[baseVariablePosition - p.size]),
+				.pointer = cls,
 				.name = debugInfo.name.c_str(),
 				.type = debugInfo.type,
 				.isPrimitive = false,
@@ -86,7 +92,7 @@ ds::InterpreterDebugFrame::InterpreterDebugFrame(InterpreterDebugState* fromStat
 				.name = debugInfo.name.c_str(),
 				.type = debugInfo.type,
 				.isPrimitive = true,
-				});
+			});
 
 			break;
 		}
@@ -104,12 +110,12 @@ ds::InterpreterDebugFrame::InterpreterDebugFrame(InterpreterDebugState* fromStat
 	}
 }
 
-Pointer ds::InterpreterDebugFrame::getOffset()
+Pointer ds::JitDebugFrame::getOffset()
 {
 	return codePosition;
 }
 
-std::vector<DebugVariable> ds::InterpreterDebugFrame::getVariables()
+std::vector<DebugVariable> ds::JitDebugFrame::getVariables()
 {
 	return variables;
 }

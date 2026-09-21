@@ -65,6 +65,7 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 	JustInTimeCompiler compiler;
 	this->code = compiler.compileBytecode(code->code, runtime->externals, runtime->vTable, code->reflect,
 		runtime->unwindBuffer, runtime->debug);
+	this->code->initializeBreakpointHandler(this);
 }
 
 RunResult ds::jit::JustInTimeRuntime::run(Pointer atOffset)
@@ -136,4 +137,15 @@ InterpretContext* ds::jit::JustInTimeRuntime::createSuspendedCopy(void* streamPo
 	copy->suspendLocation = streamPosition;
 
 	return copy;
+}
+
+bool ds::jit::JustInTimeRuntime::setDebugBreakpoint(Pointer instructionOffset)
+{
+	code->insertBreakpoint(reinterpret_cast<void*>(instructionOffset));
+	return true;
+}
+
+void ds::jit::JustInTimeRuntime::removeDebugBreakpoint(Pointer instructionOffset)
+{
+	code->removeBreakpoint(reinterpret_cast<void*>(instructionOffset));
 }
