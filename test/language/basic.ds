@@ -7,5 +7,5 @@ module basic
 fn main()
 {
 	float v = 4.0
-	writeInt(v - 3.0)
+	writeInt(6.0 - v)
 }

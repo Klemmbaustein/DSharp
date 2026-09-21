@@ -1,6 +1,7 @@
 #include <ds/jit/justInTimeCode_x64.hpp>
 #include <ds/jit/justInTimeCompiler_x64.hpp>
 #include <ds/jit/windowsJitDebugger.hpp>
+#include <ds/jit/posixJitDebugger.hpp>
 
 using namespace ds;
 
@@ -233,8 +234,10 @@ void ds::jit::JustInTimeCode::initializeBreakpointHandler(JustInTimeRuntime* rt)
 {
 	try
 	{
-#if _WIN64
+#if _WIN32
 		debugger = new WindowsJitDebugger(rt);
+#elif _POSIX_VERSION
+		//debugger = new PosixJitDebugger(rt);
 #endif
 	}
 	catch (JitDebugNotSupportedException& e)

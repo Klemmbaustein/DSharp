@@ -1,4 +1,4 @@
-#ifdef _WIN64
+#ifdef _WIN32
 #include <ds/jit/windowsJitDebugger.hpp>
 #include <ds/jit/justInTimeCode_x64.hpp>
 #include <Windows.h>
@@ -58,9 +58,6 @@ static LONG JitBreakpointException(_In_ _EXCEPTION_POINTERS* ExceptInfo)
 ds::jit::WindowsJitDebugger::WindowsJitDebugger(JustInTimeRuntime* rt)
 {
 	this->runtime = rt;
-
-	currentJitRuntime = rt;
-
 	breakpointHandle = AddVectoredExceptionHandler(0, JitBreakpointException);
 }
 
