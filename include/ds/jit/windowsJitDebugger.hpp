@@ -1,4 +1,4 @@
-#ifdef _WIN64
+#ifdef _WIN32
 #pragma once
 #include <ds/jit/platformJitDebugger.hpp>
 #include <ds/jit/justInTime.hpp>

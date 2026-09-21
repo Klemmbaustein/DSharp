@@ -242,6 +242,33 @@ void ds::jit::StackValue::compileTwoOp(StackValue& b, std::function<void()> allN
 	}
 }
 
+void ds::jit::StackValue::compileTwoOp(StackValue& b, std::function<void()> allNumbers,
+	std::function<void()> oneRegister, std::function<void()> oneInverse, std::function<void()> allRegisters)
+{
+	if (this->isNumber)
+	{
+		if (b.isNumber)
+		{
+			allNumbers();
+		}
+		else
+		{
+			oneInverse();
+		}
+	}
+	else
+	{
+		if (b.isNumber)
+		{
+			oneRegister();
+		}
+		else
+		{
+			allRegisters();
+		}
+	}
+}
+
 void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 	const std::vector<ds::ExternalFunctionPointer>& pointers,
 	std::vector<ds::RuntimeFunction>& vTable)
@@ -460,6 +487,10 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 			a.compileTwoOp(b, [&a, &b, this] { compilePushValue(a.number - b.number, sizeof(Int)); }, [&a, &b, this] {
 				assembler->sub(a.gpRegister, b.number);
 				compilePushValue(a.gpRegister); }, [&a, &b, this] {
+				auto reg = getFreeHalfRegister();
+				assembler->mov(reg, a.number);
+				assembler->sub(reg, b.gpRegister);
+				compilePushValue(reg); }, [&a, &b, this] {
 				assembler->sub(a.gpRegister, b.gpRegister);
 				compilePushValue(a.gpRegister); });
 			break;
@@ -539,6 +570,12 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 				assembler->movd(toRegister, tempRegister);
 				assembler->subss(reg.vecRegister, toRegister);
 				compilePushValue(reg.vecRegister); }, [&reg, &reg2, this] {
+				auto toRegister = getFreeVecRegister();
+				auto tempRegister = getFreeHalfRegister();
+				assembler->mov(tempRegister, reg.number);
+				assembler->movd(toRegister, tempRegister);
+				assembler->subss(toRegister, reg2.vecRegister);
+				compilePushValue(toRegister); }, [&reg, &reg2, this] {
 				assembler->subss(reg.vecRegister, reg2.vecRegister);
 				compilePushValue(reg.vecRegister); });
 			break;
@@ -612,6 +649,10 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 				assembler->cmp(a.gpRegister, b.number);
 				auto result = getFreeByteRegister();
 				assembler->setg(result);
+				compilePushValue(result); }, [&a, &b, this] {
+				assembler->cmp(b.gpRegister, a.number);
+				auto result = getFreeByteRegister();
+				assembler->setl(result);
 				compilePushValue(result); }, [&a, &b, this] {
 				assembler->cmp(a.gpRegister, b.gpRegister);
 				auto result = getFreeByteRegister();
