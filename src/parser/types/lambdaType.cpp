@@ -63,7 +63,8 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 
 	newFunction.registerFunction(with->context);
 
-	with->parseSubScope(line.previous(), with->scopeFile, errors, nullptr, nullptr, with->depth,
+	with->parseSubScope(line.previous(), with->scopeFile, errors, nullptr, nullptr,
+		with->depth, with->depth,
 		ParsedScope::ScopeOptions{
 			.targetBuffer = newFunction.functionCode,
 			.scopeTokens = hasStream ? &stream : nullptr,

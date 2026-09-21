@@ -20,7 +20,6 @@ static LONG JitBreakpointException(_In_ _EXCEPTION_POINTERS* ExceptInfo)
 	if (ExceptInfo->ExceptionRecord->ExceptionCode == EXCEPTION_SINGLE_STEP)
 	{
 		currentJitRuntime->code->restoreBreakpoint(lastBreakpoint);
-
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 

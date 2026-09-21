@@ -72,7 +72,8 @@ namespace ds
 
 		BytecodeJumpLabel* breakTarget = nullptr;
 		BytecodeJumpLabel* continueTarget = nullptr;
-		size_t breakContinueDepth = 0;
+		size_t breakDepth = 0;
+		size_t continueDepth = 0;
 		size_t functionDepth = 0;
 
 		void setClass(ParsedClass* inClass, bool copy);
@@ -98,7 +99,7 @@ namespace ds
 		std::optional<VariableInfo> parseVariableDefinition(TokenLine& line, ParsedFile* file, ErrorContext* errors, bool matchTypes = true);
 
 		void parseSubScope(Token beginToken, ParsedFile* file, ErrorContext* errors, BytecodeJumpLabel* breakTarget,
-			BytecodeJumpLabel* continueTarget, size_t breakContinueDepth,
+			BytecodeJumpLabel* continueTarget, size_t breakDepth, size_t continueDepth,
 			ScopeOptions options = ScopeOptions{
 				.targetBuffer = nullptr,
 				.scopeTokens = nullptr,
