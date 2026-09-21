@@ -362,7 +362,7 @@ static void MapIterator_next(InterpretContext* context)
 		nodes->visited = true;
 	}
 
-	context->pushValue<Bool>(nodes);
+	context->pushValue<Bool>(nodes && nodes->node);
 }
 
 static void MapKeyValue_delete(InterpretContext* context)
@@ -418,6 +418,12 @@ static void MapIterator_get(InterpretContext* context)
 	ClassRef<MapIterator> iterator = context->popValue<RuntimeClass*>()->getBasePtr();
 
 	auto& node = iterator->nodes->node;
+
+	if (!node)
+	{
+		context->runtimePanic("Failed to get the next iterator node on MapIterator.get");
+		return;
+	}
 
 	auto keyBuffer = new uint8_t[iterator->key.typeSize];
 	auto valueBuffer = new uint8_t[iterator->value.typeSize];
