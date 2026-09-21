@@ -104,7 +104,7 @@ ds::InterpreterDebugFrame::InterpreterDebugFrame(InterpreterDebugState* fromStat
 	}
 }
 
-BytecodeOffset ds::InterpreterDebugFrame::getOffset()
+Pointer ds::InterpreterDebugFrame::getOffset()
 {
 	return codePosition;
 }

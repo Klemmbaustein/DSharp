@@ -676,7 +676,7 @@ void ds::RuntimeInterpretContext::debugBreak(BytecodeOffset& baseCallStackPos)
 	}
 
 	auto state = new InterpreterDebugState(this, codePos);
-	auto result = runtime->onDebugBreak(this, codePos, state);
+	auto result = runtime->onDebugBreak(this, state);
 	delete state;
 
 	if (result)

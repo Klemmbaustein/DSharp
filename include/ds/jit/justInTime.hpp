@@ -22,12 +22,15 @@ namespace ds::jit
 		InterpretContext* createCopy() override;
 		InterpretContext* createSuspendedCopy(void* streamPosition);
 
-		size_t* lastStackPos = nullptr;
+		bool setDebugBreakpoint(Pointer instructionOffset) override;
+		void removeDebugBreakpoint(Pointer instructionOffset) override;
+
+		void* lastStackPos = nullptr;
 		void* suspendLocation = nullptr;
 		bool canAwait = false;
+		std::shared_ptr<JustInTimeCode> code = nullptr;
 
 	private:
-		std::shared_ptr<JustInTimeCode> code = nullptr;
 		LanguageContext* language = nullptr;
 	};
 } // namespace ds::jit

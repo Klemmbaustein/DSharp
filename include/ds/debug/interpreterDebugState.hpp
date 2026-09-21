@@ -26,7 +26,7 @@ namespace ds
 		InterpreterDebugFrame(InterpreterDebugState* fromState, Pointer callStackPosition, Pointer variableStackPosition);
 
 		// Inherited via DebugFrame
-		BytecodeOffset getOffset() override;
+		Pointer getOffset() override;
 		std::vector<DebugVariable> getVariables() override;
 
 		InterpreterDebugState* fromState = nullptr;
