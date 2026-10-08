@@ -630,7 +630,7 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 	{
 		auto& equals = line.get();
 
-		if (!expr.setCode)
+		if (!expr.setCode || !expr.type)
 		{
 			errors->error(ErrorCode::parseReadOnlyValue, line.lineTokens->at(0),
 				"This value cannot be written to.");
@@ -638,10 +638,17 @@ void ds::ParsedScope::compileLine(TokenLine line, ParsedFile* file, ErrorContext
 		}
 
 		auto valueExpr = Expression::pushExpression(line, errors, false, expr.type, this);
-		if (!valueExpr.type || !valueExpr.valid)
+		if (!valueExpr.valid)
 		{
 			return;
 		}
+
+		if (!valueExpr.type)
+		{
+			errors->error(ErrorCode::parseUnknownExpressionType, equals,
+				"Cannot set a value of " + Type::toString(expr.type) + " to <void>");
+		}
+
 		valueExpr.compileToType(equals, expr.type, this, errors);
 		if (!valueExpr.type)
 		{
