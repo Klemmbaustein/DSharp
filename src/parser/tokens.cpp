@@ -225,8 +225,9 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 			continue;
 		}
 
-		if (newChar == '"')
+		if (newChar == '"' || newChar == '\'')
 		{
+			auto startQuote = newChar;
 			currentWord.addChar(newChar);
 			do
 			{
@@ -242,9 +243,9 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 				{
 					newChar = getNextChar(stream);
 
-					if (newChar == '"')
+					if (newChar == startQuote)
 					{
-						currentWord.addChar('"');
+						currentWord.addChar(startQuote);
 						newChar = 0;
 					}
 					else if (newChar == 'n')
@@ -262,7 +263,7 @@ void ds::TokenStream::fromStream(std::istream& stream, std::string name, ErrorCo
 				{
 					currentWord.addChar(newChar);
 				}
-			} while (newChar != '"');
+			} while (newChar != startQuote);
 			addToken(currentWord);
 			currentWord = newToken();
 			continue;

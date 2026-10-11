@@ -69,7 +69,8 @@ ds::JitDebugFrame::JitDebugFrame(JitDebugState* fromState, Pointer callStackPosi
 
 			auto& debugInfo = dbg->variables[p.debugId];
 
-			ds::RuntimeClass* cls = *reinterpret_cast<ds::RuntimeClass**>(&fromContext->variableStack[baseVariablePosition - p.size]);
+			ds::RuntimeClass* cls = *reinterpret_cast<ds::RuntimeClass**>(
+				&fromContext->variableStack[baseVariablePosition - p.size]);
 
 			variables.push_back(DebugVariable{
 				.pointer = cls,

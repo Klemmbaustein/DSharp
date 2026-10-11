@@ -1,5 +1,5 @@
-#include <ds/jit/posixJitDebugger.hpp>
 #if _POSIX_VERSION
+#include <ds/jit/posixJitDebugger.hpp>
 #include <ds/debug/jitDebugState.hpp>
 #include <csignal>
 #include <ds/jit/justInTimeCode_x64.hpp>

@@ -6,7 +6,7 @@ using namespace ds;
 
 static bool runTestFile(const char* file, LanguageContext& context)
 {
-	auto compiler = context.createCompiler({ .printAssembly = true });
+	auto compiler = context.createCompiler({ .printAssembly = false });
 
 	compiler->addFile(file);
 

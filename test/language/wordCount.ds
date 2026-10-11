@@ -1,0 +1,44 @@
+using system
+using system::io
+
+module wordCount
+
+[EntryPoint]
+fn countWords()
+{
+	File f = new("./CTestTestfile.cmake")
+
+	int wordCount = 0
+
+	while not f.isEmpty()
+	{
+		string line = f.readln()
+
+		int i = 0
+
+		bool lastWasWhitespace = true
+
+		while i < line.length
+		{
+			char c = line[i]
+
+			bool isWhitespace = c == ' ' or c == '\t'
+
+			if isWhitespace and not lastWasWhitespace
+			{
+				wordCount += 1
+			}
+
+			lastWasWhitespace = isWhitespace
+
+			i += 1
+		}
+
+		if not lastWasWhitespace
+		{
+			wordCount += 1
+		}
+	}
+
+	writeln($"Counted {wordCount} words")
+}
