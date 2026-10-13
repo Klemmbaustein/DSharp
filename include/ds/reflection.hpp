@@ -49,11 +49,21 @@ namespace ds
 		Int interfaceOffset = 0;
 	};
 
+	struct EntryPoint
+	{
+		std::string name;
+		AttributeData attribute;
+		TypeId returnValue;
+		std::vector<TypeId> arguments;
+		Pointer codePosition = 0;
+	};
+
 	struct ReflectInfo
 	{
 		bool isSubclassOf(TypeId toCheck, TypeId superClass) const;
 		CastResult tryCast(TypeId toCheck, TypeId superClass) const;
 
+		std::vector<EntryPoint> entryPoints;
 		std::map<TypeId, TypeInfo> types;
 	};
 }

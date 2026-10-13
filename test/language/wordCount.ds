@@ -6,7 +6,7 @@ module wordCount
 [EntryPoint]
 fn countWords()
 {
-	File f = new("./CTestTestfile.cmake")
+	File f = new("./wordCount.ds")
 
 	int wordCount = 0
 

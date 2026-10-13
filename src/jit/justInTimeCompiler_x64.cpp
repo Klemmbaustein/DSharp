@@ -186,6 +186,14 @@ void ds::jit::JustInTimeCompiler::scanForFunctions(BinaryBuffer& code, std::vect
 			functionMappings.insert({ BytecodeOffset(i.second.constructor), assembler->new_label() });
 		}
 	}
+	for (auto& i : reflect.entryPoints)
+	{
+		auto found = functionMappings.find(i.codePosition);
+		if (found == functionMappings.end())
+		{
+			functionMappings.insert({ BytecodeOffset(i.codePosition), assembler->new_label() });
+		}
+	}
 
 	for (auto& i : unwind.sections)
 	{
@@ -1306,7 +1314,13 @@ void ds::jit::JustInTimeCompiler::updateReflectionOffsets(ReflectInfo& reflect)
 {
 	for (auto& i : reflect.types)
 	{
-		i.second.constructor = Pointer(result->entry) + result->compiled.label_offset(functionMappings.at(i.second.constructor));
+		i.second.constructor =
+			Pointer(result->entry) + result->compiled.label_offset(functionMappings.at(i.second.constructor));
+	}
+	for (auto& i : reflect.entryPoints)
+	{
+		i.codePosition =
+			Pointer(result->entry) + result->compiled.label_offset(functionMappings.at(i.codePosition));
 	}
 }
 

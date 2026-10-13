@@ -313,6 +313,39 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 				.interfaces = superClasses,
 			};
 		}
+
+		for (auto& fn : i.functions)
+		{
+			if (fn.inClass)
+			{
+				continue;
+			}
+
+			auto entryAttribute = fn.getAttribute<modules::system::EntryPointAttribute>();
+
+			if (!entryAttribute)
+			{
+				continue;
+			}
+
+			std::vector<TypeId> arguments;
+
+			for (auto& arg : fn.arguments)
+			{
+				arguments.push_back(arg.type->id);
+			}
+
+			auto name = fn.getFullName();
+
+			toStream.reflect.entryPoints.push_back(EntryPoint{
+				.name = name,
+				.attribute = AttributeData{ .type = entryAttribute->attribute->getType(),
+					.parameterData = entryAttribute->parametersToString() },
+				.returnValue = fn.getReturnType() ? fn.getReturnType()->id : 0,
+				.arguments = arguments,
+				.codePosition = compiler.functions[name].offset,
+				});
+		}
 	}
 
 	for (auto& mod : this->programModules)
