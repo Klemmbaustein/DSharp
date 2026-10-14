@@ -62,6 +62,12 @@ namespace ds
 		{
 			this->classPtr = classPtr;
 		}
+
+		RuntimeStrRef()
+		{
+
+		}
+
 		RuntimeStrRef(const char* stringPtr, size_t stringLength)
 		{
 			Size contentSize = Size(stringLength + 1);

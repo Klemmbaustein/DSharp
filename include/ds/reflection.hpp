@@ -23,6 +23,35 @@ namespace ds
 		AttributeData attribute;
 
 		BytecodeOffset offset = 0;
+
+		template <typename T>
+		T getFromInstance(RuntimeClass* fromInstance) const
+		{
+			T result{};
+			memcpy(&result, fromInstance->getBasePtr()->getBody() + offset, sizeof(T));
+
+			return result;
+		}
+
+		template <typename T>
+		void setToInstance(RuntimeClass* toInstance, const T& value) const
+		{
+			memcpy(toInstance->getBasePtr()->getBody() + offset, &value, sizeof(T));
+		}
+
+		/**
+		 * @brief
+		 * Sets this type member of an instance to a class value, and properly de-references
+		 * the old  value.
+		 * @param toInstance
+		 * The class instance to write to.
+		 * @param value
+		 * The new value to set.
+		 * @param context
+		 * The interpret context that should de-reference the old value.
+		 * If the old value is guaranteed to be null, this value can be null.
+		 */
+		void setClassToInstance(RuntimeClass* toInstance, RuntimeClass* value, InterpretContext* context) const;
 	};
 
 	struct TypeInfo
@@ -66,4 +95,4 @@ namespace ds
 		std::vector<EntryPoint> entryPoints;
 		std::map<TypeId, TypeInfo> types;
 	};
-}
+} // namespace ds

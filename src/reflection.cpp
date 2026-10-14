@@ -3,6 +3,19 @@
 
 using namespace ds;
 
+void ds::TypeMember::setClassToInstance(RuntimeClass* toInstance,
+	RuntimeClass* value, InterpretContext* context) const
+{
+	auto oldValue = getFromInstance<RuntimeClass*>(toInstance);
+
+	if (oldValue)
+	{
+		context->destruct(oldValue);
+	}
+
+	memcpy(toInstance->getBasePtr()->getBody() + offset, &value, sizeof(value));
+}
+
 RuntimeClass* TypeInfo::create(InterpretContext* context) const
 {
 	auto cls = RuntimeClass::allocateClass(this->bodySize,

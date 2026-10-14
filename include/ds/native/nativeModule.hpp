@@ -138,6 +138,18 @@ namespace ds
 			return cls;
 		}
 
+		ClassType* createInterface(std::string name)
+		{
+			auto cls = new ClassType();
+			cls->name = name;
+			cls->vTableOffset = UINT32_MAX;
+			cls->module = this->name;
+			cls->isInterface = true;
+
+			this->types.push_back(cls);
+			return cls;
+		}
+
 		template <typename TNative>
 		NativeGenericClassType* createGenericClass(std::string name, std::vector<GenericArgument> args, ClassType* derived = nullptr)
 		{

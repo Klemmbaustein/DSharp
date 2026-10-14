@@ -593,7 +593,7 @@ void ds::RuntimeInterpretContext::loadBytecode(BytecodeStream* code)
 	runtime->vTable.reserve(code->virtualTable.size());
 	for (auto& [offset, native] : code->virtualTable)
 	{
-		if (native)
+		if (offset == SIZE_MAX)
 		{
 			runtime->vTable.push_back(RuntimeFunction{
 				.nativeFn = runtime->externals[native] });
