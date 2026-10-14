@@ -5,6 +5,7 @@
 #include "class.hpp"
 #include "typeId.hpp"
 #include <optional>
+#include <cstring>
 
 namespace ds
 {
