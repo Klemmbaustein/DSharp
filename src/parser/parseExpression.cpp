@@ -458,6 +458,15 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 		return constant;
 	}
 
+	if (scope->inClass)
+	{
+		currentLine.loadPosition(initialPosition);
+		auto result = pushClassValue(currentLine, errors, setExpression, scope);
+
+		if (result.valid)
+			return result;
+	}
+
 	auto prevPos = currentLine.savePosition();
 	Function* function = scope->scopeFile->getMethod(value, currentLine, errors);
 	if (function)
@@ -519,15 +528,6 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 			return compiled;
 		}
 		currentLine.loadPosition(pos);
-	}
-
-	if (scope->inClass)
-	{
-		currentLine.loadPosition(initialPosition);
-		auto result = pushClassValue(currentLine, errors, setExpression, scope);
-
-		if (result.valid)
-			return result;
 	}
 
 	errors->error(ErrorCode::parseUnknownExpressionType, value, "Unexpected '" + value.string + "'");

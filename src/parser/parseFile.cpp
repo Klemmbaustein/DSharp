@@ -206,7 +206,12 @@ void ds::ParsedFile::compile(ParseContext* context)
 
 	for (auto& c : this->classes)
 	{
-		c.compile(context, &context->errors, this);
+		c.registerMethods(context);
+		if (!context->service)
+		{
+			c.compile(context, &context->errors, this);
+		}
+		c.compileMethods(context, &context->errors, this);
 	}
 
 	for (auto& fn : this->functions)

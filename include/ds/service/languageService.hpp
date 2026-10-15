@@ -22,6 +22,12 @@ namespace ds
 	};
 
 	// clang-format off
+	/**
+	 * @brief
+	 * Type of completion results to return.
+	 *
+	 * @see LanguageService
+	 */
 	enum class CompletionType
 	{
 		variable     = 0b0000001,
@@ -143,7 +149,7 @@ namespace ds
 		ParsedClass* updateClass(Token className, std::string moduleName,
 			ds::TokenStream& body, std::string fileName, std::vector<std::vector<ds::Token>> superClasses);
 
-		// TODO: remove classes
+		void removeClass(std::string fileName);
 
 		/**
 		 * @brief

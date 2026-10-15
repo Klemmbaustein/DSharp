@@ -407,36 +407,51 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 
 	for (auto& i : this->methods)
 	{
-		i->registerFunction(context);
-		if (i->name == "new")
+		if (i->name != "new")
 		{
-			// do not pop the return value of the base constructor, so we still have
-			// a pointer to this
-			i->functionCode->addNew<BytecodeCallFunction>(this->constructor.getFullName());
-			if (thisType->parent)
+			continue;
+		}
+		// do not pop the return value of the base constructor, so we still have
+		// a pointer to this
+		i->functionCode->addNew<BytecodeCallFunction>(this->constructor.getFullName());
+		if (thisType->parent)
+		{
+			for (auto& c : thisType->parent->constructors)
 			{
-				for (auto& c : thisType->parent->constructors)
+				if (c->getArguments().empty())
 				{
-					if (c->getArguments().empty())
-					{
-						i->functionCode->addBuffer(c->compileCall().code);
-						break;
-					}
-				}
-			}
-			for (auto& [_, p] : this->thisType->interfaces)
-			{
-				for (auto& c : p->constructors)
-				{
-					if (c->getArguments().empty())
-					{
-						i->functionCode->addBuffer(c->compileCall().code);
-						break;
-					}
+					i->functionCode->addBuffer(c->compileCall().code);
+					break;
 				}
 			}
 		}
+		for (auto& [_, p] : this->thisType->interfaces)
+		{
+			for (auto& c : p->constructors)
+			{
+				if (c->getArguments().empty())
+				{
+					i->functionCode->addBuffer(c->compileCall().code);
+					break;
+				}
+			}
+		}
+	}
+}
+
+void ds::ParsedClass::compileMethods(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+{
+	for (auto& i : this->methods)
+	{
 		i->compile(context, file, errors);
+	}
+}
+
+void ds::ParsedClass::registerMethods(ParseContext* context)
+{
+	for (auto& i : this->methods)
+	{
+		i->registerFunction(context);
 	}
 }
 
@@ -765,13 +780,13 @@ void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, Parse
 
 	for (auto& i : this->methods)
 	{
-		i->registerFunction(context);
 		if (i->functionIsVirtual && !i->isOverride)
 		{
 			i->vTableOffset = vTableIndex++;
 			context->virtualTable.push_back(i);
 		}
 	}
+
 	compileBaseConstructor(context, errors, file);
 
 	for (auto& i : this->methods)

@@ -85,6 +85,8 @@ namespace ds
 		void scanClass(ParseContext* context, ParsedFile* file);
 
 		void compile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+		void registerMethods(ParseContext* context);
+		void compileMethods(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 		void scan(ErrorContext* errors, ParsedFile* file);
 
 	private:

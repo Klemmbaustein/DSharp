@@ -55,6 +55,15 @@ ParsedClass* ds::LanguageService::updateClass(Token className, std::string modul
 		superClasses);
 }
 
+void ds::LanguageService::removeClass(std::string fileName)
+{
+	this->files.erase(fileName);
+	this->parser->files.remove_if([fileName](ParsedFile& f) {
+		return f.name == fileName;
+	});
+	hasChanges = true;
+}
+
 void ds::LanguageService::commitChanges()
 {
 	if (!hasChanges)
