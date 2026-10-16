@@ -147,7 +147,7 @@ namespace ds
 	struct VTableFunction
 	{
 		Pointer codeOffset = UINTPTR_MAX;
-		uint32_t nativeFunction = 0;
+		uint32_t nativeFunction = UINT32_MAX;
 	};
 
 	/**

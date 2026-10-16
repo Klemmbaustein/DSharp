@@ -50,7 +50,7 @@ void ds::jit::JustInTimeRuntime::loadBytecode(BytecodeStream* code)
 	this->usedVTable = &runtime->vTable;
 	for (auto& [offset, native] : code->virtualTable)
 	{
-		if (native)
+		if (native != UINT32_MAX)
 		{
 			runtime->vTable.push_back(RuntimeFunction{
 				.nativeFn = runtime->externals[native] });
