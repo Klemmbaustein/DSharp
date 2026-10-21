@@ -863,40 +863,117 @@ void ds::jit::JustInTimeCompiler::compileToAssembly(BinaryBuffer& code,
 		}
 		case ds::BytecodeOp::classMemberPtr:
 		case ds::BytecodeOp::classMember: {
+
 			flushStack();
+
+			// Arguments: DWORD size, DWORD offset, PTR class
+
+			auto sizeVal = compilePopValue(4, true);
+			auto offsetVal = compilePopValue(4, true);
 
 			bool isPtr = op == ds::BytecodeOp::classMemberPtr;
 
-			assembler->xor_(rax, rax);
-			// Offset
-			assembler->mov(eax, ptr_32(stackRegister, -8));
-			// class body ptr
-			assembler->mov(rsi, ptr_64(stackRegister, -16));
-			if (isPtr)
+			if (!offsetVal.isNumber && !sizeVal.isNumber)
 			{
-				assembler->mov(rsi, ptr_64(rsi, sizeof(RuntimeClass)));
-				assembler->test(rsi, rsi);
-				auto endNullCheck = assembler->new_label();
-				assembler->jnz(endNullCheck);
-				compileAbort("Attempted to read value from a native null reference");
-				assembler->bind(endNullCheck);
+				compilePopValueToRegister(rsi, true);
+				if (isPtr)
+				{
+					assembler->mov(rsi, ptr_64(rsi, sizeof(RuntimeClass)));
+					assembler->test(rsi, rsi);
+					auto endNullCheck = assembler->new_label();
+					assembler->jnz(endNullCheck);
+					compileAbort("Attempted to read value from a native null reference");
+					assembler->bind(endNullCheck);
+				}
+				else
+				{
+					assembler->add(rsi, sizeof(RuntimeClass));
+				}
+				if (offsetVal.isNumber)
+				{
+					assembler->mov(r10, offsetVal.number);
+				}
+				else
+				{
+					assembler->xor_(r10, r10);
+					assembler->mov(r10d, offsetVal.gpRegister);
+				}
+				assembler->add(rsi, r10);
+				// Destination on the stack
+				assembler->mov(rdi, stackRegister);
+				if (sizeVal.isNumber)
+				{
+					assembler->mov(r10d, sizeVal.number);
+				}
+				else
+				{
+					assembler->mov(r10d, sizeVal.gpRegister);
+				}
+
+				compileMemoryCopy(sizeVal.gpRegister);
+
+				assembler->add(stackRegister, r10);
+				stackChanged = true;
 			}
 			else
 			{
-				assembler->add(rsi, sizeof(RuntimeClass));
+				uint32_t actualOffset = (offsetVal.number & UINT32_MAX) + sizeof(RuntimeClass);
+				uint32_t actualSize = (sizeVal.number & UINT32_MAX);
+
+				auto classValue = compilePopValue(sizeof(RuntimeClass*), true);
+				Gp classRegister = classValue.gpRegister;
+				if (classValue.isNumber)
+				{
+					Gp classRegister = getFreeRegister();
+					assembler->mov(classRegister, classValue.number);
+				}
+
+				Gp resultRegister;
+
+				bool isDefaultSize = true;
+
+				if (isPtr)
+				{
+					assembler->mov(classRegister, ptr_64(classRegister, sizeof(RuntimeClass)));
+					assembler->test(classRegister, classRegister);
+					auto endNullCheck = assembler->new_label();
+					assembler->jnz(endNullCheck);
+					compileAbort("Attempted to read value from a native null reference");
+					assembler->bind(endNullCheck);
+				}
+
+				switch (actualSize)
+				{
+				case 1: {
+					resultRegister = getFreeByteRegister();
+					assembler->mov(resultRegister, ptr_8(classRegister, actualOffset));
+					break;
+				}
+				case 4: {
+					resultRegister = getFreeHalfRegister();
+					assembler->mov(resultRegister, ptr_32(classRegister, actualOffset));
+					break;
+				}
+				case 8: {
+					resultRegister = getFreeRegister();
+					assembler->mov(resultRegister, ptr_64(classRegister, actualOffset));
+					break;
+				}
+				default: {
+					assembler->lea(rsi, ptr_64(classRegister, actualOffset));
+					assembler->mov(rdi, stackRegister);
+					compileMemoryCopy(actualSize);
+					assembler->add(stackRegister, actualSize);
+					stackChanged = true;
+					isDefaultSize = false;
+				}
+				break;
+				}
+				if (isDefaultSize)
+				{
+					compilePushValue(resultRegister);
+				}
 			}
-			assembler->add(rsi, rax);
-			// Size (overwrites offset)
-			assembler->mov(eax, ptr_32(stackRegister, -4));
-			assembler->mov(r10, rax);
-			// Destination on the stack
-			assembler->lea(rdi, ptr_64(stackRegister, -16));
-			changeStackBy(-16);
-
-			compileMemoryCopy(eax);
-
-			assembler->add(stackPos, r10);
-			assembler->add(stackRegister, r10);
 			break;
 		}
 		case ds::BytecodeOp::setClassMember:
@@ -1465,8 +1542,9 @@ void ds::jit::JustInTimeCompiler::compilePushValue(Float value)
 
 void ds::jit::JustInTimeCompiler::compileMemoryCopy(size_t size)
 {
-	assembler->mov(rax, size);
-	compileMemoryCopy(rax);
+	auto reg = getFreeRegister();
+	assembler->mov(reg, size);
+	compileMemoryCopy(reg);
 }
 
 void ds::jit::JustInTimeCompiler::compileMemoryCopy(asmjit::x86::Gp size)
@@ -1494,8 +1572,8 @@ void ds::jit::JustInTimeCompiler::restoreRegisters(bool full)
 
 		// Restore variable stack
 		assembler->mov(variableStackRegister, varStackPos);
-		assembler->lea(variableStackRegister, ptr_64(runtimeRegister,
-			variableStackRegister, 0, DS_OFFSETOF(JustInTimeRuntime, variableStack)));
+		assembler->lea(variableStackRegister,
+			ptr_64(runtimeRegister, variableStackRegister, 0, DS_OFFSETOF(JustInTimeRuntime, variableStack)));
 	}
 }
 
@@ -1503,7 +1581,8 @@ void ds::jit::JustInTimeCompiler::getStack()
 {
 	// Restore stack
 	assembler->mov(stackRegister, stackPos);
-	assembler->lea(stackRegister, ptr_64(runtimeRegister, stackRegister, 0, DS_OFFSETOF(JustInTimeRuntime, stack)));
+	assembler->lea(stackRegister,
+		ptr_64(runtimeRegister, stackRegister, 0, DS_OFFSETOF(JustInTimeRuntime, stack)));
 	stackChanged = false;
 }
 
