@@ -32,7 +32,8 @@ namespace ds::jit
 			std::function<void()> oneRegister, std::function<void()> allRegisters);
 
 		void compileTwoOp(StackValue& b, std::function<void()> allNumbers,
-			std::function<void()> oneRegister, std::function<void()> oneInverse, std::function<void()> allRegisters);
+			std::function<void()> oneRegister, std::function<void()> oneInverse,
+			std::function<void()> allRegisters) const;
 	};
 
 	class JustInTimeCompiler

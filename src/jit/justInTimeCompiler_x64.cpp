@@ -2,7 +2,6 @@
 #include <array>
 #include <ds/jit/justInTime.hpp>
 #include <ds/modules/system.async.hpp>
-#include <cassert>
 
 using namespace ds;
 using namespace ds::jit;
@@ -28,7 +27,7 @@ static RuntimeFunction jit_unrefPtr(RuntimeClass** ptr)
 static void jit_getStructMember(JustInTimeRuntime* rt, Size size, Size offset, Size structSize)
 {
 	auto targetPos = rt->stackPos - offset - size;
-	rt->stackPos -= structSize - size;
+	rt->stackPos -= size_t(structSize - size);
 	memcpy(&rt->stack[rt->stackPos - size], &rt->stack[targetPos], size);
 }
 
@@ -71,12 +70,6 @@ static void jit_awaitTask(RuntimeClass* task, RuntimeClass* returnTask, JustInTi
 {
 	ClassRef<modules::system::async::Task> taskObj = task;
 
-	// if (rt->canAwait)
-	//{
-	//	rt->suspendLocation = location;
-	//	taskObj->awaiter = rt;
-	//	return;
-	// }
 	auto& newRuntime = rt->runtime->asyncContexts.emplace_back(rt->createSuspendedCopy(location));
 	taskObj->awaiter = newRuntime;
 	rt->pushValue(returnTask);
@@ -251,7 +244,7 @@ void ds::jit::StackValue::compileTwoOp(StackValue& b, std::function<void()> allN
 }
 
 void ds::jit::StackValue::compileTwoOp(StackValue& b, std::function<void()> allNumbers,
-	std::function<void()> oneRegister, std::function<void()> oneInverse, std::function<void()> allRegisters)
+	std::function<void()> oneRegister, std::function<void()> oneInverse, std::function<void()> allRegisters) const
 {
 	if (this->isNumber)
 	{
@@ -1501,7 +1494,8 @@ void ds::jit::JustInTimeCompiler::restoreRegisters(bool full)
 
 		// Restore variable stack
 		assembler->mov(variableStackRegister, varStackPos);
-		assembler->lea(variableStackRegister, ptr_64(runtimeRegister, variableStackRegister, 0, DS_OFFSETOF(JustInTimeRuntime, variableStack)));
+		assembler->lea(variableStackRegister, ptr_64(runtimeRegister,
+			variableStackRegister, 0, DS_OFFSETOF(JustInTimeRuntime, variableStack)));
 	}
 }
 
@@ -1515,6 +1509,11 @@ void ds::jit::JustInTimeCompiler::getStack()
 
 void ds::jit::JustInTimeCompiler::compileAbort(const char* msg)
 {
+	assembler->mov(r10, variableStackRegister);
+	assembler->lea(r11, ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, variableStack)));
+	assembler->sub(r10, r11);
+	assembler->mov(varStackPos, r10);
+
 	assembler->mov(ptr_64(runtimeRegister, DS_OFFSETOF(JustInTimeRuntime, lastStackPos)), rbp);
 	assembler->mov(argumentRegisters[0], runtimeRegister);
 	assembler->mov(argumentRegisters[1], msg);
