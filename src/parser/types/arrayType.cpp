@@ -25,7 +25,7 @@ ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 			nullptr, "system::array.removeIndex", "removeIndex") });
 
 	this->methods.insert({ "getIterator",
-		new BuiltinClassFunction({  },
+		new BuiltinClassFunction({},
 			IteratorType::getInstance(baseType, registry), "system::array.getIterator", "getIterator") });
 
 	this->members.push_back(ClassMember{
@@ -93,7 +93,13 @@ ExpressionResult ds::ArrayType::compileIndex(ExpressionResult thisValue, Express
 	result.code.addBuffer(indexValue.code);
 
 	result.code.pushInt(elementSize);
+	if (setMember)
+	{
+		result.setCode = result.code;
+		result.setCode->addNew<BytecodeCallNative>("system::array.setAt");
+	}
 	result.code.addNew<BytecodeCallNative>("system::array.at");
+
 	result.type = baseType;
 	result.valid = true;
 	return result;

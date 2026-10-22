@@ -91,7 +91,7 @@ ExpressionResult ds::StringType::compileIndex(ExpressionResult thisValue, Expres
 	result.code.addBuffer(indexValue.code);
 	result.code.addNew<BytecodeCallNative>("system::string.index");
 
-	if (setMember)
+	if (setMember && thisValue.setCode)
 	{
 		result.setCode = BytecodeBuffer();
 		result.setCode->addBuffer(thisValue.code);

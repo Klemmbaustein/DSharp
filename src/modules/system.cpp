@@ -903,6 +903,26 @@ static void array_at(InterpretContext* context)
 	context->pushBytes((uint8_t*)array->data + elementSize * index, elementSize);
 }
 
+static void array_setAt(InterpretContext* context)
+{
+	uint32_t elementSize = context->popValue<uint32_t>();
+	Int index = context->popValue<uint32_t>();
+	ArrayData* array = reinterpret_cast<ArrayData*>(context->popValue<RuntimeClass*>()->getBody());
+	if (index < 0)
+	{
+		context->runtimePanic("Negative array index");
+		return;
+	}
+
+	if (array->length <= index)
+	{
+		context->runtimePanic("Out of bounds array access");
+		return;
+	}
+
+	context->popBytes((uint8_t*)array->data + elementSize * index, elementSize);
+}
+
 static void fn_delete(InterpretContext* context)
 {
 	RuntimeClass* cls = context->popValue<RuntimeClass*>();
@@ -1064,6 +1084,10 @@ ds::NativeModule ds::modules::system::createModule(LanguageContext* to)
 	out.addFunction(NativeFunction(
 		{}, nullptr,
 		"array.at", &array_at));
+
+	out.addFunction(NativeFunction(
+		{}, nullptr,
+		"array.setAt", &array_setAt));
 
 	out.addFunction(NativeFunction(
 		{}, nullptr,
