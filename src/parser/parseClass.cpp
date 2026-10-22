@@ -354,6 +354,30 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 		code->addOperation(BytecodeOp::pop, args);
 	}
 
+	compileMembers(code, &constructorScope, errors);
+
+	// Return a reference to this.
+	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+	code->addBuffer(constructorScope.compileScopeExit(0, false));
+	code->addOperation(BytecodeOp::ret);
+
+	compileConstructor(context, errors, file);
+}
+
+void ds::ParsedClass::serviceCompile(ParseContext* context)
+{
+	ParsedScope scope;
+	BytecodeBuffer code;
+	scope.scopeFile = this->definitionFile;
+	scope.context = context;
+	scope.code = &code;
+
+	scope.setClass(this, false);
+	compileMembers(&code, &scope, &context->errors);
+}
+
+void ds::ParsedClass::compileMembers(BytecodeBuffer* code, ParsedScope* scope, ErrorContext* errors)
+{
 	for (auto& [name, member] : this->members)
 	{
 		if (member.isDerived)
@@ -372,15 +396,14 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 
 		TokenLine valueLine;
 		valueLine.lineTokens = &member.value;
-		auto varExpr = Expression::pushExpression(valueLine, &context->errors, false, member.type,
-			&constructorScope);
+		auto varExpr = Expression::pushExpression(valueLine, errors, false, member.type, scope);
 		valueLine.expectEndOfLine(errors);
-		varExpr.compileToType(member.name, member.type, &constructorScope, errors);
-		if (varExpr.type)
+		varExpr.compileToType(member.name, member.type, scope, errors);
+		if (varExpr.valid)
 		{
 			code->addBuffer(varExpr.code);
-			code->addBuffer(varExpr.type->compileMove(&constructorScope));
-			code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
+			code->addBuffer(varExpr.type->compileMove(scope));
+			code->addBuffer(scope->thisVariable->readValue(scope));
 
 			code->pushInt(member.offset);
 			code->pushInt(member.type->size);
@@ -389,13 +412,6 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 			valueLine.expectEndOfLine(errors);
 		}
 	}
-
-	// Return a reference to this.
-	code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
-	code->addBuffer(constructorScope.compileScopeExit(0, false));
-	code->addOperation(BytecodeOp::ret);
-
-	compileConstructor(context, errors, file);
 }
 
 void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)

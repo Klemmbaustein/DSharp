@@ -211,6 +211,10 @@ void ds::ParsedFile::compile(ParseContext* context)
 		{
 			c.compile(context, &context->errors, this);
 		}
+		else
+		{
+			c.serviceCompile(context);
+		}
 		c.compileMethods(context, &context->errors, this);
 	}
 

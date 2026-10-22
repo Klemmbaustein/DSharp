@@ -89,8 +89,11 @@ namespace ds
 		void compileMethods(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 		void scan(ErrorContext* errors, ParsedFile* file);
 
-	private:
+		void compileMembers(BytecodeBuffer* code, ParsedScope* scope, ErrorContext* errors);
 
+		void serviceCompile(ParseContext* context);
+
+	private:
 		void clearMethods();
 
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file);
