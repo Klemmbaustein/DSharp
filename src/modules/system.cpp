@@ -845,7 +845,11 @@ static void ArrayIterator_get(InterpretContext* context)
 
 	if (array->isClassType)
 	{
-		(*reinterpret_cast<RuntimeClass**>(pos))->addRef();
+		auto cls = (*reinterpret_cast<RuntimeClass**>(pos));
+		if (cls)
+		{
+			cls->addRef();
+		}
 	}
 	context->pushBytes(pos, iterator->itemSize);
 }

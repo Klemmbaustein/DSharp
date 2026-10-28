@@ -364,7 +364,7 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 	compileConstructor(context, errors, file);
 }
 
-void ds::ParsedClass::serviceCompile(ParseContext* context)
+void ds::ParsedClass::serviceCompile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
 	ParsedScope scope;
 	BytecodeBuffer code;
@@ -374,6 +374,26 @@ void ds::ParsedClass::serviceCompile(ParseContext* context)
 
 	scope.setClass(this, false);
 	compileMembers(&code, &scope, &context->errors);
+
+	if (thisType->parent)
+	{
+		BytecodeOffset offset = 0;
+		handleParentClass(offset, thisType->parent, context, errors, file);
+	}
+
+	for (auto& [offset, interface] : thisType->interfaces)
+	{
+		createInterfaceVTable(interface, context, errors, file);
+	}
+
+	for (auto& i : this->methods)
+	{
+		if (!i->foundOverride && i->isOverride)
+		{
+			errors->error(ErrorCode::parseInvalidOverride, i->name,
+				"Could not find any function that " + i->name.string + " can override.");
+		}
+	}
 }
 
 void ds::ParsedClass::compileMembers(BytecodeBuffer* code, ParsedScope* scope, ErrorContext* errors)

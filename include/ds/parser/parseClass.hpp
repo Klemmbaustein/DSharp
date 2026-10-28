@@ -91,7 +91,7 @@ namespace ds
 
 		void compileMembers(BytecodeBuffer* code, ParsedScope* scope, ErrorContext* errors);
 
-		void serviceCompile(ParseContext* context);
+		void serviceCompile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 
 	private:
 		void clearMethods();
