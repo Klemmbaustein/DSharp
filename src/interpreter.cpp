@@ -489,16 +489,8 @@ bool ds::RuntimeInterpretContext::runInstruction(BytecodeOp op, uint8_t argsSize
 			TypeId id = *(TypeId*)&argumentBuffer[0];
 			if (id != ptr->type)
 			{
-				auto [success, isInterface, offset] = this->runtime->reflect->tryCast(ptr->type, id);
+				ptr = this->runtime->reflect->tryCast(ptr->type, id).tryConvert(ptr);
 
-				if (success)
-				{
-					ptr = isInterface ? reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset) : ptr;
-				}
-				else
-				{
-					ptr = nullptr;
-				}
 			}
 		}
 		if (!isNullable && !ptr)

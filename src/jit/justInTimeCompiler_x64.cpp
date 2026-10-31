@@ -52,16 +52,7 @@ static RuntimeClass* jit_classAs(JustInTimeRuntime* rt, RuntimeClass* ptr, ds::T
 {
 	if (ptr && id != ptr->type)
 	{
-		auto [success, isInterface, offset] = rt->runtime->reflect->tryCast(ptr->type, id);
-
-		if (success)
-		{
-			ptr = isInterface ? reinterpret_cast<RuntimeClass*>(ptr->getBody() + offset) : ptr;
-		}
-		else
-		{
-			ptr = nullptr;
-		}
+		return rt->runtime->reflect->tryCast(ptr->type, id).tryConvert(ptr);
 	}
 	return ptr;
 }

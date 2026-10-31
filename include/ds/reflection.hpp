@@ -77,6 +77,15 @@ namespace ds
 		bool success = false;
 		bool isInterface = false;
 		Int interfaceOffset = 0;
+
+		RuntimeClass* tryConvert(RuntimeClass* inInstance) const
+		{
+			if (success)
+			{
+				return isInterface ? reinterpret_cast<RuntimeClass*>(inInstance->getBody() + interfaceOffset) : inInstance;
+			}
+			return nullptr;
+		}
 	};
 
 	struct EntryPoint

@@ -591,7 +591,8 @@ ExpressionResult ds::Expression::parseFunctionArguments(Token functionName, std:
 			errors->error(ErrorCode::parseUnexpectedToken,
 				currentLine.lineTokens->size() ? currentLine.previous() : functionName,
 				"Wrong number of arguments for function '" +
-					functionName.string + "'. Got " + std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
+					functionName.string + "'. Got " +
+					std::to_string(argIndex) + ", but " + std::to_string(arguments.size()) +
 					" argument(s) were expected.");
 		}
 		return ExpressionResult();
