@@ -110,6 +110,9 @@ ExpressionResult ds::StringType::compileEqualsTo(ExpressionResult first, Express
 	ErrorContext* errors, ParsedScope* with)
 {
 	first.code.addOperation(BytecodeOp::refClass);
+
+	second.type = second.type->asClass();
+
 	second.compileToType(opToken, this, with, errors);
 	first.code.addBuffer(second.code);
 	first.code.addOperation(BytecodeOp::refClass);

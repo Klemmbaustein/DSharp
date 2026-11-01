@@ -483,7 +483,6 @@ void ds::ParseContext::resetModules(LanguageContext* context)
 		{
 			i.scanned = false;
 			i.compiled = false;
-			i.baseConstructorCompiled = false;
 		}
 	}
 

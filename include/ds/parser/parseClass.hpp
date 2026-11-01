@@ -78,7 +78,6 @@ namespace ds
 
 		bool scanned = false;
 		bool compiled = false;
-		bool baseConstructorCompiled = false;
 		bool isFileClass = false;
 		bool isInterface = false;
 

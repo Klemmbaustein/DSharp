@@ -325,12 +325,6 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 
 void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
-	if (baseConstructorCompiled)
-	{
-		return;
-	}
-	baseConstructorCompiled = true;
-
 	if (thisType->parent && thisType->parent->languageClass)
 	{
 		thisType->parent->languageClass->fullCompile(context, thisType->parent->languageClass->definitionFile);
@@ -353,6 +347,11 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 
 	for (auto& [interface, impl] : thisType->interfaces)
 	{
+		if (interface->languageClass)
+		{
+			interface->languageClass->fullCompile(context, file);
+		}
+
 		code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 		BinaryBuffer args;
 		args.addValue(impl.offset);

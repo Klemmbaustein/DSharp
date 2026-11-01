@@ -50,6 +50,12 @@ static void string_compare(InterpretContext* context)
 	auto second = context->popRuntimeString();
 	auto first = context->popRuntimeString();
 
+	if (!first.classPtr || !second.classPtr)
+	{
+		context->pushValue<Int>(first.classPtr != second.classPtr);
+		return;
+	}
+
 	Int cmp = std::strcmp(second.ptr(), first.ptr());
 
 	context->pushValue(cmp);
