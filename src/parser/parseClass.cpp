@@ -206,7 +206,7 @@ void ds::ParsedClass::scanDerived(BytecodeOffset& position, std::vector<ClassMem
 
 		if (classType->isInterface)
 		{
-			thisType->interfaces.insert({ position, classType });
+			thisType->interfaces.insert({ classType, ClassInterfaceImplementation(position, thisType) });
 			position += Size(sizeof(RuntimeClass));
 		}
 		else
@@ -325,6 +325,17 @@ void ds::ParsedClass::compileDestructor(ParseContext* context, ErrorContext* err
 
 void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext* errors, ParsedFile* file)
 {
+	if (baseConstructorCompiled)
+	{
+		return;
+	}
+	baseConstructorCompiled = true;
+
+	if (thisType->parent && thisType->parent->languageClass)
+	{
+		thisType->parent->languageClass->fullCompile(context, thisType->parent->languageClass->definitionFile);
+	}
+
 	auto& constructorBytecode = context->compiler.functions[constructor.getFullName()];
 	this->constructor.code = &constructorBytecode;
 
@@ -340,12 +351,12 @@ void ds::ParsedClass::compileBaseConstructor(ParseContext* context, ErrorContext
 	}
 	constructorScope.setClass(this, true);
 
-	for (auto& [offset, interface] : thisType->interfaces)
+	for (auto& [interface, impl] : thisType->interfaces)
 	{
 		code->addBuffer(constructorScope.thisVariable->readValue(&constructorScope));
 		BinaryBuffer args;
-		args.addValue(offset);
-		args.addValue(createInterfaceVTable(interface, context, errors, file));
+		args.addValue(impl.offset);
+		args.addValue(createInterfaceVTable(interface, impl.originClass, context, errors, file));
 		code->addOperation(BytecodeOp::implInterface, args);
 		if (interface->baseConstructor)
 			code->addBuffer(interface->baseConstructor->compileCall().code);
@@ -381,9 +392,9 @@ void ds::ParsedClass::serviceCompile(ParseContext* context, ErrorContext* errors
 		handleParentClass(offset, thisType->parent, context, errors, file);
 	}
 
-	for (auto& [offset, interface] : thisType->interfaces)
+	for (auto& [interface, impl] : thisType->interfaces)
 	{
-		createInterfaceVTable(interface, context, errors, file);
+		createInterfaceVTable(interface, impl.originClass, context, errors, file);
 	}
 
 	for (auto& i : this->methods)
@@ -461,7 +472,7 @@ void ds::ParsedClass::compileConstructor(ParseContext* context, ErrorContext* er
 				}
 			}
 		}
-		for (auto& [_, p] : this->thisType->interfaces)
+		for (auto& [p, _] : this->thisType->interfaces)
 		{
 			for (auto& c : p->constructors)
 			{
@@ -550,7 +561,7 @@ void ds::ParsedClass::handleParentClass(BytecodeOffset& vTableIndex, ClassType* 
 	}
 }
 
-BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, ParseContext* context,
+BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, ClassType* originClass, ParseContext* context,
 	ErrorContext* errors, ParsedFile* file)
 {
 	BytecodeOffset vTableIndex = 1;
@@ -581,45 +592,59 @@ BytecodeOffset ds::ParsedClass::createInterfaceVTable(ClassType* interface, Pars
 			continue;
 		}
 
-		bool found = false;
-
-		for (auto& i : this->methods)
-		{
-			if (!i->isOverride || i->foundOverride || i->getShortName() != m->function->getShortName())
-			{
-				continue;
-			}
-			if (!Function::signaturesMatch(i, m->function))
-			{
-				errors->error(ErrorCode::parseInvalidOverride, i->name,
-					"Function signatures of " + i->getFullName() + " and " +
-						m->function->getFullName() + " do not match.\nExpected signature: " +
-						m->function->getSignatureText() + "\nGot:                " + i->getSignatureText());
-			}
-
-			context->virtualTable.push_back(i);
-
-			BinaryBuffer args;
-			args.addValue<Int>(thisType->getInterfaceOffset(interface));
-			args.addValue<Bool>(true);
-
-			i->functionCode->instructions.insert(i->functionCode->instructions.begin(),
-				std::make_shared<BytecodeOperation>(BytecodeOp::castInterface, args));
-			i->vTableOffset = vTableIndex++;
-			i->foundOverride = true;
-			i->inheritsGeneric = interface->isGeneric;
-			found = true;
-			break;
-		}
-		if (found)
+		if (findInterfaceVTableEntry(interface, originClass, context, errors, m, vTableIndex))
 		{
 			continue;
 		}
+
 		context->virtualTable.push_back(m->function);
 		vTableIndex++;
 	}
 
 	return initialIndex;
+}
+
+bool ds::ParsedClass::findInterfaceVTableEntry(ClassType* interface, ClassType* originClass, ParseContext* context,
+	ErrorContext* errors, ClassMethod* baseMethod, BytecodeOffset& vTableEntry)
+{
+	for (auto& i : this->methods)
+	{
+		if (!i->isOverride || i->getShortName() != baseMethod->function->getShortName())
+		{
+			continue;
+		}
+		if (!Function::signaturesMatch(i, baseMethod->function))
+		{
+			errors->error(ErrorCode::parseInvalidOverride, i->name,
+				"Function signatures of " + i->getFullName() + " and " +
+					baseMethod->function->getFullName() + " do not match.\nExpected signature: " +
+					baseMethod->function->getSignatureText() + "\nGot:                " + i->getSignatureText());
+		}
+
+		context->virtualTable.push_back(i);
+
+		BinaryBuffer args;
+		args.addValue<Int>(thisType->getInterfaceOffset(interface));
+		args.addValue<Bool>(true);
+
+		if (!i->foundOverride)
+		{
+			i->functionCode->instructions.insert(i->functionCode->instructions.begin(),
+				std::make_shared<BytecodeOperation>(BytecodeOp::castInterface, args));
+		}
+		i->foundOverride = true;
+		i->vTableOffset = vTableEntry++;
+		i->inheritsGeneric = interface->isGeneric;
+		return true;
+	}
+
+	if (originClass != thisType && thisType->parent && thisType->parent->languageClass)
+	{
+		return thisType->parent->languageClass->findInterfaceVTableEntry(interface, originClass, context, errors,
+			baseMethod, vTableEntry);
+	}
+
+	return false;
 }
 
 ExpressionResult ds::ClassLifetimeFunction::compileCall()
@@ -786,22 +811,35 @@ void ds::ParsedClass::scanClass(ParseContext* context, ParsedFile* file)
 	}
 }
 
-void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+void ds::ParsedClass::fullCompile(ParseContext* context, ParsedFile* file)
 {
 	// TODO: build vtable offsets in scan phase?
 	if (compiled)
 	{
 		return;
 	}
+	compiled = true;
 
+	registerMethods(context);
+	if (!context->service)
+	{
+		compile(context, &context->errors, file);
+	}
+	else
+	{
+		serviceCompile(context, &context->errors, file);
+	}
+	compileMethods(context, &context->errors, file);
+}
+
+void ds::ParsedClass::compile(ParseContext* context, ErrorContext* errors, ParsedFile* file)
+{
 	if (thisType->parent && thisType->parent->languageClass)
 	{
 		errors->currentFile = thisType->parent->languageClass->definitionFile->name;
-		thisType->parent->languageClass->compile(context, errors, thisType->parent->languageClass->definitionFile);
+		thisType->parent->languageClass->fullCompile(context, thisType->parent->languageClass->definitionFile);
 	}
 	errors->currentFile = file->name;
-
-	compiled = true;
 
 	compileDestructor(context, errors, file);
 

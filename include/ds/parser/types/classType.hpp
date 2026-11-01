@@ -76,6 +76,12 @@ namespace ds
 			TypeRegistry* registry) override;
 	};
 
+	struct ClassInterfaceImplementation
+	{
+		BytecodeOffset offset = 0;
+		ClassType* originClass = nullptr;
+	};
+
 	class ClassType : public Type
 	{
 	public:
@@ -122,7 +128,7 @@ namespace ds
 		void applyName() override;
 
 		ClassType* parent = nullptr;
-		std::map<BytecodeOffset, ClassType*> interfaces;
+		std::map<ClassType*, ClassInterfaceImplementation> interfaces;
 
 		ExpressionResult toInterface(ExpressionResult expr, ClassType* interface);
 		BytecodeOffset getInterfaceOffset(ClassType* interface);

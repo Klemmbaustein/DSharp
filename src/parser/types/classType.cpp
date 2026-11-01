@@ -139,7 +139,7 @@ bool ds::ClassType::isSubclassOf(ClassType* parent)
 			return true;
 		}
 	}
-	for (auto& [_, i] : interfaces)
+	for (auto& [i, _] : interfaces)
 	{
 		if (i == parent)
 		{
@@ -338,12 +338,12 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 
 ExpressionResult ds::ClassType::toInterface(ExpressionResult expr, ClassType* interface)
 {
-	for (auto& [offset, type] : this->interfaces)
+	for (auto& [type, impl] : this->interfaces)
 	{
 		if (type->sameAs(interface))
 		{
 			BinaryBuffer args;
-			args.addValue<Int>(offset);
+			args.addValue<Int>(impl.offset);
 			args.addValue<Bool>(false);
 			expr.code.addOperation(BytecodeOp::castInterface, args);
 			expr.type = interface;
@@ -355,11 +355,11 @@ ExpressionResult ds::ClassType::toInterface(ExpressionResult expr, ClassType* in
 
 BytecodeOffset ds::ClassType::getInterfaceOffset(ClassType* interface)
 {
-	for (auto& [offset, type] : this->interfaces)
+	for (auto& [type, impl] : this->interfaces)
 	{
 		if (type->sameAs(interface))
 		{
-			return offset;
+			return impl.offset;
 		}
 	}
 	return 0;

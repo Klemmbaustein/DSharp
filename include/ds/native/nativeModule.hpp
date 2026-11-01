@@ -107,7 +107,7 @@ namespace ds
 			{
 				if (derived->isInterface)
 				{
-					cls->interfaces.insert({ 0, derived });
+					cls->interfaces.insert({ derived, ClassInterfaceImplementation(0, derived) });
 				}
 				else
 				{
@@ -163,7 +163,7 @@ namespace ds
 			{
 				if (derived->isInterface)
 				{
-					cls->interfaces.insert({ 0, derived });
+					cls->interfaces.insert({ derived, ClassInterfaceImplementation(0, derived) });
 				}
 				else
 				{

@@ -22,10 +22,17 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 				t->parent = convertGenericType(t->parent, types, false, at, with, registry)->asClass();
 			}
 
+			std::map<ClassType*, ClassInterfaceImplementation> newInterfaces;
+
 			for (auto& i : t->interfaces)
 			{
-				i.second = convertGenericType(i.second, types, false, at, with, registry)->asClass();
+				if (i.second.originClass = this)
+				{
+					i.second.originClass = t;
+				}
+				newInterfaces[convertGenericType(i.first, types, false, at, with, registry)->asClass()] = i.second;
 			}
+			t->interfaces = newInterfaces;
 
 			for (auto& i : t->members)
 			{

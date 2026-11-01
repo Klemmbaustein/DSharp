@@ -78,23 +78,28 @@ namespace ds
 
 		bool scanned = false;
 		bool compiled = false;
+		bool baseConstructorCompiled = false;
 		bool isFileClass = false;
 		bool isInterface = false;
 
 		void registerType(ParseContext* context, ParsedFile* file);
 		void scanClass(ParseContext* context, ParsedFile* file);
-
-		void compile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
-		void registerMethods(ParseContext* context);
-		void compileMethods(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 		void scan(ErrorContext* errors, ParsedFile* file);
 
-		void compileMembers(BytecodeBuffer* code, ParsedScope* scope, ErrorContext* errors);
+		void registerMethods(ParseContext* context);
+		void compileMethods(ParseContext* context, ErrorContext* errors, ParsedFile* file);
 
-		void serviceCompile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+		void fullCompile(ParseContext* context, ParsedFile* file);
 
 	private:
 		void clearMethods();
+
+		void compileMembers(BytecodeBuffer* code, ParsedScope* scope, ErrorContext* errors);
+		void compile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+		void serviceCompile(ParseContext* context, ErrorContext* errors, ParsedFile* file);
+
+		bool findInterfaceVTableEntry(ClassType* interface, ClassType* originClass, ParseContext* context,
+			ErrorContext* errors, ClassMethod* baseMethod, BytecodeOffset& vTableEntry);
 
 		bool scanLine(std::vector<AttribInfo>& currentAttributes, ErrorContext* errors, ParsedFile* file);
 		void scanDerived(BytecodeOffset& position, std::vector<ClassMember>& members,
@@ -106,7 +111,7 @@ namespace ds
 
 		void handleParentClass(BytecodeOffset& vTableIndex, ClassType* parent, ParseContext* context,
 			ErrorContext* errors, ParsedFile* file);
-		BytecodeOffset createInterfaceVTable(ClassType* interface, ParseContext* context,
+		BytecodeOffset createInterfaceVTable(ClassType* interface, ClassType* originClass, ParseContext* context,
 			ErrorContext* errors, ParsedFile* file);
 	};
 } // namespace ds

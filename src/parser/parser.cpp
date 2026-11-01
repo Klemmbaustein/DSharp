@@ -218,9 +218,9 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 
 		std::map<TypeId, BytecodeOffset> superClasses;
 
-		for (auto& [offset, super] : cls->interfaces)
+		for (auto& [super, impl] : cls->interfaces)
 		{
-			superClasses.insert({ super->id, offset });
+			superClasses.insert({ super->id, impl.offset });
 		}
 
 		if (options.emitDebugData)
@@ -287,9 +287,9 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 
 			std::map<TypeId, BytecodeOffset> superClasses;
 
-			for (auto& [offset, super] : cls.thisType->interfaces)
+			for (auto& [super, impl] : cls.thisType->interfaces)
 			{
-				superClasses.insert({ super->id, offset });
+				superClasses.insert({ super->id, impl.offset });
 			}
 
 			std::vector<AttributeData> attributes;
@@ -483,6 +483,7 @@ void ds::ParseContext::resetModules(LanguageContext* context)
 		{
 			i.scanned = false;
 			i.compiled = false;
+			i.baseConstructorCompiled = false;
 		}
 	}
 
