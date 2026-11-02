@@ -374,13 +374,11 @@ ExpressionResult ds::Expression::pushValue(TokenLine& currentLine,
 
 		auto compiled = foundType->compileValue(className, currentLine, errors, scope, hintType);
 
-		if (compiled.type == nullptr)
+		if (compiled.type != nullptr)
 		{
-			return ExpressionResult();
+			compiled.code.addBuffer(compiled.type->compileEndMove(scope));
+			return compiled;
 		}
-
-		compiled.code.addBuffer(compiled.type->compileEndMove(scope));
-		return compiled;
 	}
 
 	if (value == "await")

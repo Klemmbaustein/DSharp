@@ -265,6 +265,8 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 
 	if (!this->allowDirectConstructorCall)
 	{
+		errors->error(ErrorCode::parseNoMatchingConstructor, first, "This type has no accessible constructors.");
+
 		return ExpressionResult();
 	}
 

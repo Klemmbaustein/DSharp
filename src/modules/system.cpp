@@ -301,6 +301,10 @@ static void map_contains(InterpretContext* context)
 	context->popBytes(buffer.data(), key.typeSize);
 
 	auto& node = map->getNode(buffer.data(), key, context);
+	if (map->keyIsClassType)
+	{
+		context->destruct(MapData::getClass(buffer.data()));
+	}
 
 	context->pushValue<Bool>(node != nullptr);
 }
