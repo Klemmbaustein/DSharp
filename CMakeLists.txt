@@ -1,4 +1,4 @@
-﻿# CMakeList.txt : CMake project for DSharp, include source and define
+# CMakeList.txt : CMake project for DSharp, include source and define
 # project specific logic here.
 #
 cmake_minimum_required(VERSION 3.20)
@@ -58,4 +58,11 @@ target_link_libraries(DSharp PUBLIC asmjit::asmjit)
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	enable_testing()
 	add_subdirectory("test/runner")
+endif()
+
+
+if(DSHARP_MODULES)
+	add_library(DSharp.Modules)
+	target_sources(DSharp.Modules PUBLIC FILE_SET CXX_MODULES FILES "src/dsharp.cppm" "src/dsharp.service.cppm")
+	target_link_libraries(DSharp.Modules PUBLIC DSharp)
 endif()
