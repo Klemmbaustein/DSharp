@@ -808,7 +808,7 @@ static void array_removeIndex(InterpretContext* context)
 	{
 		RuntimeClass** elem = reinterpret_cast<RuntimeClass**>(array->data);
 		context->destruct(elem[index]);
-		memmove(&elem[index], &elem[index + 1], array->length - index);
+		memmove(&elem[index], &elem[index + 1], (array->length - index) * sizeof(ds::RuntimeClass*));
 	}
 	else
 	{
