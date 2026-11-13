@@ -140,6 +140,7 @@ void ds::ParsedScope::parseSubScope(Token beginToken, ParsedFile* file, ErrorCon
 {
 	// Create a sub scope that optionally takes in the ScopeOptions
 	ParsedScope conditionScope;
+	conditionScope.lambdaCount = this->lambdaCount;
 	conditionScope.beginToken = beginToken;
 	conditionScope.scopeFunction = options.scopeFunction ? options.scopeFunction : this->scopeFunction;
 	conditionScope.code = options.targetBuffer ? options.targetBuffer : this->code;
@@ -405,6 +406,12 @@ void ds::ParsedScope::addTask(TaskType* taskType)
 
 void ds::ParsedScope::compile(ParseContext* context, ParsedFile* file, ErrorContext* errors)
 {
+	uint32_t lambdaCountVar = 0;
+	if (!lambdaCount)
+	{
+		lambdaCount = &lambdaCountVar;
+	}
+
 	this->context = context;
 	this->scopeFile = file;
 

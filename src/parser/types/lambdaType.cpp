@@ -52,7 +52,7 @@ ExpressionResult ds::LambdaType::compileValue(Token first, TokenLine& line, Erro
 		name = with->scopeFunction->inClass->name.string + "." + name;
 	}
 
-	newFunction.name = Token(name + ".<lambda" + std::to_string(with->lambdaCount++) + ">");
+	newFunction.name = Token(name + ".<lambda" + std::to_string((*with->lambdaCount)++) + ">");
 	newFunction.functionModule = with->scopeFunction->functionModule;
 	newFunction.isLambda = true;
 	newFunction.functionFile = with->scopeFile;

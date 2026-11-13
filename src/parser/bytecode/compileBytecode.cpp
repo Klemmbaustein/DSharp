@@ -348,11 +348,16 @@ void ds::BytecodeCompiler::printAssembly()
 
 		for (auto& instr : fn.second.instructions)
 		{
+			auto str = instr->toString();
+
+			if (!str.empty())
+			{
 #if HAS_CPP_FORMAT
-			std::println("{} {}", instr->offset, instr->toString());
+				std::println("{} {}", instr->offset, str);
 #else
-			std::printf("%lu %s", instr->offset, instr->toString().c_str());
+				std::printf("%lu %s", instr->offset, str.c_str());
 #endif
+			}
 		}
 	}
 }

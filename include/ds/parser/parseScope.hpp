@@ -65,7 +65,7 @@ namespace ds
 
 		uint32_t variableStackPosition = 0;
 		uint32_t lambdaOffset = 0;
-		uint32_t lambdaCount = 0;
+		uint32_t* lambdaCount = nullptr;
 		bool compileReturn = false;
 		bool returnThis = false;
 		bool isLambda = false;

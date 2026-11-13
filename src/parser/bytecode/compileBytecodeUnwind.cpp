@@ -20,7 +20,7 @@ BytecodeOffset ds::BytecodeUnwindClass::getArgsSize()
 
 std::string ds::BytecodeUnwindClass::toString()
 {
-	return "UNWIND: " + variable->toString();
+	return "";
 }
 
 void ds::BytecodeUnwindClass::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section,
@@ -60,7 +60,7 @@ BytecodeOffset ds::BytecodeDebugUnwindPrimitive::getArgsSize()
 
 std::string ds::BytecodeDebugUnwindPrimitive::toString()
 {
-	return "UNWIND_PRIM";
+	return "";
 }
 
 void ds::BytecodeDebugUnwindPrimitive::addUnwindInfo(BytecodeCompiler* compiler, UnwindSection& section,
