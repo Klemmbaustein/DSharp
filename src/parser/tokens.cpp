@@ -153,7 +153,7 @@ void ds::TokenStream::fromTokens(const std::vector<Token> from)
 				currentLine = &this->lineTokens.emplace_back();
 			}
 		}
-		else if (!currentLine->empty() && i == "}")
+		else if (!currentLine->empty() && i == "}" && depth == 0)
 		{
 			currentLine = &this->lineTokens.emplace_back();
 		}
