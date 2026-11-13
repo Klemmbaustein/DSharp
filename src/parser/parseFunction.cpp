@@ -67,9 +67,31 @@ void ds::ParsedFunction::registerFunction(ParseContext* context)
 
 std::string ds::ParsedFunction::getFullName() const
 {
-	if (this->inClass)
-		return this->functionModule->name + "::" + this->inClass->name.string + "." + this->name.string;
-	return this->functionModule->name + "::" + this->name.string;
+	if (fullName.has_value())
+	{
+		return *fullName;
+	}
+
+	if (inClass && name == "new")
+	{
+		std::string argsText;
+
+		for (auto& i : arguments)
+		{
+			argsText.append("_" + Type::toFullString(i.type));
+		}
+
+		fullName = functionModule->name + "::" + inClass->name.string + "." + name.string + argsText;
+	}
+	else if (inClass)
+	{
+		fullName = functionModule->name + "::" + inClass->name.string + "." + name.string;
+	}
+	else
+	{
+		fullName = functionModule->name + "::" + name.string;
+	}
+	return *fullName;
 }
 
 std::string ds::ParsedFunction::getShortName() const

@@ -297,11 +297,13 @@ ExpressionResult ds::ClassType::compileValue(Token first, TokenLine& line,
 		bool found = false;
 		for (auto& i : this->constructors)
 		{
+			argsLine.position = 0;
 			auto constructor = Expression::parseFunctionArguments(Token(first), i->getArguments(),
 				argsLine, errors, false, with);
 
 			if (!constructor.valid)
 			{
+				constructor.unrefHere(with);
 				continue;
 			}
 

@@ -2,6 +2,7 @@
 #include "function.hpp"
 #include "parseClass.hpp"
 #include <iostream>
+#include <optional>
 
 namespace ds
 {
@@ -60,6 +61,9 @@ namespace ds
 		{
 			return vTableOffset;
 		}
+
+	private:
+		mutable std::optional<std::string> fullName;
 	};
 
 }
