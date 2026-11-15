@@ -50,7 +50,7 @@ static void jit_abort(JustInTimeRuntime* rt, const char* msg)
 
 static RuntimeClass* jit_classAs(JustInTimeRuntime* rt, RuntimeClass* ptr, ds::TypeId id)
 {
-	if (ptr && id != ptr->type)
+	if (ptr)
 	{
 		return rt->runtime->reflect->tryCast(ptr->type, id).tryConvert(ptr);
 	}

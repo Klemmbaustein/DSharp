@@ -81,6 +81,11 @@ bool ds::ReflectInfo::isSubclassOf(TypeId toCheck, TypeId superClass) const
 
 CastResult ds::ReflectInfo::tryCast(TypeId toCheck, TypeId superClass) const
 {
+	if (toCheck == superClass)
+	{
+		return { true, false, 0 };
+	}
+
 	auto t = this->types.find(toCheck);
 
 	if (t != this->types.end())

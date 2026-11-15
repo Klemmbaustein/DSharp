@@ -82,7 +82,11 @@ namespace ds
 		{
 			if (success)
 			{
-				return isInterface ? reinterpret_cast<RuntimeClass*>(inInstance->getBody() + interfaceOffset) : inInstance;
+				if (isInterface)
+				{
+					return reinterpret_cast<RuntimeClass*>(inInstance->getBody() + interfaceOffset);
+				}
+				return inInstance->getBasePtr();
 			}
 			return nullptr;
 		}

@@ -626,7 +626,7 @@ bool ds::ParsedClass::findInterfaceVTableEntry(ClassType* interface, ClassType* 
 		args.addValue<Int>(thisType->getInterfaceOffset(interface));
 		args.addValue<Bool>(true);
 
-		if (!i->foundOverride)
+		if (!i->foundOverride && i->functionCode)
 		{
 			i->functionCode->instructions.insert(i->functionCode->instructions.begin(),
 				std::make_shared<BytecodeOperation>(BytecodeOp::castInterface, args));

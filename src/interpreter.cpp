@@ -487,11 +487,7 @@ bool ds::RuntimeInterpretContext::runInstruction(BytecodeOp op, uint8_t argsSize
 		if (ptr)
 		{
 			TypeId id = *(TypeId*)&argumentBuffer[0];
-			if (id != ptr->type)
-			{
-				ptr = this->runtime->reflect->tryCast(ptr->type, id).tryConvert(ptr);
-
-			}
+			ptr = this->runtime->reflect->tryCast(ptr->type, id).tryConvert(ptr);
 		}
 		if (!isNullable && !ptr)
 		{

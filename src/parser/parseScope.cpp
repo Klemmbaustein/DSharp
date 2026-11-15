@@ -948,8 +948,8 @@ BytecodeBuffer ds::ScopeVariable::readValue(ParsedScope* with) const
 		if (!found)
 		{
 			with->scopeFunction->capturedVariables.push_back(name);
-			this->lambdaOffset = with->lambdaOffset;
-			with->lambdaOffset += type->size;
+			this->lambdaOffset = with->lambdaRootScope->lambdaOffset;
+			with->lambdaRootScope->lambdaOffset += type->size;
 		}
 		result.addBuffer(with->lambdaVariable->readValue(with));
 		result.pushInt(this->lambdaOffset + 4);
