@@ -99,7 +99,7 @@ namespace ds
 			if (this->nullable)
 				delete this->nullable;
 		}
-
+		TypeId implementedGeneric = 0;
 		BytecodeOffset vTableOffset = 0;
 		bool isInterface = false;
 		bool isByValueType = false;

@@ -12,6 +12,7 @@ ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 	this->size = sizeof(Pointer);
 	this->vTableOffset = UINT32_MAX;
 	this->baseType = baseType;
+	this->implementedGeneric = ARRAY_BASE_TYPE;
 
 	this->methods.insert({ "push",
 		new BuiltinClassFunction({ FunctionArgument(baseType, Token("value")) }, nullptr, "system::array.push", "push") });
@@ -37,6 +38,12 @@ ds::ArrayType::ArrayType(Type* baseType, TypeRegistry* registry)
 	addGenericToName = false;
 
 	applyName();
+}
+
+void ds::ArrayType::applyName()
+{
+	baseType->applyName();
+	this->id = ARRAY_BASE_TYPE + baseType->id;
 }
 
 ds::ArrayType::~ArrayType()

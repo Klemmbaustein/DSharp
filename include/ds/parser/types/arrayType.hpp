@@ -23,11 +23,14 @@ namespace ds
 		ExpressionResult getLength(BytecodeBuffer thisValue, ParseContext* context);
 
 		ExpressionResult makeArrayValue(std::vector<ExpressionResult> values, ParsedScope* with);
+		void applyName() override;
 
 		virtual std::vector<Type*> getGenericTypes()
 		{
 			return {baseType};
 		}
+
+		static constexpr inline TypeId ARRAY_BASE_TYPE = typeIdFromName("<array>");
 
 		Type* baseType;
 	};

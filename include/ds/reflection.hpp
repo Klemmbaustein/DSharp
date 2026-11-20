@@ -67,6 +67,7 @@ namespace ds
 
 		std::vector<TypeMember> members;
 		TypeId superClass = 0;
+		TypeId implementsGeneric = 0;
 		std::map<TypeId, BytecodeOffset> interfaces;
 
 		RuntimeClass* create(InterpretContext* context) const;

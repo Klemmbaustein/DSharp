@@ -16,6 +16,7 @@ Type* ds::NativeGenericClassType::instantiateGeneric(std::vector<Type*> types, T
 			auto t = new NativeGenericClassType(*this);
 			t->nullable = new NullableClassType(t);
 			t->types = types;
+			t->implementedGeneric = this->id;
 
 			if (t->parent)
 			{

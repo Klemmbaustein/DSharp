@@ -241,6 +241,7 @@ void ds::ParseContext::generateReflectionMetadata(BytecodeStream& toStream)
 			.name = Type::toFullString(cls),
 			.bodySize = cls->classSize,
 			.superClass = cls->parent ? cls->parent->id : 0,
+			.implementsGeneric = cls->implementedGeneric,
 			.interfaces = superClasses,
 		};
 	};
